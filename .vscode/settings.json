@@ -1,4 +1,10 @@
 {
   "files.autoSave": "onFocusChange",
-  "files.exclude": {}
+  "files.exclude": {
+    ".vscode": true,
+    "bin": true,
+    "obj": true,
+    "Gymnasiearbete.csproj": true,
+    ".git": true
+  }
 }

@@ -65,15 +65,15 @@ namespace GameEngine
             defaultShader = new Shader("Shaders/mesh.vert", "Shaders/mesh.frag");
             lightShader = new Shader("Shaders/light.vert", "Shaders/light.frag");
 
-            ModelImporter.LoadModel("ImportClass/CoolMotorCycle.fbx", out vertexData, out indices);
+            ModelImporter.LoadModel("ImportClass/Suzanne.fbx", out vertexData, out indices);
             ModelImporter.LoadModel("ImportClass/floor.fbx", out vertexData2, out indices2);
 
-            camera = new Camera(Vector3.Zero, -Vector3.UnitZ, 10);
+            camera = new Camera(new(0, 1, 2), -Vector3.UnitZ, 10);
 
             suzanne = new Mesh(vertexData, indices, defaultShader, true);
-            suzanne.position = new(0, 2, -3);
+            suzanne.position = new(0, 2, 0);
             suzanne.rotation = new(-90, 0, 0);
-            suzanne.scale = new(0.25f);
+            suzanne.scale = new(1);
 
             floor = new Mesh(vertexData2, indices2, defaultShader, true);
             floor.position = new(0, 0, 0);

@@ -12,7 +12,7 @@ namespace GameEngine.Rendering
         private Shader lightShader;
 
         public Vector3 position = Vector3.Zero;
-        public Vector3 scale = Vector3.One * 0.1f;
+        public Vector3 scale = Vector3.One * 0.25f;
         public Vector3 color = new(1, 1, 0);
         public float intensity = 1.0f;
 

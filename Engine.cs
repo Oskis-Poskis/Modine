@@ -52,6 +52,8 @@ namespace GameEngine
         Light light;
         Light light2;
 
+        
+
         protected override void OnLoad()
         {
             MakeCurrent();

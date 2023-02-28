@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete.csproj": {}
+    "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete---OpenGL\\Gymnasiearbete.csproj": {}
   },
   "projects": {
-    "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete.csproj": {
+    "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete---OpenGL\\Gymnasiearbete.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete.csproj",
+        "projectUniqueName": "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete---OpenGL\\Gymnasiearbete.csproj",
         "projectName": "Gymnasiearbete",
-        "projectPath": "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete.csproj",
+        "projectPath": "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete---OpenGL\\Gymnasiearbete.csproj",
         "packagesPath": "C:\\Users\\oskkas27\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\obj\\",
+        "outputPath": "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete---OpenGL\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\oskkas27\\AppData\\Roaming\\NuGet\\NuGet.Config",

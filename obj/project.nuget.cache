@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "7UqmNkarRlNctANuZlxCSiw3NbDpJNnjMpq5B+NyCgpfWduegCBLwaXqtVOTRB6s1NdqP8m+A7dtGGh9ko+T0g==",
+  "dgSpecHash": "6G/eTBSqXfaHytIpI48vGw+aouJMUuNmTJPlSz5XTQF5ufMpZ7nDpUsiISz0mNqnirc13JM3gjXOBHNUGP7mOw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete.csproj",
+  "projectFilePath": "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete---OpenGL\\Gymnasiearbete.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\oskkas27\\.nuget\\packages\\assimpnet\\4.1.0\\assimpnet.4.1.0.nupkg.sha512",
     "C:\\Users\\oskkas27\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",

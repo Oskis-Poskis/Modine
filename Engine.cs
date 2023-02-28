@@ -1,12 +1,15 @@
-﻿using OpenTK.Windowing.Common;
+﻿using System.ComponentModel;
+using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using ImGuiNET;
 
 using GameEngine.Common;
 using GameEngine.Importer;
 using GameEngine.Rendering;
+using GameEngine.ImGUI;
 
 namespace GameEngine
 {
@@ -52,7 +55,7 @@ namespace GameEngine
         Light light;
         Light light2;
 
-        
+        private ImGuiController _controller;
 
         protected override void OnLoad()
         {
@@ -88,6 +91,8 @@ namespace GameEngine
             light.position = new(3, 4, -3);
             light2 = new Light(lightShader);
             light2.position = new(-2, 7, -6);
+
+            _controller = new ImGuiController(windowSize.X, windowSize.Y);
 
             base.OnLoad();
         }
@@ -143,6 +148,10 @@ namespace GameEngine
 
             light.Render(camera.position, camera.direction, pitch, yaw);
             light2.Render(camera.position, camera.direction, pitch, yaw);
+
+            _controller.Update(this, (float)args.Time);
+            ImGui.ShowDemoWindow();
+            _controller.Render();
 
             Context.SwapBuffers();
             base.OnRenderFrame(args);

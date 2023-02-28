@@ -4,7 +4,6 @@
     ".vscode": true,
     "bin": true,
     "obj": true,
-    "Gymnasiearbete.csproj": true,
     "README.md": true
   }
 }

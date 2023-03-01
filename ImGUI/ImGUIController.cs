@@ -57,6 +57,8 @@ namespace GameEngine.ImGUI
             io.Fonts.AddFontFromFileTTF("Fonts/Rubik-Medium.ttf", 16);
 
             io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+            io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+            io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
 
             CreateDeviceResources();
             SetKeyMappings();

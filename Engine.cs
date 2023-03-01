@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+﻿using SN = System.Numerics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -38,7 +38,7 @@ namespace GameEngine
         float sensitivity = 0.01f;
 
         int frameCount = 0;
-        double elapsedTime = 0.0, fps = 0.0;
+        double elapsedTime = 0.0, fps = 0.0, ms;
 
         public Shader defaultShader;
         public Shader lightShader;
@@ -55,7 +55,12 @@ namespace GameEngine
         Light light;
         Light light2;
 
+        PolygonMode _polygonMode = PolygonMode.Fill;
+
         private ImGuiController _controller;
+        int FBO;
+        int framebufferTexture;
+        int depthTexture;
 
         protected override void OnLoad()
         {
@@ -65,13 +70,42 @@ namespace GameEngine
             GL.Enable(EnableCap.CullFace);
             GL.PointSize(5);
 
+
+            FBO = GL.GenFramebuffer();
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
+
+            // Color Texture
+            framebufferTexture = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, (int)windowSize.X, (int)windowSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+            // Attach color to FBO
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, framebufferTexture, 0);
+
+            // Depth Texture
+            depthTexture = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, depthTexture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, (int)windowSize.X, (int)windowSize.X, 0, PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+            // Attach Depth to FBO
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, depthTexture, 0);
+
+
+
+
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1280 / 768, 0.1f, 100);
 
             defaultShader = new Shader("Shaders/mesh.vert", "Shaders/mesh.frag");
             lightShader = new Shader("Shaders/light.vert", "Shaders/light.frag");
 
-            ModelImporter.LoadModel("ImportClass/Suzanne.fbx", out vertexData, out indices);
-            ModelImporter.LoadModel("ImportClass/floor.fbx", out vertexData2, out indices2);
+            ModelImporter.LoadModel("Importing/Suzanne.fbx", out vertexData, out indices);
+            ModelImporter.LoadModel("Importing/floor.fbx", out vertexData2, out indices2);
 
             camera = new Camera(new(0, 1, 2), -Vector3.UnitZ, 10);
 
@@ -93,6 +127,58 @@ namespace GameEngine
             light2.position = new(-2, 7, -6);
 
             _controller = new ImGuiController(windowSize.X, windowSize.Y);
+
+            ImGui.GetStyle().FrameRounding = 6;
+            ImGui.GetStyle().FrameBorderSize = 1;
+            ImGui.GetStyle().TabRounding = 2;
+            ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;
+
+            // Background color
+            ImGui.PushStyleColor(ImGuiCol.WindowBg, new System.Numerics.Vector4(22f, 22f, 22f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.FrameBg, new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new System.Numerics.Vector4(60f, 60f, 60f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new System.Numerics.Vector4(80f, 80f, 80f, 255f) / 255);
+
+            // Popup BG
+            ImGui.PushStyleColor(ImGuiCol.ModalWindowDimBg, new System.Numerics.Vector4(30f, 30f, 30f, 150f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.TextDisabled, new System.Numerics.Vector4(150f, 150f, 150f, 255f) / 255);
+
+            // Titles
+            ImGui.PushStyleColor(ImGuiCol.TitleBgActive, new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.TitleBg, new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.TitleBgCollapsed, new System.Numerics.Vector4(15f, 15f, 15f, 255f) / 255);
+
+            // Tabs
+            ImGui.PushStyleColor(ImGuiCol.Tab, new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.TabActive, new System.Numerics.Vector4(35f, 35f, 35f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.TabUnfocused, new System.Numerics.Vector4(16f, 16f, 16f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.TabUnfocusedActive, new System.Numerics.Vector4(35f, 35f, 35f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.TabHovered, new System.Numerics.Vector4(80f, 80f, 80f, 255f) / 255);
+            
+            // Header
+            ImGui.PushStyleColor(ImGuiCol.Header, new System.Numerics.Vector4(0f, 153f, 76f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new System.Numerics.Vector4(0f, 153f, 76f, 180f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(0f, 153f, 76f, 255f) / 255);
+
+            // Rezising bar
+            ImGui.PushStyleColor(ImGuiCol.Separator, new System.Numerics.Vector4(40f, 40f, 40f, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.SeparatorHovered, new System.Numerics.Vector4(60f, 60f, 60f, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.SeparatorActive, new System.Numerics.Vector4(80f, 80f, 80f, 255) / 255);
+
+            // Buttons
+            ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(255, 41, 55, 200) / 255);
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new System.Numerics.Vector4(255, 41, 55, 150) / 255);
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, new System.Numerics.Vector4(255, 41, 55, 100) / 255);
+
+            // Docking and rezise
+            ImGui.PushStyleColor(ImGuiCol.DockingPreview, new System.Numerics.Vector4(200, 0, 0, 200) / 255);
+            ImGui.PushStyleColor(ImGuiCol.ResizeGrip, new System.Numerics.Vector4(217, 35, 35, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.ResizeGripHovered, new System.Numerics.Vector4(217, 35, 35, 200) / 255);
+            ImGui.PushStyleColor(ImGuiCol.ResizeGripActive, new System.Numerics.Vector4(217, 35, 35, 150) / 255);
+
+            // Sliders, buttons, etc
+            ImGui.PushStyleColor(ImGuiCol.SliderGrab, new System.Numerics.Vector4(120f, 120f, 120f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.SliderGrabActive, new System.Numerics.Vector4(180f, 180f, 180f, 255f) / 255);
 
             base.OnLoad();
         }
@@ -130,7 +216,8 @@ namespace GameEngine
             elapsedTime += args.Time;
             if (elapsedTime >= 1.0)
             {
-                fps = frameCount / elapsedTime; 
+                fps = frameCount / elapsedTime;
+                ms = 1000.0 / fps;
                 frameCount = 0;
                 elapsedTime = 0.0;
             } 
@@ -140,18 +227,37 @@ namespace GameEngine
 
         protected override void OnRenderFrame(FrameEventArgs args)
         {
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
+
             GL.ClearColor(new Color4(0.1f, 0.1f, 0.1f, 1));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
+            GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
             foreach (Mesh mesh in Meshes) mesh.Render(camera.position, camera.direction);
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
             light.Render(camera.position, camera.direction, pitch, yaw);
             light2.Render(camera.position, camera.direction, pitch, yaw);
 
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+
             _controller.Update(this, (float)args.Time);
-            //ImGui.SetNextWindowBgAlpha(0.0f);
-            //ImGui.Begin("EmptyWindow", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoInputs);
-            ImGui.GetForegroundDrawList().AddText(new System.Numerics.Vector2(10, 10), ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(255, 255, 255, 255)), "FPS: " + fps.ToString("0"));
+            ImGui.GetForegroundDrawList().AddText(
+                new SN.Vector2(20, 40),
+                ImGui.ColorConvertFloat4ToU32(new SN.Vector4(150, 150, 150, 255)),
+                GL.GetString(StringName.Renderer) + "\n" +
+                windowSize.X + " x " + windowSize.Y + "\n" +
+                "\n" +
+                fps.ToString("0") + " FPS" + "\n" +
+                ms.ToString("0.00") + " ms");
+            
+            ImGui.DockSpaceOverViewport();
+
+            ImGui.Begin("Viewport", ImGuiWindowFlags.NoTitleBar);
+            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
+            ImGui.Image((IntPtr)framebufferTexture, new SN.Vector2(ClientSize.X, ClientSize.Y - 40), new(0, 1), new(1, 0), SN.Vector4.One, SN.Vector4.Zero);
+            ImGui.End();
+
             _controller.Render();
 
             Context.SwapBuffers();
@@ -162,6 +268,16 @@ namespace GameEngine
         {
             GL.Viewport(0, 0, e.Width, e.Height);
             UpdateProjectionMatrix(e.Width, e.Height);
+
+            windowSize = new(e.Width, e.Height);
+
+            // Update size of framebuffer textures
+            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, e.Width, e.Height, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+
+            GL.BindTexture(TextureTarget.Texture2D, depthTexture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, e.Width, e.Height, 0, PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
+
             _controller.WindowResized(e.Width, e.Height);
 
             base.OnResize(e);
@@ -181,17 +297,17 @@ namespace GameEngine
             if (e.Key == Keys.D1)
             {
                 GL.Enable(EnableCap.CullFace);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                _polygonMode = PolygonMode.Fill;
             }
             if (e.Key == Keys.D2)
             {
                 GL.Disable(EnableCap.CullFace);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                _polygonMode = PolygonMode.Line;
             }
             if (e.Key == Keys.D3)
             {
                 GL.Disable(EnableCap.CullFace);
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Point);
+                _polygonMode = PolygonMode.Point;
             }
 
             if (e.Key == Keys.N) foreach (Mesh mesh in Meshes) mesh.smoothShading = true;

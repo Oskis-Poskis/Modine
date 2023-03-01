@@ -126,6 +126,15 @@ namespace GameEngine
             if (IsKeyDown(Keys.Space) | IsKeyDown(Keys.E)) camera.position += moveAmount * Vector3.UnitY;
             if (IsKeyDown(Keys.LeftShift) | IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
 
+            frameCount++;
+            elapsedTime += args.Time;
+            if (elapsedTime >= 1.0)
+            {
+                fps = frameCount / elapsedTime; 
+                frameCount = 0;
+                elapsedTime = 0.0;
+            } 
+
             base.OnUpdateFrame(args);
         }
 
@@ -134,23 +143,15 @@ namespace GameEngine
             GL.ClearColor(new Color4(0.1f, 0.1f, 0.1f, 1));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            frameCount++;
-            elapsedTime += args.Time;
-            if (elapsedTime >= 1.0)
-            {
-                fps = frameCount / elapsedTime;
-                this.Title = "FPS: " + (int)fps;
-                frameCount = 0;
-                elapsedTime = 0.0;
-            } 
-
             foreach (Mesh mesh in Meshes) mesh.Render(camera.position, camera.direction);
 
             light.Render(camera.position, camera.direction, pitch, yaw);
             light2.Render(camera.position, camera.direction, pitch, yaw);
 
             _controller.Update(this, (float)args.Time);
-            ImGui.ShowDemoWindow();
+            //ImGui.SetNextWindowBgAlpha(0.0f);
+            //ImGui.Begin("EmptyWindow", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoInputs);
+            ImGui.GetForegroundDrawList().AddText(new System.Numerics.Vector2(10, 10), ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(255, 255, 255, 255)), "FPS: " + fps.ToString("0"));
             _controller.Render();
 
             Context.SwapBuffers();
@@ -161,6 +162,7 @@ namespace GameEngine
         {
             GL.Viewport(0, 0, e.Width, e.Height);
             UpdateProjectionMatrix(e.Width, e.Height);
+            _controller.WindowResized(e.Width, e.Height);
 
             base.OnResize(e);
         }

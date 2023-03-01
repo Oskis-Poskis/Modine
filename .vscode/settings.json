@@ -4,6 +4,8 @@
     ".vscode": true,
     "bin": true,
     "obj": true,
-    "README.md": true
+    "README.md": true,
+    "Gymnasiearbete.csproj": true,
+    "imgui.ini": true
   }
 }

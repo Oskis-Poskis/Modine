@@ -53,7 +53,8 @@ namespace GameEngine.ImGUI
             IntPtr context = ImGui.CreateContext();
             ImGui.SetCurrentContext(context);
             var io = ImGui.GetIO();
-            io.Fonts.AddFontDefault();
+            //io.Fonts.AddFontDefault();
+            io.Fonts.AddFontFromFileTTF("Fonts/Rubik-Medium.ttf", 16);
 
             io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
 

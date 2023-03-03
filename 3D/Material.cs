@@ -7,7 +7,7 @@ namespace GameEngine.Rendering
 {
     public class Material
     {
-        public Vector3 Color { get; set; } = new Vector3(1.0f, 1.0f, 0.0f);
+        public Vector3 Color { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
         public float Metallic { get; set; } = 0.0f;
         public float Roughness { get; set; } = 0.5f;
 
@@ -21,9 +21,9 @@ namespace GameEngine.Rendering
         public void SetShaderUniforms(Shader shader)
         {
             shader.Use();
-            shader.SetVector3("cColor", Color);
-            //shader.SetFloat("metallic", Metallic);
-            //shader.SetFloat("roughness", Roughness);
+            shader.SetVector3("albedo", Color);
+            shader.SetFloat("metallic", Metallic);
+            shader.SetFloat("roughness", Roughness);
         }
     }
 }

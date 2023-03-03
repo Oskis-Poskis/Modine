@@ -43,6 +43,7 @@ namespace GameEngine
         int frameCount = 0;
         double elapsedTime = 0.0, fps = 0.0, ms;
 
+        Material _material;
         public Shader defaultShader;
         public Shader lightShader;
         Matrix4 projectionMatrix;
@@ -59,6 +60,7 @@ namespace GameEngine
         Light light2;
 
         PolygonMode _polygonMode = PolygonMode.Fill;
+        private bool vsyncOn = true;
 
         private ImGuiController _controller;
         int FBO;
@@ -111,9 +113,9 @@ namespace GameEngine
             ModelImporter.LoadModel("Importing/floor.fbx", out vertexData2, out indices2);
 
             camera = new Camera(new(0, 1, 2), -Vector3.UnitZ, 10);
-            Material material = new(new(1, 1, 1), 0, 0.2f);
+            _material = new(new(1, 0.5f, 0), 0, 0.2f);
 
-            suzanne = new Mesh(vertexData, indices, defaultShader, true, material);
+            suzanne = new Mesh(vertexData, indices, defaultShader, true, _material);
             suzanne.position = new(0, 2, 0);
             suzanne.rotation = new(-90, 0, 0);
             suzanne.scale = new(1);
@@ -162,7 +164,7 @@ namespace GameEngine
 
             frameCount++;
             elapsedTime += args.Time;
-            if (elapsedTime >= 1.0)
+            if (elapsedTime >= 0.1f)
             {
                 fps = frameCount / elapsedTime;
                 ms = 1000.0 / fps;
@@ -221,6 +223,9 @@ namespace GameEngine
             ImGUICommands.Header();
             ImGUICommands.SmallStats(viewportSize, viewportPos, fps, ms);
             ImGUICommands.Viewport(framebufferTexture, out viewportSize, out viewportPos);
+            ImGUICommands.MaterialEditor(ref _material);
+            ImGUICommands.Settings(ref vsyncOn);
+            VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
 
             _controller.Render();
 

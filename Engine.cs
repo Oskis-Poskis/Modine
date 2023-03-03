@@ -31,9 +31,11 @@ namespace GameEngine
         {
             CenterWindow();
             windowSize = this.Size;
+            previousWindowSize = windowSize;
         }
 
         private Vector2i windowSize;
+        private Vector2i previousWindowSize;
         private float pitch = 0.5f, yaw = 0.0f;
         float sensitivity = 0.01f;
 
@@ -70,9 +72,10 @@ namespace GameEngine
             GL.Enable(EnableCap.CullFace);
             GL.PointSize(5);
 
-
             FBO = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
+
+            VSync = VSyncMode.Adaptive;
 
             // Color Texture
             framebufferTexture = GL.GenTexture();
@@ -95,9 +98,6 @@ namespace GameEngine
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
             // Attach Depth to FBO
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, depthTexture, 0);
-
-
-
 
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1280 / 768, 0.1f, 100);
 
@@ -127,58 +127,7 @@ namespace GameEngine
             light2.position = new(-2, 7, -6);
 
             _controller = new ImGuiController(windowSize.X, windowSize.Y);
-
-            ImGui.GetStyle().FrameRounding = 6;
-            ImGui.GetStyle().FrameBorderSize = 1;
-            ImGui.GetStyle().TabRounding = 2;
-            ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;
-
-            // Background color
-            ImGui.PushStyleColor(ImGuiCol.WindowBg, new System.Numerics.Vector4(22f, 22f, 22f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.FrameBg, new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new System.Numerics.Vector4(60f, 60f, 60f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new System.Numerics.Vector4(80f, 80f, 80f, 255f) / 255);
-
-            // Popup BG
-            ImGui.PushStyleColor(ImGuiCol.ModalWindowDimBg, new System.Numerics.Vector4(30f, 30f, 30f, 150f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.TextDisabled, new System.Numerics.Vector4(150f, 150f, 150f, 255f) / 255);
-
-            // Titles
-            ImGui.PushStyleColor(ImGuiCol.TitleBgActive, new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.TitleBg, new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.TitleBgCollapsed, new System.Numerics.Vector4(15f, 15f, 15f, 255f) / 255);
-
-            // Tabs
-            ImGui.PushStyleColor(ImGuiCol.Tab, new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.TabActive, new System.Numerics.Vector4(35f, 35f, 35f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.TabUnfocused, new System.Numerics.Vector4(16f, 16f, 16f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.TabUnfocusedActive, new System.Numerics.Vector4(35f, 35f, 35f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.TabHovered, new System.Numerics.Vector4(80f, 80f, 80f, 255f) / 255);
-            
-            // Header
-            ImGui.PushStyleColor(ImGuiCol.Header, new System.Numerics.Vector4(0f, 153f, 76f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new System.Numerics.Vector4(0f, 153f, 76f, 180f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(0f, 153f, 76f, 255f) / 255);
-
-            // Rezising bar
-            ImGui.PushStyleColor(ImGuiCol.Separator, new System.Numerics.Vector4(40f, 40f, 40f, 255) / 255);
-            ImGui.PushStyleColor(ImGuiCol.SeparatorHovered, new System.Numerics.Vector4(60f, 60f, 60f, 255) / 255);
-            ImGui.PushStyleColor(ImGuiCol.SeparatorActive, new System.Numerics.Vector4(80f, 80f, 80f, 255) / 255);
-
-            // Buttons
-            ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(255, 41, 55, 200) / 255);
-            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new System.Numerics.Vector4(255, 41, 55, 150) / 255);
-            ImGui.PushStyleColor(ImGuiCol.ButtonActive, new System.Numerics.Vector4(255, 41, 55, 100) / 255);
-
-            // Docking and rezise
-            ImGui.PushStyleColor(ImGuiCol.DockingPreview, new System.Numerics.Vector4(200, 0, 0, 200) / 255);
-            ImGui.PushStyleColor(ImGuiCol.ResizeGrip, new System.Numerics.Vector4(217, 35, 35, 255) / 255);
-            ImGui.PushStyleColor(ImGuiCol.ResizeGripHovered, new System.Numerics.Vector4(217, 35, 35, 200) / 255);
-            ImGui.PushStyleColor(ImGuiCol.ResizeGripActive, new System.Numerics.Vector4(217, 35, 35, 150) / 255);
-
-            // Sliders, buttons, etc
-            ImGui.PushStyleColor(ImGuiCol.SliderGrab, new System.Numerics.Vector4(120f, 120f, 120f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.SliderGrabActive, new System.Numerics.Vector4(180f, 180f, 180f, 255f) / 255);
+            ImGUICommands.LoadTheme();
 
             base.OnLoad();
         }
@@ -227,6 +176,7 @@ namespace GameEngine
 
         protected override void OnRenderFrame(FrameEventArgs args)
         {
+            GL.Viewport(0, 0, windowSize.X, windowSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
 
             GL.ClearColor(new Color4(0.1f, 0.1f, 0.1f, 1));
@@ -239,27 +189,29 @@ namespace GameEngine
             light.Render(camera.position, camera.direction, pitch, yaw);
             light2.Render(camera.position, camera.direction, pitch, yaw);
 
+            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
+            if (windowSize != previousWindowSize)
+            {
+                GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, windowSize.X, windowSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+                GL.BindTexture(TextureTarget.Texture2D, depthTexture);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, windowSize.X, windowSize.Y, 0, PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
+
+                UpdateProjectionMatrix(windowSize.X, windowSize.Y);
+                previousWindowSize = windowSize;
+            }
+
             _controller.Update(this, (float)args.Time);
-            ImGui.GetForegroundDrawList().AddText(
-                new SN.Vector2(20, 40),
-                ImGui.ColorConvertFloat4ToU32(new SN.Vector4(150, 150, 150, 255)),
-                GL.GetString(StringName.Renderer) + "\n" +
-                windowSize.X + " x " + windowSize.Y + "\n" +
-                "\n" +
-                fps.ToString("0") + " FPS" + "\n" +
-                ms.ToString("0.00") + " ms");
-            
             ImGui.DockSpaceOverViewport();
 
-            ImGui.Begin("Viewport", ImGuiWindowFlags.NoTitleBar);
-            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
-            ImGui.Image((IntPtr)framebufferTexture, new SN.Vector2(ClientSize.X, ClientSize.Y - 40), new(0, 1), new(1, 0), SN.Vector4.One, SN.Vector4.Zero);
-
-            ImGui.GetWindowContentRegionMin();
-            ImGui.GetWindowContentRegionMax();
+            ImGUICommands.SmallStats(windowSize, fps, ms);
+            ImGUICommands.Viewport(framebufferTexture);
             
+            windowSize = new(
+                Convert.ToInt32(MathHelper.Abs(ImGui.GetWindowContentRegionMin().X - ImGui.GetWindowContentRegionMax().X)),
+                Convert.ToInt32(MathHelper.Abs(ImGui.GetWindowContentRegionMin().Y - ImGui.GetWindowContentRegionMax().Y)));
 
             ImGui.End();
 
@@ -271,18 +223,6 @@ namespace GameEngine
 
         protected override void OnResize(ResizeEventArgs e)
         {
-            windowSize = new(e.Width, e.Height);
-
-            GL.Viewport(0, 0, e.Width, e.Height);
-            UpdateProjectionMatrix(e.Width, e.Height);
-
-            // Update size of framebuffer textures
-            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, e.Width, e.Height, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
-
-            GL.BindTexture(TextureTarget.Texture2D, depthTexture);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, e.Width, e.Height, 0, PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
-
             _controller.WindowResized(e.Width, e.Height);
 
             base.OnResize(e);

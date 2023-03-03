@@ -256,6 +256,11 @@ namespace GameEngine
             ImGui.Begin("Viewport", ImGuiWindowFlags.NoTitleBar);
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
             ImGui.Image((IntPtr)framebufferTexture, new SN.Vector2(ClientSize.X, ClientSize.Y - 40), new(0, 1), new(1, 0), SN.Vector4.One, SN.Vector4.Zero);
+
+            ImGui.GetWindowContentRegionMin();
+            ImGui.GetWindowContentRegionMax();
+            
+
             ImGui.End();
 
             _controller.Render();
@@ -266,10 +271,10 @@ namespace GameEngine
 
         protected override void OnResize(ResizeEventArgs e)
         {
+            windowSize = new(e.Width, e.Height);
+
             GL.Viewport(0, 0, e.Width, e.Height);
             UpdateProjectionMatrix(e.Width, e.Height);
-
-            windowSize = new(e.Width, e.Height);
 
             // Update size of framebuffer textures
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);

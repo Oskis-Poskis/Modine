@@ -102,7 +102,7 @@ void main()
 
     vec3 Lo = vec3(0.0);
 
-    Lo += CalcDirectionalLight(vec3(-1, 1, 1), V, N, F0, albedo, roughness, metallic);
+    Lo += CalcDirectionalLight(vec3(1, 1, 1), V, N, F0, albedo, roughness, metallic);
 
     vec3 ambient = 0.1 * albedo;
     vec3 color = ambient + Lo;

@@ -3,6 +3,8 @@ using ImGuiNET;
 
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using GameEngine.Rendering;
+using OpenTK.Windowing.Common;
 
 namespace GameEngine.ImGUI
 {
@@ -46,8 +48,25 @@ namespace GameEngine.ImGUI
                 Convert.ToInt32(ImGui.GetWindowPos().X),
                 Convert.ToInt32(ImGui.GetWindowPos().Y));
             ImGui.End();
+        }
 
-            ImGui.Begin("Test");
+        public static void MaterialEditor(ref Material _material)
+        {
+            ImGui.Begin("Material Editor");
+
+            SN.Vector3 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z);
+            ImGui.ColorPicker3("Albedo", ref color, ImGuiColorEditFlags.NoInputs);
+            _material.Color = new(color.X, color.Y, color.Z);
+
+            ImGui.End();
+        }
+
+        public static void Settings(ref bool vsyncOn)
+        {
+            ImGui.Begin("Settings");
+
+            ImGui.Checkbox("VSync", ref vsyncOn);
+            
             ImGui.End();
         }
 
@@ -122,7 +141,8 @@ namespace GameEngine.ImGUI
             ImGui.PushStyleColor(ImGuiCol.ButtonActive, new System.Numerics.Vector4(255, 41, 55, 100) / 255);
 
             // Docking and rezise
-            ImGui.PushStyleColor(ImGuiCol.DockingPreview, new System.Numerics.Vector4(30, 140, 120, 255) / 255);
+            // ImGui.PushStyleColor(ImGuiCol.DockingPreview, new System.Numerics.Vector4(30, 140, 120, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.DockingPreview, new System.Numerics.Vector4(100, 100, 100, 255) / 255);
             ImGui.PushStyleColor(ImGuiCol.ResizeGrip, new System.Numerics.Vector4(217, 35, 35, 255) / 255);
             ImGui.PushStyleColor(ImGuiCol.ResizeGripHovered, new System.Numerics.Vector4(217, 35, 35, 200) / 255);
             ImGui.PushStyleColor(ImGuiCol.ResizeGripActive, new System.Numerics.Vector4(217, 35, 35, 150) / 255);

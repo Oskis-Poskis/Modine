@@ -30,12 +30,13 @@ namespace GameEngine
             })
         {
             CenterWindow();
-            windowSize = this.Size;
-            previousWindowSize = windowSize;
+            viewportSize = this.Size;
+            previousViewportSize = viewportSize;
         }
 
-        private Vector2i windowSize;
-        private Vector2i previousWindowSize;
+        private Vector2i viewportSize;
+        private Vector2i previousViewportSize;
+        private Vector2i viewportPos;
         private float pitch = 0.5f, yaw = 0.0f;
         float sensitivity = 0.01f;
 
@@ -52,7 +53,7 @@ namespace GameEngine
         int[] indices2;
 
         Camera camera;
-        Mesh suzanne, floor;
+        Mesh suzanne;
         List<Mesh> Meshes = new List<Mesh>();
         Light light;
         Light light2;
@@ -66,6 +67,8 @@ namespace GameEngine
 
         protected override void OnLoad()
         {
+            base.OnLoad();
+
             MakeCurrent();
             IsVisible = true;
             GL.Enable(EnableCap.DepthTest);
@@ -80,7 +83,7 @@ namespace GameEngine
             // Color Texture
             framebufferTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, (int)windowSize.X, (int)windowSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, (int)viewportSize.X, (int)viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
@@ -91,7 +94,7 @@ namespace GameEngine
             // Depth Texture
             depthTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, depthTexture);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, (int)windowSize.X, (int)windowSize.X, 0, PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
@@ -108,32 +111,28 @@ namespace GameEngine
             ModelImporter.LoadModel("Importing/floor.fbx", out vertexData2, out indices2);
 
             camera = new Camera(new(0, 1, 2), -Vector3.UnitZ, 10);
+            Material material;
 
-            suzanne = new Mesh(vertexData, indices, defaultShader, true);
+            suzanne = new Mesh(vertexData, indices, defaultShader, true, material);
             suzanne.position = new(0, 2, 0);
             suzanne.rotation = new(-90, 0, 0);
             suzanne.scale = new(1);
 
-            floor = new Mesh(vertexData2, indices2, defaultShader, true);
-            floor.position = new(0, 0, 0);
-            floor.rotation = new(-90, 0, 0);
-
             Meshes.Add(suzanne);
-            Meshes.Add(floor);
 
             light = new Light(lightShader);
             light.position = new(3, 4, -3);
             light2 = new Light(lightShader);
             light2.position = new(-2, 7, -6);
 
-            _controller = new ImGuiController(windowSize.X, windowSize.Y);
+            _controller = new ImGuiController(viewportSize.X, viewportSize.Y);
             ImGUICommands.LoadTheme();
-
-            base.OnLoad();
         }
 
         protected override void OnUpdateFrame(FrameEventArgs args)
         {
+            base.OnUpdateFrame(args);
+
             if (IsMouseButtonDown(MouseButton.Button2))
             {
                 CursorState = CursorState.Grabbed;
@@ -169,17 +168,29 @@ namespace GameEngine
                 ms = 1000.0 / fps;
                 frameCount = 0;
                 elapsedTime = 0.0;
-            } 
-
-            base.OnUpdateFrame(args);
+            }
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
         {
-            GL.Viewport(0, 0, windowSize.X, windowSize.Y);
+            base.OnRenderFrame(args);
+            RenderScene(args);
+        }
+
+        protected override void OnResize(ResizeEventArgs e)
+        {
+            base.OnResize(e);
+            //RenderScene();
+
+            _controller.WindowResized(e.Width, e.Height);
+        }
+
+        public void RenderScene(FrameEventArgs args)
+        {
+            GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
 
-            GL.ClearColor(new Color4(0.1f, 0.1f, 0.1f, 1));
+            GL.ClearColor(new Color4(0.05f, 0.05f, 0.05f, 1));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
@@ -192,40 +203,35 @@ namespace GameEngine
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
-            if (windowSize != previousWindowSize)
+            if (viewportSize != previousViewportSize)
             {
                 GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, windowSize.X, windowSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
                 GL.BindTexture(TextureTarget.Texture2D, depthTexture);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, windowSize.X, windowSize.Y, 0, PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, viewportSize.X, viewportSize.Y, 0, PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
 
-                UpdateProjectionMatrix(windowSize.X, windowSize.Y);
-                previousWindowSize = windowSize;
+                UpdateProjectionMatrix(viewportSize.X, viewportSize.Y);
+                previousViewportSize = viewportSize;
             }
 
             _controller.Update(this, (float)args.Time);
             ImGui.DockSpaceOverViewport();
 
-            ImGUICommands.SmallStats(windowSize, fps, ms);
-            ImGUICommands.Viewport(framebufferTexture);
-            
-            windowSize = new(
-                Convert.ToInt32(MathHelper.Abs(ImGui.GetWindowContentRegionMin().X - ImGui.GetWindowContentRegionMax().X)),
-                Convert.ToInt32(MathHelper.Abs(ImGui.GetWindowContentRegionMin().Y - ImGui.GetWindowContentRegionMax().Y)));
-
-            ImGui.End();
+            ImGUICommands.Header();
+            ImGUICommands.SmallStats(viewportSize, viewportPos, fps, ms);
+            ImGUICommands.Viewport(framebufferTexture, out viewportSize, out viewportPos);
 
             _controller.Render();
 
-            Context.SwapBuffers();
-            base.OnRenderFrame(args);
+            SwapBuffers();
         }
 
-        protected override void OnResize(ResizeEventArgs e)
+        public void Focus()
         {
-            _controller.WindowResized(e.Width, e.Height);
+            Vector3 targetPosition = suzanne.position;
+            Vector3 direction = Vector3.Normalize(targetPosition - camera.position);
 
-            base.OnResize(e);
+            camera.direction = direction;
         }
 
         public void UpdateProjectionMatrix(int width, int height)
@@ -238,6 +244,10 @@ namespace GameEngine
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
         {
+            base.OnKeyDown(e);
+
+            if (e.Key == Keys.F) Focus();
+
             if (e.Key == Keys.Escape) Close();
             if (e.Key == Keys.D1)
             {
@@ -257,8 +267,6 @@ namespace GameEngine
 
             if (e.Key == Keys.N) foreach (Mesh mesh in Meshes) mesh.smoothShading = true;
             if (e.Key == Keys.M) foreach (Mesh mesh in Meshes) mesh.smoothShading = false;
-
-            base.OnKeyDown(e);
         }
     }
 }

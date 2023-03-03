@@ -59,6 +59,8 @@ namespace GameEngine.ImGUI
             io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
             io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
             io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+            //io.MouseDrawCursor = true;
+            //io.ConfigWindowsResizeFromEdges = true;
 
             CreateDeviceResources();
             SetKeyMappings();

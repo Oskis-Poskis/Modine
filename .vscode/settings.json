@@ -1,4 +1,11 @@
 {
   "files.autoSave": "onFocusChange",
-  "files.exclude": {}
+  "files.exclude": {
+    "imgui.ini": true,
+    "README.md": true,
+    "Gymnasiearbete.csproj": true,
+    "obj": true,
+    "bin": true,
+    ".vscode": true
+  }
 }

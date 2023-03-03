@@ -24,13 +24,14 @@ namespace GameEngine.Rendering
         private int eboHandle;
         private int vertexCount;
         public bool smoothShading;
+        public Material Material { get; set; }
         private Shader meshShader;
 
         public Vector3 position = Vector3.Zero;
         public Vector3 rotation = Vector3.Zero;
         public Vector3 scale = Vector3.One;
 
-        public Mesh(VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading)
+        public Mesh(VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading, Material material)
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -75,6 +76,7 @@ namespace GameEngine.Rendering
             meshShader.SetMatrix4("model", model);
             meshShader.SetMatrix4("view", viewMatrix);
             meshShader.SetInt("smoothShading", Convert.ToInt32(smoothShading));
+            Material.SetShaderUniforms(meshShader);
 
             GL.BindVertexArray(vaoHandle);
 

@@ -111,7 +111,7 @@ namespace GameEngine
             ModelImporter.LoadModel("Importing/floor.fbx", out vertexData2, out indices2);
 
             camera = new Camera(new(0, 1, 2), -Vector3.UnitZ, 10);
-            Material material;
+            Material material = new(new(1, 1, 1), 0, 0.2f);
 
             suzanne = new Mesh(vertexData, indices, defaultShader, true, material);
             suzanne.position = new(0, 2, 0);
@@ -194,6 +194,7 @@ namespace GameEngine
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
+            defaultShader.SetVector3("viewPos", camera.position);
             foreach (Mesh mesh in Meshes) mesh.Render(camera.position, camera.direction);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 

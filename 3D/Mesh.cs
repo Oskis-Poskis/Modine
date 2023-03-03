@@ -24,7 +24,7 @@ namespace GameEngine.Rendering
         private int eboHandle;
         private int vertexCount;
         public bool smoothShading;
-        public Material Material { get; set; }
+        public Material Material;
         private Shader meshShader;
 
         public Vector3 position = Vector3.Zero;
@@ -52,6 +52,8 @@ namespace GameEngine.Rendering
             meshShader = shader;
             vertexCount = indices.Length;
             smoothShading = SmoothShading;
+
+            Material = material;
 
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);

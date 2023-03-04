@@ -91,7 +91,7 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
     return (kD * alb / PI + specular) * radiance * NDotL;
 }
 
-float ShadowCalculation(vec4 fragPosLightSpace)
+float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 {
     // perform perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -99,7 +99,8 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 
     float closestDepth = texture(shadowMap, projCoords.xy).r;
     float currentDepth = projCoords.z;
-    float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.0075);
+    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;  
 
     return shadow;
 }
@@ -120,14 +121,16 @@ void main()
 
     Lo += CalcDirectionalLight(vec3(1, 1, 1), V, N, F0, albedo, roughness, metallic);
 
-    vec3 ambient = 0.1 * albedo;
+    float ambient = 0.1;
     vec3 color = ambient + Lo;
 
-    float shadow = ShadowCalculation(fragPosLightSpace); 
-    color *= 1 - shadow;
+    
 
     vec3 result = vec3(1) - exp(-color);
     result = pow(result, vec3(1 / 2.2));
+
+    float shadow = ShadowCalculation(fragPosLightSpace, N, vec3(1, 1, 1)); 
+    result = result * (1 - shadow * 0.9);
 
     fragColor = vec4(result, 1);
 }

@@ -126,8 +126,8 @@ namespace GameEngine
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, shadowRes, shadowRes, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
             
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, depthMap, 0);
@@ -254,14 +254,12 @@ namespace GameEngine
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
             GL.Clear(ClearBufferMask.DepthBufferBit);
 
+            GL.CullFace(CullFaceMode.Front);
             foreach (Mesh mesh in Meshes) mesh.meshShader = shadowShader;
             renderShadowMap = true;
             UpdateMatrices();
 
             foreach (Mesh mesh in Meshes) mesh.Render();
-
-            renderShadowMap = false;
-            UpdateMatrices();
 
             // Render normal scene
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
@@ -271,8 +269,11 @@ namespace GameEngine
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
+            GL.CullFace(CullFaceMode.Back);
             foreach (Mesh mesh in Meshes) mesh.meshShader = defaultShader;
             defaultShader.SetVector3("viewPos", camera.position);
+            renderShadowMap = false;
+            UpdateMatrices();
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, depthMap);
@@ -324,12 +325,11 @@ namespace GameEngine
 
         public void UpdateMatrices()
         {
-            Matrix4 lightSpaceMatrix = Matrix4.LookAt(new(-2, 4, -1), new(0, 0, 0), Vector3.UnitY) * Matrix4.CreateOrthographic(shadowRes, shadowRes, 1, 7.5f);
+            float aspectRatio = (float)viewportSize.X / viewportSize.Y;
+            Matrix4 lightSpaceMatrix = Matrix4.LookAt(new(10, 10, 10), new(0, 0, 0), Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-10, 10, -10, 10, 0.1f, 100);
             
             if (!renderShadowMap)
             {
-                float aspectRatio = (float)viewportSize.X / viewportSize.Y;
-
                 projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, 0.1f, 100);
                 viewMatrix = Matrix4.LookAt(camera.position, camera.position + camera.direction, Vector3.UnitY);
                 defaultShader.SetMatrix4("projection", projectionMatrix);

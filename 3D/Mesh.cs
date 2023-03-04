@@ -26,7 +26,7 @@ namespace GameEngine.Rendering
         public bool smoothShading;
         public string name;
         public Material Material;
-        private Shader meshShader;
+        public Shader meshShader;
 
         public Vector3 position = Vector3.Zero;
         public Vector3 rotation = Vector3.Zero;
@@ -63,13 +63,9 @@ namespace GameEngine.Rendering
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
         }
 
-        Matrix4 viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
-
-        public void Render(Vector3 cameraPosition, Vector3 direction)
+        public void Render()
         {   
             meshShader.Use();
-
-            viewMatrix = Matrix4.LookAt(cameraPosition, cameraPosition + direction, Vector3.UnitY);
 
             Matrix4 model = Matrix4.Identity;
             model *= Matrix4.CreateScale(scale);
@@ -79,7 +75,6 @@ namespace GameEngine.Rendering
             model *= Matrix4.CreateTranslation(position);
 
             meshShader.SetMatrix4("model", model);
-            meshShader.SetMatrix4("view", viewMatrix);
 
             GL.BindVertexArray(vaoHandle);
 

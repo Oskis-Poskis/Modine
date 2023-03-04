@@ -2,12 +2,15 @@
 
 in vec3 normals;
 in vec3 fragPos;
+in vec4 fragPosLightSpace;
 out vec4 fragColor;
 
 uniform vec3 albedo;
 uniform float metallic;
 uniform float roughness;
 uniform bool smoothShading;
+
+uniform sampler2D shadowMap;
 
 uniform vec3 viewPos;
 
@@ -19,7 +22,7 @@ uniform highp float NoiseAmount;
 highp float NoiseCalc = NoiseAmount / 255;
 highp float random(highp vec2 coords)
 {
-   return fract(sin(dot(coords.xy, vec2(12.9898,78.233))) * 43758.5453);
+   return fract(sin(dot(coords.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
 const float PI = 3.14159265359;
@@ -88,6 +91,19 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
     return (kD * alb / PI + specular) * radiance * NDotL;
 }
 
+float ShadowCalculation(vec4 fragPosLightSpace)
+{
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
+}
+
 void main()
 {
     vec3 normal;
@@ -106,6 +122,9 @@ void main()
 
     vec3 ambient = 0.1 * albedo;
     vec3 color = ambient + Lo;
+
+    float shadow = ShadowCalculation(fragPosLightSpace); 
+    color *= 1 - shadow;
 
     vec3 result = vec3(1) - exp(-color);
     result = pow(result, vec3(1 / 2.2));

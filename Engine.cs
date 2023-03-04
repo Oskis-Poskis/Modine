@@ -1,5 +1,4 @@
-﻿using SN = System.Numerics;
-using OpenTK.Windowing.Common;
+﻿using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Graphics.OpenGL4;
@@ -48,15 +47,19 @@ namespace GameEngine
         Material _material;
         public Shader defaultShader;
         public Shader lightShader;
+        public Shader shadowShader;
         Matrix4 projectionMatrix;
+        Matrix4 viewMatrix;
 
         VertexData[] vertexData;
         int[] indices;
+        VertexData[] vertexData2;
+        int[] indices2;
         int triangleCount = 0;
 
         Camera camera;
         Mesh suzanne;
-        Mesh suzanne2;
+        Mesh floor;
         List<Mesh> Meshes = new List<Mesh>();
         int selectedMesh = 0;
         Light light;
@@ -70,6 +73,12 @@ namespace GameEngine
         int framebufferTexture;
         int depthTexture;
 
+        int depthMapFBO;
+        int depthMap;
+        int shadowRes = 2048;
+
+        bool renderShadowMap = false;
+
         protected override void OnLoad()
         {
             base.OnLoad();
@@ -78,6 +87,7 @@ namespace GameEngine
             IsVisible = true;
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.CullFace);
+            GL.LineWidth(2);
             GL.PointSize(5);
 
             FBO = GL.GenFramebuffer();
@@ -107,42 +117,68 @@ namespace GameEngine
             // Attach Depth to FBO
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, depthTexture, 0);
 
+
+
+            depthMapFBO = GL.GenFramebuffer();
+
+            depthMap = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, depthMap);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, shadowRes, shadowRes, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+            
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, depthMap, 0);
+            GL.DrawBuffer(DrawBufferMode.None);
+            GL.ReadBuffer(ReadBufferMode.None);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+
+
+
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1280 / 768, 0.1f, 100);
+            viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
+            //projectionMatrix = Matrix4.CreateOrthographic(1280, 778, 0.1f, 100);
 
             defaultShader = new Shader("Shaders/mesh.vert", "Shaders/mesh.frag");
             lightShader = new Shader("Shaders/light.vert", "Shaders/light.frag");
-
-            ModelImporter.LoadModel("Importing/Suzanne.fbx", out vertexData, out indices);
+            shadowShader = new Shader("Shaders/shadow.vert", "Shaders/shadow.frag");
 
             camera = new Camera(new(0, 1, 2), -Vector3.UnitZ, 10);
-            _material = new(new(1, 0.5f, 0), 0, 0.2f);
+            _material = new(new(1, 1, 1), 0, 0.2f);
             _material.SetShaderUniforms(defaultShader);
 
+            ModelImporter.LoadModel("Importing/Suzanne.fbx", out vertexData, out indices);
             suzanne = new Mesh("Suzanne", vertexData, indices, defaultShader, true, _material);
             suzanne.position = new(0, 2, 0);
             suzanne.rotation = new(-90, 0, 0);
 
-            suzanne2 = new Mesh("Suzanne2", vertexData, indices, defaultShader, true, _material);
-            suzanne2.position = new(-3, 3, 0);
-            suzanne2.rotation = new(-90, 45, 0);
+            ModelImporter.LoadModel("Importing/Floor.fbx", out vertexData2, out indices2);
+            floor = new Mesh("Floor", vertexData2, indices2, defaultShader, true, _material);
+            floor.position = new(0, 0, 0);
+            floor.rotation = new(-90, 0, 0);
 
-            //Meshes.Add(suzanne);
-            //Meshes.Add(suzanne2);
+            Meshes.Add(suzanne);
+            Meshes.Add(floor);
 
-            for (int z = 0; z < 10; z++)
+            /*
+            int amount = 5;
+            for (int z = 0; z < amount; z++)
             {
-                for (int y = 0; y < 10; y++)
+                for (int y = 0; y < amount; y++)
                 {
-                    for (int x = 0; x < 10; x++)
+                    for (int x = 0; x < amount; x++)
                     {
-                        int index = z * 100 + y * 10 + x;
+                        int index = z * amount * amount + y * amount + x;
                         Meshes.Add(new Mesh("Monkey_" + index, vertexData, indices, defaultShader, true, _material));
                         Meshes[index].position = new Vector3(x * 3, y * 3, z * -3);
                         Meshes[index].rotation = new Vector3(-90, 0, 0);
                     }
                 }
             }
-
+            */
+            
             foreach (Mesh mesh in Meshes) triangleCount += mesh.vertexCount / 3;
 
             light = new Light(lightShader);
@@ -200,28 +236,47 @@ namespace GameEngine
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             base.OnRenderFrame(args);
-            RenderScene(args);
+            RenderScene(args.Time);
         }
 
         protected override void OnResize(ResizeEventArgs e)
         {
             base.OnResize(e);
-            //RenderScene();
+            RenderScene(0.017f);
 
             _controller.WindowResized(e.Width, e.Height);
         }
 
-        public void RenderScene(FrameEventArgs args)
+        public void RenderScene(double time)
         {
-            GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
+            // Render shadow scene
+            GL.Viewport(0, 0, shadowRes, shadowRes);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
+            GL.Clear(ClearBufferMask.DepthBufferBit);
+
+            foreach (Mesh mesh in Meshes) mesh.meshShader = shadowShader;
+            renderShadowMap = true;
+            UpdateMatrices();
+
+            foreach (Mesh mesh in Meshes) mesh.Render();
+
+            renderShadowMap = false;
+            UpdateMatrices();
+
+            // Render normal scene
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
 
+            GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
             GL.ClearColor(new Color4(0.05f, 0.05f, 0.05f, 1));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
+            foreach (Mesh mesh in Meshes) mesh.meshShader = defaultShader;
             defaultShader.SetVector3("viewPos", camera.position);
-            foreach (Mesh mesh in Meshes) mesh.Render(camera.position, camera.direction);
+
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, depthMap);
+            foreach (Mesh mesh in Meshes) mesh.Render();
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
             light.Render(camera.position, camera.direction, pitch, yaw);
@@ -237,16 +292,16 @@ namespace GameEngine
                 GL.BindTexture(TextureTarget.Texture2D, depthTexture);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, viewportSize.X, viewportSize.Y, 0, PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
 
-                UpdateProjectionMatrix(viewportSize.X, viewportSize.Y);
+                UpdateMatrices();
                 previousViewportSize = viewportSize;
             }
 
-            _controller.Update(this, (float)args.Time);
+            _controller.Update(this, (float)time);
             ImGui.DockSpaceOverViewport();
 
             ImGUICommands.Header();
-            ImGUICommands.SmallStats(viewportSize, viewportPos, fps, ms, Meshes.Count, triangleCount);
-            ImGUICommands.Viewport(framebufferTexture, out viewportSize, out viewportPos, out viewportHovered);
+            ImGUICommands.SmallStats(viewportSize, viewportPos, yaw, pitch, fps, ms, Meshes.Count, triangleCount);
+            ImGUICommands.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
             ImGUICommands.MaterialEditor(ref _material, ref defaultShader, ref suzanne);
             ImGUICommands.Outliner(Meshes, ref selectedMesh);
             //ImGui.ShowDemoWindow();
@@ -267,12 +322,27 @@ namespace GameEngine
             camera.direction = direction;
         }
 
-        public void UpdateProjectionMatrix(int width, int height)
+        public void UpdateMatrices()
         {
-            float aspectRatio = (float)width / height;
-            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, 0.1f, 100);
-            defaultShader.SetMatrix4("projection", projectionMatrix);
-            lightShader.SetMatrix4("projection", projectionMatrix);
+            Matrix4 lightSpaceMatrix = Matrix4.LookAt(new(-2, 4, -1), new(0, 0, 0), Vector3.UnitY) * Matrix4.CreateOrthographic(shadowRes, shadowRes, 1, 7.5f);
+            
+            if (!renderShadowMap)
+            {
+                float aspectRatio = (float)viewportSize.X / viewportSize.Y;
+
+                projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, 0.1f, 100);
+                viewMatrix = Matrix4.LookAt(camera.position, camera.position + camera.direction, Vector3.UnitY);
+                defaultShader.SetMatrix4("projection", projectionMatrix);
+                defaultShader.SetMatrix4("view", viewMatrix);
+                defaultShader.SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
+                lightShader.SetMatrix4("projection", projectionMatrix);
+                lightShader.SetMatrix4("view", viewMatrix);
+            }
+            else
+            {
+                shadowShader.SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
+            }
+
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
@@ -299,9 +369,6 @@ namespace GameEngine
                     GL.Disable(EnableCap.CullFace);
                     _polygonMode = PolygonMode.Point;
                 }
-
-                if (e.Key == Keys.N) foreach (Mesh mesh in Meshes) mesh.smoothShading = true;
-                if (e.Key == Keys.M) foreach (Mesh mesh in Meshes) mesh.smoothShading = false;
             }
         }
 

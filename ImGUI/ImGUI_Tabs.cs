@@ -4,22 +4,21 @@ using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using GameEngine.Rendering;
-using OpenTK.Windowing.Common;
 using GameEngine.Common;
 
 namespace GameEngine.ImGUI
 {
     public static class ImGUICommands
     {
-        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, double fps, double ms, int objectCount, int triangleCount)
+        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, float yaw, float pitch, double fps, double ms, int objectCount, int triangleCount)
         {
             ImGui.GetForegroundDrawList().AddRectFilled(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
-                new(viewportPos.X + 200, viewportPos.Y + 200),
+                new(viewportPos.X + 200, viewportPos.Y + 230),
                 ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
             ImGui.GetForegroundDrawList().AddRect(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
-                new(viewportPos.X + 200, viewportPos.Y + 200),
+                new(viewportPos.X + 200, viewportPos.Y + 230),
                 ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.3f)));
 
             ImGui.GetForegroundDrawList().AddText(
@@ -28,6 +27,8 @@ namespace GameEngine.ImGUI
                 GL.GetString(StringName.Renderer) + "\n" +
                 "Size: " + viewportSize.X + " x " + viewportSize.Y + "\n" +
                 "Pos: " + viewportPos.X + " x " + viewportPos.Y + "\n" +
+                "Yaw: " + yaw.ToString("0.0") + "\n" +
+                "Pitch: " + pitch.ToString("0.0") + "\n" +
                 "\n" +
                 "Meshes: " + objectCount + "\n" +
                 "Triangles: " + triangleCount.ToString("N0") + "\n" +
@@ -36,7 +37,7 @@ namespace GameEngine.ImGUI
                 ms.ToString("0.00") + " ms");
         }
 
-        public static void Viewport(int framebufferTexture, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered)
+        public static void Viewport(int framebufferTexture, int depthMap, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered, int shadowRes)
         {
             ImGui.Begin("Viewport");
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
@@ -53,8 +54,23 @@ namespace GameEngine.ImGUI
                 Convert.ToInt32(ImGui.GetWindowPos().Y));
 
             viewportHovered = ImGui.IsWindowHovered() ? true : false;
-
             ImGui.End();
+        
+            /*
+            ImGui.SetNextWindowSizeConstraints(new(256, 256), new(shadowRes));
+            // limit the size range
+            ImGui.Begin("Shadow View");
+            float width = shadowRes;
+            float height = shadowRes;
+            if (width != height)
+            {
+                // adjust the size if not square 
+                if (width > height) width = height;
+                else height = width;
+                ImGui.SetWindowSize(new(width, height));
+            }
+            ImGui.Image((IntPtr)depthMap, new(width, height), new(0, 1), new(1, 0), SN.Vector4.One, SN.Vector4.Zero); ImGui.End();
+            */
         }
 
         public static void MaterialEditor(ref Material _material, ref Shader meshShader, ref Mesh mesh)

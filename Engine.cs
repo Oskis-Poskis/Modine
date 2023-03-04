@@ -58,6 +58,7 @@ namespace GameEngine
         Mesh suzanne;
         Mesh suzanne2;
         List<Mesh> Meshes = new List<Mesh>();
+        int selectedMesh = 0;
         Light light;
         Light light2;
 
@@ -247,7 +248,8 @@ namespace GameEngine
             ImGUICommands.SmallStats(viewportSize, viewportPos, fps, ms, Meshes.Count, triangleCount);
             ImGUICommands.Viewport(framebufferTexture, out viewportSize, out viewportPos, out viewportHovered);
             ImGUICommands.MaterialEditor(ref _material, ref defaultShader, ref suzanne);
-            ImGui.ShowDemoWindow();
+            ImGUICommands.Outliner(Meshes, ref selectedMesh);
+            //ImGui.ShowDemoWindow();
 
             ImGUICommands.Settings(ref vsyncOn);
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
@@ -308,6 +310,13 @@ namespace GameEngine
             base.OnTextInput(e);
 
             _controller.PressChar((char)e.Unicode);
+        }
+
+        protected override void OnMouseWheel(MouseWheelEventArgs e)
+        {
+            base.OnMouseWheel(e);
+
+            _controller.MouseScroll(e.Offset);
         }
     }
 }

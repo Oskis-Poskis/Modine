@@ -123,9 +123,37 @@ namespace GameEngine.ImGUI
             ImGui.EndMainMenuBar();
         }
 
-        public static void LoadOutliner(float spacing)
-        {
 
+        public static void Outliner(List<Mesh> meshes, ref int selectedMeshIndex)
+        {
+            ImGui.Begin("Outliner", ImGuiWindowFlags.None);
+
+            for (int i = 0; i < meshes.Count; i++)
+            {
+                bool isSelected = false;
+
+                if (i % 2 == 0)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Header, new SN.Vector4(0.6f, 0.6f, 0.6f, 1.0f));
+
+                }
+                else
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Header, new SN.Vector4(0.2f, 0.2f, 0.2f, 1.0f));
+                }
+
+                ImGui.BeginGroup();
+
+                if (ImGui.Selectable(meshes[i].name, isSelected))
+                {
+                    // Handle mesh selection
+                }
+
+                ImGui.EndGroup();
+                ImGui.PopStyleColor();
+            }
+
+            ImGui.End();
         }
 
         public static void LoadTheme()

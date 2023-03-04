@@ -69,7 +69,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, float rough, float metal)
 {
     // Calc per light radiance
-    vec3 L = direction;
+    vec3 L = normalize(direction);
     vec3 H = normalize(V + L);
     vec3 radiance = vec3(1);
 
@@ -93,15 +93,29 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 {
-    // perform perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
-
-    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float closestDepth = texture(shadowMap, projCoords.xy).r; 
     float currentDepth = projCoords.z;
-    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.0075);
-    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;  
 
+    float bias = max(0.03 * (1.0 - dot(normal, lightDir)), 0.003);
+
+    // PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
+        }    
+    }
+    shadow /= 9.0;
+    
+    if(projCoords.z > 1.0)
+        shadow = 0.0;
+        
     return shadow;
 }
 
@@ -121,16 +135,11 @@ void main()
 
     Lo += CalcDirectionalLight(vec3(1, 1, 1), V, N, F0, albedo, roughness, metallic);
 
-    float ambient = 0.1;
-    vec3 color = ambient + Lo;
-
-    
-
-    vec3 result = vec3(1) - exp(-color);
+    vec3 result = vec3(1) - exp(-Lo);
     result = pow(result, vec3(1 / 2.2));
 
     float shadow = ShadowCalculation(fragPosLightSpace, N, vec3(1, 1, 1)); 
-    result = result * (1 - shadow * 0.9);
+    result = result * (1 - shadow) + (albedo * 0.1);
 
     fragColor = vec4(result, 1);
 }

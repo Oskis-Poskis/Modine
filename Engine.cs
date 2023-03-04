@@ -51,15 +51,19 @@ namespace GameEngine
         Matrix4 projectionMatrix;
         Matrix4 viewMatrix;
 
+        Mesh suzanne;
+        Mesh floor;
+        Mesh cube;
+        Mesh cube2;
         VertexData[] vertexData;
         int[] indices;
         VertexData[] vertexData2;
         int[] indices2;
+        VertexData[] vertexData3;
+        int[] indices3;
         int triangleCount = 0;
 
         Camera camera;
-        Mesh suzanne;
-        Mesh floor;
         List<Mesh> Meshes = new List<Mesh>();
         int selectedMesh = 0;
         Light light;
@@ -117,8 +121,6 @@ namespace GameEngine
             // Attach Depth to FBO
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, depthTexture, 0);
 
-
-
             depthMapFBO = GL.GenFramebuffer();
 
             depthMap = GL.GenTexture();
@@ -134,8 +136,6 @@ namespace GameEngine
             GL.DrawBuffer(DrawBufferMode.None);
             GL.ReadBuffer(ReadBufferMode.None);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-
-
 
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1280 / 768, 0.1f, 100);
             viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
@@ -157,10 +157,23 @@ namespace GameEngine
             ModelImporter.LoadModel("Importing/Floor.fbx", out vertexData2, out indices2);
             floor = new Mesh("Floor", vertexData2, indices2, defaultShader, true, _material);
             floor.position = new(0, 0, 0);
+            floor.scale = new(3);
             floor.rotation = new(-90, 0, 0);
+
+            ModelImporter.LoadModel("Importing/Cube.fbx", out vertexData3, out indices3);
+            cube = new Mesh("Floor", vertexData3, indices3, defaultShader, true, _material);
+            cube.position = new(3, 1, 0);
+            cube.rotation = new(-90, 30, 0);
+
+            ModelImporter.LoadModel("Importing/Cube.fbx", out vertexData3, out indices3);
+            cube2 = new Mesh("Floor", vertexData3, indices3, defaultShader, true, _material);
+            cube2.position = new(-4, 3, 2);
+            cube2.rotation = new(-45, 30, 80);
 
             Meshes.Add(suzanne);
             Meshes.Add(floor);
+            Meshes.Add(cube);
+            Meshes.Add(cube2);
 
             /*
             int amount = 5;

@@ -34,6 +34,8 @@ namespace GameEngine
             previousViewportSize = viewportSize;
         }
 
+        private bool viewportHovered;
+
         private Vector2i viewportSize;
         private Vector2i previousViewportSize;
         private Vector2i viewportPos;
@@ -50,11 +52,11 @@ namespace GameEngine
 
         VertexData[] vertexData;
         int[] indices;
-        VertexData[] vertexData2;
-        int[] indices2;
+        int triangleCount = 0;
 
         Camera camera;
         Mesh suzanne;
+        Mesh suzanne2;
         List<Mesh> Meshes = new List<Mesh>();
         Light light;
         Light light2;
@@ -110,17 +112,37 @@ namespace GameEngine
             lightShader = new Shader("Shaders/light.vert", "Shaders/light.frag");
 
             ModelImporter.LoadModel("Importing/Suzanne.fbx", out vertexData, out indices);
-            ModelImporter.LoadModel("Importing/floor.fbx", out vertexData2, out indices2);
 
             camera = new Camera(new(0, 1, 2), -Vector3.UnitZ, 10);
             _material = new(new(1, 0.5f, 0), 0, 0.2f);
+            _material.SetShaderUniforms(defaultShader);
 
-            suzanne = new Mesh(vertexData, indices, defaultShader, true, _material);
+            suzanne = new Mesh("Suzanne", vertexData, indices, defaultShader, true, _material);
             suzanne.position = new(0, 2, 0);
             suzanne.rotation = new(-90, 0, 0);
-            suzanne.scale = new(1);
 
-            Meshes.Add(suzanne);
+            suzanne2 = new Mesh("Suzanne2", vertexData, indices, defaultShader, true, _material);
+            suzanne2.position = new(-3, 3, 0);
+            suzanne2.rotation = new(-90, 45, 0);
+
+            //Meshes.Add(suzanne);
+            //Meshes.Add(suzanne2);
+
+            for (int z = 0; z < 10; z++)
+            {
+                for (int y = 0; y < 10; y++)
+                {
+                    for (int x = 0; x < 10; x++)
+                    {
+                        int index = z * 100 + y * 10 + x;
+                        Meshes.Add(new Mesh("Monkey_" + index, vertexData, indices, defaultShader, true, _material));
+                        Meshes[index].position = new Vector3(x * 3, y * 3, z * -3);
+                        Meshes[index].rotation = new Vector3(-90, 0, 0);
+                    }
+                }
+            }
+
+            foreach (Mesh mesh in Meshes) triangleCount += mesh.vertexCount / 3;
 
             light = new Light(lightShader);
             light.position = new(3, 4, -3);
@@ -150,17 +172,18 @@ namespace GameEngine
                     (float)Math.Sin(pitch),
                     (float)Math.Sin(yaw) * (float)Math.Cos(pitch));
             }
-
             else CursorState = CursorState.Normal;
 
             float moveAmount = (float)(camera.speed * args.Time);
-
-            if (IsKeyDown(Keys.W)) camera.position += moveAmount * camera.direction;
-            if (IsKeyDown(Keys.S)) camera.position -= moveAmount * camera.direction;
-            if (IsKeyDown(Keys.A)) camera.position -= moveAmount * Vector3.Normalize(Vector3.Cross(camera.direction, Vector3.UnitY));
-            if (IsKeyDown(Keys.D)) camera.position += moveAmount * Vector3.Normalize(Vector3.Cross(camera.direction, Vector3.UnitY));
-            if (IsKeyDown(Keys.Space) | IsKeyDown(Keys.E)) camera.position += moveAmount * Vector3.UnitY;
-            if (IsKeyDown(Keys.LeftShift) | IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
+            if (viewportHovered)
+            {
+                if (IsKeyDown(Keys.W)) camera.position += moveAmount * camera.direction;
+                if (IsKeyDown(Keys.S)) camera.position -= moveAmount * camera.direction;
+                if (IsKeyDown(Keys.A)) camera.position -= moveAmount * Vector3.Normalize(Vector3.Cross(camera.direction, Vector3.UnitY));
+                if (IsKeyDown(Keys.D)) camera.position += moveAmount * Vector3.Normalize(Vector3.Cross(camera.direction, Vector3.UnitY));
+                if (IsKeyDown(Keys.Space) | IsKeyDown(Keys.E)) camera.position += moveAmount * Vector3.UnitY;
+                if (IsKeyDown(Keys.LeftShift) | IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
+            }
 
             frameCount++;
             elapsedTime += args.Time;
@@ -221,9 +244,11 @@ namespace GameEngine
             ImGui.DockSpaceOverViewport();
 
             ImGUICommands.Header();
-            ImGUICommands.SmallStats(viewportSize, viewportPos, fps, ms);
-            ImGUICommands.Viewport(framebufferTexture, out viewportSize, out viewportPos);
-            ImGUICommands.MaterialEditor(ref _material);
+            ImGUICommands.SmallStats(viewportSize, viewportPos, fps, ms, Meshes.Count, triangleCount);
+            ImGUICommands.Viewport(framebufferTexture, out viewportSize, out viewportPos, out viewportHovered);
+            ImGUICommands.MaterialEditor(ref _material, ref defaultShader, ref suzanne);
+            ImGui.ShowDemoWindow();
+
             ImGUICommands.Settings(ref vsyncOn);
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
 
@@ -232,7 +257,7 @@ namespace GameEngine
             SwapBuffers();
         }
 
-        public void Focus()
+        public void FocusObject()
         {
             Vector3 targetPosition = suzanne.position;
             Vector3 direction = Vector3.Normalize(targetPosition - camera.position);
@@ -252,27 +277,37 @@ namespace GameEngine
         {
             base.OnKeyDown(e);
 
-            if (e.Key == Keys.F) Focus();
+            if (viewportHovered)
+            {
+                if (e.Key == Keys.F) FocusObject();
 
-            if (e.Key == Keys.Escape) Close();
-            if (e.Key == Keys.D1)
-            {
-                GL.Enable(EnableCap.CullFace);
-                _polygonMode = PolygonMode.Fill;
-            }
-            if (e.Key == Keys.D2)
-            {
-                GL.Disable(EnableCap.CullFace);
-                _polygonMode = PolygonMode.Line;
-            }
-            if (e.Key == Keys.D3)
-            {
-                GL.Disable(EnableCap.CullFace);
-                _polygonMode = PolygonMode.Point;
-            }
+                if (e.Key == Keys.Escape) Close();
+                if (e.Key == Keys.D1)
+                {
+                    GL.Enable(EnableCap.CullFace);
+                    _polygonMode = PolygonMode.Fill;
+                }
+                if (e.Key == Keys.D2)
+                {
+                    GL.Disable(EnableCap.CullFace);
+                    _polygonMode = PolygonMode.Line;
+                }
+                if (e.Key == Keys.D3)
+                {
+                    GL.Disable(EnableCap.CullFace);
+                    _polygonMode = PolygonMode.Point;
+                }
 
-            if (e.Key == Keys.N) foreach (Mesh mesh in Meshes) mesh.smoothShading = true;
-            if (e.Key == Keys.M) foreach (Mesh mesh in Meshes) mesh.smoothShading = false;
+                if (e.Key == Keys.N) foreach (Mesh mesh in Meshes) mesh.smoothShading = true;
+                if (e.Key == Keys.M) foreach (Mesh mesh in Meshes) mesh.smoothShading = false;
+            }
+        }
+
+        protected override void OnTextInput(TextInputEventArgs e)
+        {
+            base.OnTextInput(e);
+
+            _controller.PressChar((char)e.Unicode);
         }
     }
 }

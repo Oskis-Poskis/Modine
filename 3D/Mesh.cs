@@ -22,8 +22,9 @@ namespace GameEngine.Rendering
         private int vaoHandle;
         private int vboHandle;
         private int eboHandle;
-        private int vertexCount;
+        public int vertexCount;
         public bool smoothShading;
+        public string name;
         public Material Material;
         private Shader meshShader;
 
@@ -31,7 +32,7 @@ namespace GameEngine.Rendering
         public Vector3 rotation = Vector3.Zero;
         public Vector3 scale = Vector3.One;
 
-        public Mesh(VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading, Material material)
+        public Mesh(string Name, VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading, Material material)
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -49,11 +50,13 @@ namespace GameEngine.Rendering
             GL.EnableVertexAttribArray(shader.GetAttribLocation("aNormals"));
             GL.VertexAttribPointer(shader.GetAttribLocation("aNormals"), 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
             
+            name = Name;
             meshShader = shader;
             vertexCount = indices.Length;
             smoothShading = SmoothShading;
 
             Material = material;
+            UpdateShading(smoothShading);
 
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
@@ -77,8 +80,6 @@ namespace GameEngine.Rendering
 
             meshShader.SetMatrix4("model", model);
             meshShader.SetMatrix4("view", viewMatrix);
-            meshShader.SetInt("smoothShading", Convert.ToInt32(smoothShading));
-            Material.SetShaderUniforms(meshShader);
 
             GL.BindVertexArray(vaoHandle);
 
@@ -89,6 +90,11 @@ namespace GameEngine.Rendering
             }
 
             GL.BindVertexArray(0);
+        }
+
+        public void UpdateShading(bool SmoothShading)
+        {
+            meshShader.SetInt("smoothShading", Convert.ToInt32(SmoothShading));
         }
 
         public void Dispose()

@@ -5,20 +5,21 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using GameEngine.Rendering;
 using OpenTK.Windowing.Common;
+using GameEngine.Common;
 
 namespace GameEngine.ImGUI
 {
     public static class ImGUICommands
     {
-        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, double fps, double ms)
+        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, double fps, double ms, int objectCount, int triangleCount)
         {
             ImGui.GetForegroundDrawList().AddRectFilled(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
-                new(viewportPos.X + 200, viewportPos.Y + 150),
+                new(viewportPos.X + 200, viewportPos.Y + 200),
                 ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
             ImGui.GetForegroundDrawList().AddRect(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
-                new(viewportPos.X + 200, viewportPos.Y + 150),
+                new(viewportPos.X + 200, viewportPos.Y + 200),
                 ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.3f)));
 
             ImGui.GetForegroundDrawList().AddText(
@@ -28,11 +29,14 @@ namespace GameEngine.ImGUI
                 "Size: " + viewportSize.X + " x " + viewportSize.Y + "\n" +
                 "Pos: " + viewportPos.X + " x " + viewportPos.Y + "\n" +
                 "\n" +
+                "Meshes: " + objectCount + "\n" +
+                "Triangles: " + triangleCount.ToString("N0") + "\n" +
+                "\n" +
                 fps.ToString("0") + " FPS" + "\n" +
                 ms.ToString("0.00") + " ms");
         }
 
-        public static void Viewport(int framebufferTexture, out Vector2i windowSize, out Vector2i viewportPos)
+        public static void Viewport(int framebufferTexture, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered)
         {
             ImGui.Begin("Viewport");
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
@@ -47,16 +51,43 @@ namespace GameEngine.ImGUI
             viewportPos = new(
                 Convert.ToInt32(ImGui.GetWindowPos().X),
                 Convert.ToInt32(ImGui.GetWindowPos().Y));
+
+            viewportHovered = ImGui.IsWindowHovered() ? true : false;
+
             ImGui.End();
         }
 
-        public static void MaterialEditor(ref Material _material)
+        public static void MaterialEditor(ref Material _material, ref Shader meshShader, ref Mesh mesh)
         {
             ImGui.Begin("Material Editor");
 
             SN.Vector3 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z);
-            ImGui.ColorPicker3("Albedo", ref color, ImGuiColorEditFlags.NoInputs);
-            _material.Color = new(color.X, color.Y, color.Z);
+            if (ImGui.ColorPicker3("Albedo", ref color, ImGuiColorEditFlags.NoInputs))
+            {
+                _material.Color = new(color.X, color.Y, color.Z);
+                _material.SetShaderUniforms(meshShader);
+            }
+
+            float tempRoughness = _material.Roughness;
+            if (ImGui.SliderFloat("Roughness", ref tempRoughness, 0, 1))
+            {
+                _material.Roughness = tempRoughness;
+                _material.SetShaderUniforms(meshShader);
+            }
+
+            float tempMetallic = _material.Metallic;
+            if (ImGui.SliderFloat("Metallic", ref tempMetallic, 0, 1))
+            {
+                _material.Metallic = tempMetallic;
+                _material.SetShaderUniforms(meshShader);
+            }
+
+            bool tempSmoothShading = mesh.smoothShading;
+            if (ImGui.Checkbox("Smooth Shading", ref tempSmoothShading))
+            {
+                mesh.smoothShading = tempSmoothShading;
+                mesh.UpdateShading(tempSmoothShading);
+            }
 
             ImGui.End();
         }
@@ -92,6 +123,11 @@ namespace GameEngine.ImGUI
             ImGui.EndMainMenuBar();
         }
 
+        public static void LoadOutliner(float spacing)
+        {
+
+        }
+
         public static void LoadTheme()
         {
             ImGui.GetStyle().FrameRounding = 6;
@@ -99,6 +135,7 @@ namespace GameEngine.ImGUI
             ImGui.GetStyle().TabRounding = 2;
             ImGui.GetStyle().WindowRounding = 7;
             ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;
+            ImGui.GetStyle().GrabMinSize = 15;
 
             ImGui.PushStyleColor(ImGuiCol.Border, new System.Numerics.Vector4(25, 25, 25, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.MenuBarBg, new System.Numerics.Vector4(15, 15, 15, 200f) / 255);

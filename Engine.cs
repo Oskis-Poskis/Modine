@@ -128,8 +128,10 @@ namespace GameEngine
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, shadowRes, shadowRes, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToBorder);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToBorder);
+            float[] borderColor = new[]{ 1.0f, 1.0f, 1.0f, 1.0f };
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBorderColor, borderColor);
             
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, depthMap, 0);
@@ -152,7 +154,7 @@ namespace GameEngine
             ModelImporter.LoadModel("Importing/Suzanne.fbx", out vertexData, out indices);
             suzanne = new Mesh("Suzanne", vertexData, indices, defaultShader, true, _material);
             suzanne.position = new(0, 2, 0);
-            suzanne.rotation = new(-90, 0, 0);
+            suzanne.rotation = new(-125, 0, 0);
 
             ModelImporter.LoadModel("Importing/Floor.fbx", out vertexData2, out indices2);
             floor = new Mesh("Floor", vertexData2, indices2, defaultShader, true, _material);
@@ -161,12 +163,12 @@ namespace GameEngine
             floor.rotation = new(-90, 0, 0);
 
             ModelImporter.LoadModel("Importing/Cube.fbx", out vertexData3, out indices3);
-            cube = new Mesh("Floor", vertexData3, indices3, defaultShader, true, _material);
+            cube = new Mesh("Cube1", vertexData3, indices3, defaultShader, true, _material);
             cube.position = new(3, 1, 0);
             cube.rotation = new(-90, 30, 0);
 
             ModelImporter.LoadModel("Importing/Cube.fbx", out vertexData3, out indices3);
-            cube2 = new Mesh("Floor", vertexData3, indices3, defaultShader, true, _material);
+            cube2 = new Mesh("Cube2", vertexData3, indices3, defaultShader, true, _material);
             cube2.position = new(-4, 3, 2);
             cube2.rotation = new(-45, 30, 80);
 
@@ -267,7 +269,7 @@ namespace GameEngine
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
             GL.Clear(ClearBufferMask.DepthBufferBit);
 
-            GL.CullFace(CullFaceMode.Front);
+            //GL.CullFace(CullFaceMode.Front);
             foreach (Mesh mesh in Meshes) mesh.meshShader = shadowShader;
             renderShadowMap = true;
             UpdateMatrices();
@@ -282,7 +284,7 @@ namespace GameEngine
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
-            GL.CullFace(CullFaceMode.Back);
+            //GL.CullFace(CullFaceMode.Back);
             foreach (Mesh mesh in Meshes) mesh.meshShader = defaultShader;
             defaultShader.SetVector3("viewPos", camera.position);
             renderShadowMap = false;

@@ -77,6 +77,17 @@ namespace GameEngine.ImGUI
         {
             ImGui.Begin("Material Editor");
 
+            SN.Vector3 tempPos = new(mesh.position.X, mesh.position.Y, mesh.position.Z);
+            if (ImGui.DragFloat3("Position", ref tempPos, 0.1f))
+            {
+                mesh.position = new(tempPos.X, tempPos.Y, tempPos.Z);
+            }
+            SN.Vector3 tempRot = new(mesh.rotation.X, mesh.rotation.Y, mesh.rotation.Z);
+            if (ImGui.DragFloat3("Rotation", ref tempRot, 1))
+            {
+                mesh.rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
+            }
+
             SN.Vector3 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z);
             if (ImGui.ColorPicker3("Albedo", ref color, ImGuiColorEditFlags.NoInputs))
             {

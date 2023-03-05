@@ -5,14 +5,15 @@ in vec3 fragPos;
 in vec4 fragPosLightSpace;
 out vec4 fragColor;
 
+uniform vec3 ambient;
 uniform vec3 albedo;
 uniform float metallic;
 uniform float roughness;
 uniform bool smoothShading;
-
 uniform sampler2D shadowMap;
-
 uniform vec3 viewPos;
+uniform float shadowFactor;
+uniform vec3 direction;
 
 const float constant = 1;
 const float linear = 0.09;
@@ -133,13 +134,13 @@ void main()
 
     vec3 Lo = vec3(0.0);
 
-    Lo += CalcDirectionalLight(vec3(1, 1, 1), V, N, F0, albedo, roughness, metallic);
+    Lo += CalcDirectionalLight(direction, V, N, F0, albedo, roughness, metallic);
 
     vec3 result = vec3(1) - exp(-Lo);
     result = pow(result, vec3(1 / 2.2));
 
-    float shadow = ShadowCalculation(fragPosLightSpace, N, vec3(1, 1, 1)); 
-    result = result * (1 - shadow) + (albedo * 0.1);
+    float shadow = ShadowCalculation(fragPosLightSpace, N, direction); 
+    result = result * (1 - shadow * shadowFactor) + (albedo * ambient);
 
     fragColor = vec4(result, 1);
 }

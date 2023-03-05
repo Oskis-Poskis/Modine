@@ -24,6 +24,7 @@ namespace GameEngine.Rendering
         private int eboHandle;
         public int vertexCount;
         public bool smoothShading;
+        public bool castShadow;
         public string name;
         public Material Material;
         public Shader meshShader;
@@ -32,7 +33,7 @@ namespace GameEngine.Rendering
         public Vector3 rotation = Vector3.Zero;
         public Vector3 scale = Vector3.One;
 
-        public Mesh(string Name, VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading, Material material)
+        public Mesh(string Name, VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading, bool CastShadow, Material material)
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -54,9 +55,10 @@ namespace GameEngine.Rendering
             meshShader = shader;
             vertexCount = indices.Length;
             smoothShading = SmoothShading;
+            castShadow = CastShadow;
 
             Material = material;
-            UpdateShading(smoothShading);
+            meshShader.SetInt("smoothShading", Convert.ToInt32(SmoothShading));
 
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
@@ -87,15 +89,15 @@ namespace GameEngine.Rendering
             GL.BindVertexArray(0);
         }
 
-        public void UpdateShading(bool SmoothShading)
-        {
-            meshShader.SetInt("smoothShading", Convert.ToInt32(SmoothShading));
-        }
-
         public void Dispose()
         {
             GL.DeleteVertexArray(vaoHandle);
             GL.DeleteBuffer(vboHandle);
+        }
+
+        public void SetName(string newName)
+        {
+            this.name = newName;
         }
     }
 }

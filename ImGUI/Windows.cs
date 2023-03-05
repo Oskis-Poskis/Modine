@@ -8,17 +8,17 @@ using GameEngine.Common;
 
 namespace GameEngine.ImGUI
 {
-    public static class ImGUICommands
+    public static class ImGuiWindows
     {
-        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, float yaw, float pitch, double fps, double ms, int objectCount, int triangleCount)
+        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, float yaw, float pitch, double fps, double ms, int objectCount, int triangleCount, Mesh mesh)
         {
             ImGui.GetForegroundDrawList().AddRectFilled(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
-                new(viewportPos.X + 200, viewportPos.Y + 230),
+                new(viewportPos.X + 200, viewportPos.Y + 200),
                 ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
             ImGui.GetForegroundDrawList().AddRect(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
-                new(viewportPos.X + 200, viewportPos.Y + 230),
+                new(viewportPos.X + 200, viewportPos.Y + 200),
                 ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.3f)));
 
             ImGui.GetForegroundDrawList().AddText(
@@ -27,9 +27,7 @@ namespace GameEngine.ImGUI
                 GL.GetString(StringName.Renderer) + "\n" +
                 "Size: " + viewportSize.X + " x " + viewportSize.Y + "\n" +
                 "Pos: " + viewportPos.X + " x " + viewportPos.Y + "\n" +
-                "Yaw: " + yaw.ToString("0.0") + "\n" +
-                "Pitch: " + pitch.ToString("0.0") + "\n" +
-                "\n" +
+                "Object: " + yaw.ToString("0.0") + "\n" +
                 "Meshes: " + objectCount + "\n" +
                 "Triangles: " + triangleCount.ToString("N0") + "\n" +
                 "\n" +
@@ -37,7 +35,44 @@ namespace GameEngine.ImGUI
                 ms.ToString("0.00") + " ms");
         }
 
-        public static void Viewport(int framebufferTexture, int depthMap, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered, int shadowRes)
+        public static void ObjectProperties(ref List<Mesh> meshes, int selectedMesh)
+        {
+            ImGui.Begin("Properties");
+
+            Mesh mesh = meshes[selectedMesh];
+
+            string newName = mesh.name;
+            if (ImGui.InputTextWithHint("##Name", newName, ref newName, 30)) mesh.SetName(newName);
+
+            ImGui.Checkbox("Cast shadow", ref mesh.castShadow);
+            ImGui.Checkbox("Smooth Shading", ref mesh.smoothShading);
+            ImGui.Text(mesh.smoothShading.ToString());
+
+            SN.Vector3 tempPos = new(mesh.position.X, mesh.position.Y, mesh.position.Z);
+            ImGui.Text("Position");
+            if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
+            {
+                mesh.position = new(tempPos.X, tempPos.Y, tempPos.Z);
+            }
+
+            SN.Vector3 tempRot = new(mesh.rotation.X, mesh.rotation.Y, mesh.rotation.Z);
+            ImGui.Text("Rotation");
+            if (ImGui.DragFloat3("##Rotation", ref tempRot, 1))
+            {
+                mesh.rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
+            }
+            
+            SN.Vector3 tempScale = new(mesh.scale.X, mesh.scale.Y, mesh.scale.Z);
+            ImGui.Text("Scale");
+            if (ImGui.DragFloat3("##Scale", ref tempScale, 0.1f))
+            {
+                mesh.scale = new(tempScale.X, tempScale.Y, tempScale.Z);
+            }
+
+            ImGui.End();
+        }
+
+        public static void Viewport(int framebufferTexture, int depthMap, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered)
         {
             ImGui.Begin("Viewport");
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
@@ -77,17 +112,6 @@ namespace GameEngine.ImGUI
         {
             ImGui.Begin("Material Editor");
 
-            SN.Vector3 tempPos = new(mesh.position.X, mesh.position.Y, mesh.position.Z);
-            if (ImGui.DragFloat3("Position", ref tempPos, 0.1f))
-            {
-                mesh.position = new(tempPos.X, tempPos.Y, tempPos.Z);
-            }
-            SN.Vector3 tempRot = new(mesh.rotation.X, mesh.rotation.Y, mesh.rotation.Z);
-            if (ImGui.DragFloat3("Rotation", ref tempRot, 1))
-            {
-                mesh.rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
-            }
-
             SN.Vector3 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z);
             if (ImGui.ColorPicker3("Albedo", ref color, ImGuiColorEditFlags.NoInputs))
             {
@@ -109,21 +133,49 @@ namespace GameEngine.ImGUI
                 _material.SetShaderUniforms(meshShader);
             }
 
-            bool tempSmoothShading = mesh.smoothShading;
-            if (ImGui.Checkbox("Smooth Shading", ref tempSmoothShading))
-            {
-                mesh.smoothShading = tempSmoothShading;
-                mesh.UpdateShading(tempSmoothShading);
-            }
-
             ImGui.End();
         }
 
-        public static void Settings(ref bool vsyncOn)
+        static int selectedIndex = 3;
+        public static void Settings(ref bool vsyncOn, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader)
         {
             ImGui.Begin("Settings");
 
             ImGui.Checkbox("VSync", ref vsyncOn);
+
+            SN.Vector3 dir = new(direction.X, direction.Y, direction.Z);
+            ImGui.Text("Ambient Color");
+            if (ImGui.SliderFloat3("Sun Direction", ref dir, -1, 1))
+            {
+                direction = new(dir.X, dir.Y, dir.Z);
+                shader.SetVector3("direction", direction);
+            }
+
+            SN.Vector3 color = new(ambient.X, ambient.Y, ambient.Z);            
+            ImGui.Text("Ambient Color");
+            if (ImGui.ColorPicker3("##Ambient Color", ref color, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoSidePreview))
+            {
+                ambient = new(color.X, color.Y, color.Z);
+                shader.SetVector3("ambient", ambient);
+            }
+
+            float shadowFac = ShadowFactor;
+            ImGui.Text("Shadow Factor");
+            if (ImGui.SliderFloat("##Shadow Factor", ref shadowFac, 0, 1))
+            {
+                ShadowFactor = shadowFac;
+                shader.SetFloat("shadowFactor", ShadowFactor);
+            }
+
+            int[] options = new int[] { 256, 512, 1024, 2048, 4096, 8192 };
+            ImGui.Text("Shadow Resolution");
+            if (ImGui.SliderInt("##Resolution", ref selectedIndex, 0, 5, options[selectedIndex].ToString()))
+            {
+                // Use the selected resolution in your application logic
+                shadowRes = options[selectedIndex];
+                GL.BindTexture(TextureTarget.Texture2D, depthMap);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, shadowRes, shadowRes, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
+            }
             
             ImGui.End();
         }
@@ -157,27 +209,15 @@ namespace GameEngine.ImGUI
 
             for (int i = 0; i < meshes.Count; i++)
             {
-                bool isSelected = false;
-
-                if (i % 2 == 0)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Header, new SN.Vector4(0.6f, 0.6f, 0.6f, 1.0f));
-
-                }
-                else
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Header, new SN.Vector4(0.2f, 0.2f, 0.2f, 1.0f));
-                }
-
                 ImGui.BeginGroup();
 
-                if (ImGui.Selectable(meshes[i].name, isSelected))
+                if (ImGui.Selectable(meshes[i].name, selectedMeshIndex == i))
                 {
                     // Handle mesh selection
+                    selectedMeshIndex = i;
                 }
 
                 ImGui.EndGroup();
-                ImGui.PopStyleColor();
             }
 
             ImGui.End();

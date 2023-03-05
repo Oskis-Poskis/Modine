@@ -107,7 +107,6 @@ namespace GameEngine
 
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1280 / 768, 0.1f, 100);
             viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
-            //projectionMatrix = Matrix4.CreateOrthographic(1280, 778, 0.1f, 100);
 
             defaultShader = new Shader("Shaders/mesh.vert", "Shaders/mesh.frag");
             lightShader = new Shader("Shaders/light.vert", "Shaders/light.frag");

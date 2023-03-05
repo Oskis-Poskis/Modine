@@ -144,8 +144,8 @@ namespace GameEngine.ImGUI
             ImGui.Checkbox("VSync", ref vsyncOn);
 
             SN.Vector3 dir = new(direction.X, direction.Y, direction.Z);
-            ImGui.Text("Ambient Color");
-            if (ImGui.SliderFloat3("Sun Direction", ref dir, -1, 1))
+            ImGui.Text("Sun Direction");
+            if (ImGui.SliderFloat3("##Sun Direction", ref dir, -1, 1))
             {
                 direction = new(dir.X, dir.Y, dir.Z);
                 shader.SetVector3("direction", direction);

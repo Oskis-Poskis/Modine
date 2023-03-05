@@ -58,12 +58,15 @@ namespace GameEngine
         Mesh floor;
         Mesh cube;
         Mesh cube2;
+        Mesh sphere;
         VertexData[] vertexData;
         int[] indices;
         VertexData[] vertexData2;
         int[] indices2;
         VertexData[] vertexData3;
         int[] indices3;
+        VertexData[] vertexData4;
+        int[] indices4;
         int triangleCount = 0;
 
         Camera camera;
@@ -141,10 +144,17 @@ namespace GameEngine
             cube2.scale = new(0.3f);
             cube2.rotation = new(-90, 45, 0);
 
+            ModelImporter.LoadModel("Importing/Sphere.fbx", out vertexData4, out indices4);
+            sphere = new Mesh("Sphere", vertexData4, indices4, defaultShader, true, true, _material);
+            sphere.position = new(1, 3, 1);
+            sphere.scale = new(1);
+            sphere.rotation = new(-90, 0, 0);
+
             Meshes.Add(suzanne);
             Meshes.Add(floor);
             Meshes.Add(cube);
             Meshes.Add(cube2);
+            Meshes.Add(sphere);
             
             foreach (Mesh mesh in Meshes) triangleCount += mesh.vertexCount / 3;
 

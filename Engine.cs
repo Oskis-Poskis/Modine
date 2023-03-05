@@ -51,6 +51,7 @@ namespace GameEngine
         public Shader defaultShader;
         public Shader lightShader;
         public Shader shadowShader;
+        public Shader postprocessShader;
         Matrix4 projectionMatrix;
         Matrix4 viewMatrix;
 
@@ -89,6 +90,19 @@ namespace GameEngine
 
         bool renderShadowMap = false;
 
+        private int VAO;
+        private int VBO;
+
+        float[] PPvertices =
+        {
+            -1f,  1f,
+            -1f, -1f,
+             1f,  1f,
+             1f,  1f,
+            -1f, -1f,
+             1f, -1f,
+        };
+
         unsafe protected override void OnLoad()
         {
             base.OnLoad();
@@ -114,6 +128,17 @@ namespace GameEngine
             defaultShader = new Shader("Shaders/mesh.vert", "Shaders/mesh.frag");
             lightShader = new Shader("Shaders/light.vert", "Shaders/light.frag");
             shadowShader = new Shader("Shaders/shadow.vert", "Shaders/shadow.frag");
+            postprocessShader = new Shader("Shaders/postprocess.vert", "Shaders/postprocess.frag");
+
+            VAO = GL.GenVertexArray();
+            GL.BindVertexArray(VAO);
+
+            VBO = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
+            GL.BufferData(BufferTarget.ArrayBuffer, PPvertices.Length * sizeof(float), PPvertices, BufferUsageHint.StaticDraw);
+
+            GL.EnableVertexAttribArray(postprocessShader.GetAttribLocation("aPosition"));
+            GL.VertexAttribPointer(postprocessShader.GetAttribLocation("aPosition"), 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
 
             camera = new Camera(new(0, 1, 2), -Vector3.UnitZ, 10);
             _material = new(new(1, 1, 1), 0, 0.2f);
@@ -233,21 +258,18 @@ namespace GameEngine
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
             GL.Clear(ClearBufferMask.DepthBufferBit);
 
-            //GL.CullFace(CullFaceMode.Front);
             foreach (Mesh mesh in Meshes) mesh.meshShader = shadowShader;
             renderShadowMap = true;
             UpdateMatrices();
             foreach (Mesh mesh in Meshes) if (mesh.castShadow) mesh.Render();
 
             // Render normal scene
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
-
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
             GL.ClearColor(new Color4(ambient.X, ambient.Y, ambient.Z, 1));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
-            //GL.CullFace(CullFaceMode.Back);
+
             foreach (Mesh mesh in Meshes) mesh.meshShader = defaultShader;
             defaultShader.SetVector3("viewPos", camera.position);
             renderShadowMap = false;
@@ -265,9 +287,15 @@ namespace GameEngine
             light.Render(camera.position, camera.direction, pitch, yaw);
             light2.Render(camera.position, camera.direction, pitch, yaw);
 
+            // Post processing here
+            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
+            postprocessShader.Use();
+            GL.BindVertexArray(VAO);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+
+            // Resize framebuffer
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-
             if (viewportSize != previousViewportSize)
             {
                 GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);

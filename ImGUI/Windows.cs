@@ -10,7 +10,7 @@ namespace GameEngine.ImGUI
 {
     public static class ImGuiWindows
     {
-        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, float yaw, float pitch, double fps, double ms, int objectCount, int triangleCount, Mesh mesh)
+        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, float yaw, float pitch, double fps, double ms, int objectCount, int triangleCount)
         {
             ImGui.GetForegroundDrawList().AddRectFilled(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
@@ -35,44 +35,49 @@ namespace GameEngine.ImGUI
                 ms.ToString("0.00") + " ms");
         }
 
-        public static void ObjectProperties(ref List<Mesh> meshes, int selectedMesh)
+        public static void ObjectProperties(ref List<SceneObject> sceneObjects, int selectedMesh)
         {
+            SceneObject _sceneObject = sceneObjects[selectedMesh];
             ImGui.Begin("Properties");
 
-            Mesh mesh = meshes[selectedMesh];
-
-            string newName = mesh.name;
-            if (ImGui.InputTextWithHint("##Name", newName, ref newName, 30)) mesh.SetName(newName);
-
-            ImGui.Checkbox("Cast shadow", ref mesh.castShadow);
-            ImGui.Checkbox("Smooth Shading", ref mesh.smoothShading);
-            ImGui.Text(mesh.smoothShading.ToString());
-
-            SN.Vector3 tempPos = new(mesh.position.X, mesh.position.Y, mesh.position.Z);
-            ImGui.Text("Position");
-            if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
+            if (_sceneObject.Type == "Mesh")
             {
-                mesh.position = new(tempPos.X, tempPos.Y, tempPos.Z);
-            }
+                string newName = _sceneObject.Name;
+                if (ImGui.InputTextWithHint("##Name", newName, ref newName, 30))
+                {
+                    //_sceneObject.Mesh.meshName = newName;
+                    _sceneObject.Name = newName;
+                }
 
-            SN.Vector3 tempRot = new(mesh.rotation.X, mesh.rotation.Y, mesh.rotation.Z);
-            ImGui.Text("Rotation");
-            if (ImGui.DragFloat3("##Rotation", ref tempRot, 1))
-            {
-                mesh.rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
-            }
-            
-            SN.Vector3 tempScale = new(mesh.scale.X, mesh.scale.Y, mesh.scale.Z);
-            ImGui.Text("Scale");
-            if (ImGui.DragFloat3("##Scale", ref tempScale, 0.1f))
-            {
-                mesh.scale = new(tempScale.X, tempScale.Y, tempScale.Z);
+                ImGui.Checkbox("Cast shadow", ref _sceneObject.Mesh.castShadow);
+                ImGui.Checkbox("Smooth Shading", ref _sceneObject.Mesh.smoothShading);
+
+                SN.Vector3 tempPos = new(_sceneObject.Mesh.position.X, _sceneObject.Mesh.position.Y, _sceneObject.Mesh.position.Z);
+                ImGui.Text("Position");
+                if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
+                {
+                     _sceneObject.Mesh.position = new(tempPos.X, tempPos.Y, tempPos.Z);
+                }
+
+                SN.Vector3 tempRot = new( _sceneObject.Mesh.rotation.X, _sceneObject.Mesh.rotation.Y, _sceneObject.Mesh.rotation.Z);
+                ImGui.Text("Rotation");
+                if (ImGui.DragFloat3("##Rotation", ref tempRot, 1))
+                {
+                     _sceneObject.Mesh.rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
+                }
+                
+                SN.Vector3 tempScale = new(_sceneObject.Mesh.scale.X, _sceneObject.Mesh.scale.Y, _sceneObject.Mesh.scale.Z);
+                ImGui.Text("Scale");
+                if (ImGui.DragFloat3("##Scale", ref tempScale, 0.1f))
+                {
+                    _sceneObject.Mesh.scale = new(tempScale.X, tempScale.Y, tempScale.Z);
+                }
             }
 
             ImGui.End();
         }
 
-        public static void Viewport(int framebufferTexture, int depthMap, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered)
+        public static void Viewport(int framebufferTexture, int depthMap, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered, int shadowRes)
         {
             ImGui.Begin("Viewport");
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
@@ -91,12 +96,9 @@ namespace GameEngine.ImGUI
             viewportHovered = ImGui.IsWindowHovered() ? true : false;
             ImGui.End();
         
-            /*
-            ImGui.SetNextWindowSizeConstraints(new(256, 256), new(shadowRes));
-            // limit the size range
             ImGui.Begin("Shadow View");
-            float width = shadowRes;
-            float height = shadowRes;
+            float width = 400;
+            float height = 400;
             if (width != height)
             {
                 // adjust the size if not square 
@@ -105,7 +107,6 @@ namespace GameEngine.ImGUI
                 ImGui.SetWindowSize(new(width, height));
             }
             ImGui.Image((IntPtr)depthMap, new(width, height), new(0, 1), new(1, 0), SN.Vector4.One, SN.Vector4.Zero); ImGui.End();
-            */
         }
 
         public static void MaterialEditor(ref Material _material, ref Shader meshShader, ref Mesh mesh)
@@ -203,15 +204,15 @@ namespace GameEngine.ImGUI
         }
 
 
-        public static void Outliner(List<Mesh> meshes, ref int selectedMeshIndex)
+        public static void Outliner(List<SceneObject> sceneObjects, ref int selectedMeshIndex)
         {
             ImGui.Begin("Outliner", ImGuiWindowFlags.None);
 
-            for (int i = 0; i < meshes.Count; i++)
+            for (int i = 0; i < sceneObjects.Count; i++)
             {
                 ImGui.BeginGroup();
 
-                if (ImGui.Selectable(meshes[i].name, selectedMeshIndex == i))
+                if (ImGui.Selectable(sceneObjects[i].Name, selectedMeshIndex == i))
                 {
                     // Handle mesh selection
                     selectedMeshIndex = i;

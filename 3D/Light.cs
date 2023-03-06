@@ -5,7 +5,7 @@ using GameEngine.Common;
 
 namespace GameEngine.Rendering
 {
-    public class Light : IDisposable
+    public class Light : SceneObject
     {
         private int vaoHandle;
         private int vboHandle;
@@ -15,6 +15,9 @@ namespace GameEngine.Rendering
         public Vector3 scale = Vector3.One * 0.25f;
         public Vector3 color = new(1, 1, 0);
         public float intensity = 1.0f;
+        public string lightName;
+
+        public static Light _light;
 
         float[] vertices = new float[]
         {
@@ -28,7 +31,7 @@ namespace GameEngine.Rendering
              1, -1, 0
         };
 
-        public Light(Shader shader)
+        public Light(Shader shader, string Type) : base()
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -43,12 +46,15 @@ namespace GameEngine.Rendering
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
+            _light = this;
+
             lightShader = shader;
+            this.lightName = Name;
         }
 
         Matrix4 viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
 
-        public void Render(Vector3 cameraPosition, Vector3 direction, float pitch, float yaw)
+        public override void RenderLight(Vector3 cameraPosition, Vector3 direction, float pitch, float yaw)
         {   
             lightShader.Use();
 
@@ -71,7 +77,7 @@ namespace GameEngine.Rendering
             GL.BindVertexArray(0);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             GL.DeleteVertexArray(vaoHandle);
             GL.DeleteBuffer(vboHandle);

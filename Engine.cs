@@ -72,6 +72,7 @@ namespace GameEngine
 
         Camera camera;
         List<Mesh> Meshes = new List<Mesh>();
+        List<SceneObject> sceneObjects = new List<SceneObject>();
         int selectedMesh = 0;
         Light light;
         Light light2;
@@ -148,45 +149,54 @@ namespace GameEngine
             defaultShader.SetFloat("shadowFactor", shadowFactor);
 
             ModelImporter.LoadModel("Importing/Suzanne.fbx", out vertexData, out indices);
-            suzanne = new Mesh("Suzanne", vertexData, indices, defaultShader, true, true, _material);
+            suzanne = new Mesh("Mesh", vertexData, indices, defaultShader, true, true, _material);
             suzanne.position = new(0, 2, 0);
             suzanne.rotation = new(-125, 0, 0);
 
             ModelImporter.LoadModel("Importing/Floor.fbx", out vertexData2, out indices2);
-            floor = new Mesh("Floor", vertexData2, indices2, defaultShader, true, true, _material);
+            floor = new Mesh("Mesh", vertexData2, indices2, defaultShader, true, true, _material);
             floor.position = new(0, 0, 0);
             floor.scale = new(3);
             floor.rotation = new(-90, 0, 0);
 
             ModelImporter.LoadModel("Importing/Cube.fbx", out vertexData3, out indices3);
-            cube = new Mesh("Cube1", vertexData3, indices3, defaultShader, true, true, _material);
+            cube = new Mesh("Mesh", vertexData3, indices3, defaultShader, true, true, _material);
             cube.position = new(3, 1, 0);
             cube.rotation = new(-90, 30, 0);
 
             ModelImporter.LoadModel("Importing/CoolMotorCycle.fbx", out vertexData3, out indices3);
-            cube2 = new Mesh("MotorCycleWheel", vertexData3, indices3, defaultShader, true, true, _material);
+            cube2 = new Mesh("Mesh", vertexData3, indices3, defaultShader, true, true, _material);
             cube2.position = new(-4, 3, 2);
             cube2.scale = new(0.3f);
             cube2.rotation = new(-90, 45, 0);
 
             ModelImporter.LoadModel("Importing/Sphere.fbx", out vertexData4, out indices4);
-            sphere = new Mesh("Sphere", vertexData4, indices4, defaultShader, true, true, _material);
+            sphere = new Mesh("Mesh", vertexData4, indices4, defaultShader, true, true, _material);
             sphere.position = new(1, 3, 1);
             sphere.scale = new(1);
             sphere.rotation = new(-90, 0, 0);
 
-            Meshes.Add(suzanne);
-            Meshes.Add(floor);
-            Meshes.Add(cube);
-            Meshes.Add(cube2);
-            Meshes.Add(sphere);
+            //Meshes.Add(suzanne);
+            //Meshes.Add(floor);
+            //Meshes.Add(cube);
+            //Meshes.Add(cube2);
+            //Meshes.Add(sphere);
             
             foreach (Mesh mesh in Meshes) triangleCount += mesh.vertexCount / 3;
 
-            light = new Light(lightShader);
+            light = new Light(lightShader, "Light");
+            light2 = new Light(lightShader, "Light");
             light.position = new(3, 4, -3);
-            light2 = new Light(lightShader);
             light2.position = new(-2, 7, -6);
+
+            SceneObject _mesh1 = new("Monkey", "Mesh", suzanne);
+            SceneObject _mesh2 = new("Floor", "Mesh", floor);
+            SceneObject _light = new("Light1", "Light", null, light);
+            SceneObject _light2 = new("Light2", "Light", null, light2);
+            sceneObjects.Add(_mesh1);
+            sceneObjects.Add(_mesh2);
+            sceneObjects.Add(_light);
+            sceneObjects.Add(_light2);
 
             ImGuiController = new ImGuiController(viewportSize.X, viewportSize.Y);
             ImGuiWindows.LoadTheme();
@@ -258,10 +268,10 @@ namespace GameEngine
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
             GL.Clear(ClearBufferMask.DepthBufferBit);
 
-            foreach (Mesh mesh in Meshes) mesh.meshShader = shadowShader;
+            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == "Mesh") sceneObject.Mesh.meshShader = shadowShader;
             renderShadowMap = true;
             UpdateMatrices();
-            foreach (Mesh mesh in Meshes) if (mesh.castShadow) mesh.Render();
+            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == "Mesh" && sceneObject.Mesh.castShadow == true) sceneObject.Mesh.Render();
 
             // Render normal scene
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
@@ -270,22 +280,25 @@ namespace GameEngine
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
 
-            foreach (Mesh mesh in Meshes) mesh.meshShader = defaultShader;
+            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == "Mesh") sceneObject.Mesh.meshShader = defaultShader;
             defaultShader.SetVector3("viewPos", camera.position);
             renderShadowMap = false;
             UpdateMatrices();
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, depthMap);
-            foreach (Mesh mesh in Meshes)
+
+            foreach (SceneObject sceneObject in sceneObjects)
             {
-                defaultShader.SetInt("smoothShading", Convert.ToInt32(mesh.smoothShading));
-                mesh.Render();
+                if (sceneObject.Type == "Mesh")
+                {
+                    defaultShader.Use();
+                    sceneObject.Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObject.Mesh.smoothShading));
+                    sceneObject.Mesh.Render();
+                }
+                if (sceneObject.Type == "Light") sceneObject.RenderLight(camera.position, camera.direction, pitch, yaw);
             }
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-
-            light.Render(camera.position, camera.direction, pitch, yaw);
-            light2.Render(camera.position, camera.direction, pitch, yaw);
 
             // Post processing here
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
@@ -311,11 +324,11 @@ namespace GameEngine
             ImGui.DockSpaceOverViewport();
 
             ImGuiWindows.Header();
-            ImGuiWindows.SmallStats(viewportSize, viewportPos, yaw, pitch, fps, ms, Meshes.Count, triangleCount, Meshes[selectedMesh]);
-            ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered);
+            ImGuiWindows.SmallStats(viewportSize, viewportPos, yaw, pitch, fps, ms, Meshes.Count, triangleCount);
+            ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
             ImGuiWindows.MaterialEditor(ref _material, ref defaultShader, ref suzanne);
-            ImGuiWindows.Outliner(Meshes, ref selectedMesh);
-            ImGuiWindows.ObjectProperties(ref Meshes, selectedMesh);
+            ImGuiWindows.Outliner(sceneObjects, ref selectedMesh);
+            ImGuiWindows.ObjectProperties(ref sceneObjects, selectedMesh);
             //ImGui.ShowDemoWindow();
 
             ImGuiWindows.Settings(ref vsyncOn, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref defaultShader);

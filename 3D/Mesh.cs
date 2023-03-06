@@ -17,7 +17,7 @@ namespace GameEngine.Rendering
         }
     }
 
-    public class Mesh : IDisposable
+    public class Mesh : SceneObject
     {
         private int vaoHandle;
         private int vboHandle;
@@ -25,7 +25,7 @@ namespace GameEngine.Rendering
         public int vertexCount;
         public bool smoothShading;
         public bool castShadow;
-        public string name;
+        public string meshName;
         public Material Material;
         public Shader meshShader;
 
@@ -33,7 +33,7 @@ namespace GameEngine.Rendering
         public Vector3 rotation = Vector3.Zero;
         public Vector3 scale = Vector3.One;
 
-        public Mesh(string Name, VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading, bool CastShadow, Material material)
+        public Mesh(string Type, VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading, bool CastShadow, Material material) : base()
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -51,7 +51,7 @@ namespace GameEngine.Rendering
             GL.EnableVertexAttribArray(shader.GetAttribLocation("aNormals"));
             GL.VertexAttribPointer(shader.GetAttribLocation("aNormals"), 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
             
-            name = Name;
+            meshName = Name;
             meshShader = shader;
             vertexCount = indices.Length;
             smoothShading = SmoothShading;
@@ -65,10 +65,8 @@ namespace GameEngine.Rendering
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
         }
 
-        public void Render()
+        public override void Render()
         {   
-            meshShader.Use();
-
             Matrix4 model = Matrix4.Identity;
             model *= Matrix4.CreateScale(scale);
             model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(rotation.X)) *
@@ -89,15 +87,10 @@ namespace GameEngine.Rendering
             GL.BindVertexArray(0);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             GL.DeleteVertexArray(vaoHandle);
             GL.DeleteBuffer(vboHandle);
-        }
-
-        public void SetName(string newName)
-        {
-            this.name = newName;
         }
     }
 }

@@ -397,6 +397,7 @@ namespace GameEngine
 
                 if (ImGui.Button("Remove Selected") && sceneObjects.Count != 0)
                 {
+                    sceneObjects[selectedMesh].Dispose();
                     sceneObjects.RemoveAt(selectedMesh);
                     triangleCount = Game.CalculateTriangles();
                     if (selectedMesh != 0) selectedMesh -= 1;

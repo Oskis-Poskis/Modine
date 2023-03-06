@@ -5,6 +5,8 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using ImGuiNET;
 
+using SN = System.Numerics;
+
 using GameEngine.Common;
 using GameEngine.Importer;
 using GameEngine.Rendering;
@@ -231,8 +233,10 @@ namespace GameEngine
                 if (IsKeyDown(Keys.S)) camera.position -= moveAmount * camera.direction;
                 if (IsKeyDown(Keys.A)) camera.position -= moveAmount * Vector3.Normalize(Vector3.Cross(camera.direction, Vector3.UnitY));
                 if (IsKeyDown(Keys.D)) camera.position += moveAmount * Vector3.Normalize(Vector3.Cross(camera.direction, Vector3.UnitY));
-                if (IsKeyDown(Keys.Space) | IsKeyDown(Keys.E)) camera.position += moveAmount * Vector3.UnitY;
-                if (IsKeyDown(Keys.LeftShift) | IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
+                if (IsKeyDown(Keys.E)) camera.position += moveAmount * Vector3.UnitY;
+                if (IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
+
+                
             }
 
             frameCount++;
@@ -330,9 +334,38 @@ namespace GameEngine
             ImGuiWindows.SmallStats(viewportSize, viewportPos, yaw, pitch, fps, ms, Meshes.Count, triangleCount);
             ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
             ImGuiWindows.MaterialEditor(ref _material, ref defaultShader, ref suzanne);
-            ImGuiWindows.Outliner(sceneObjects, ref selectedMesh);
+            ImGuiWindows.Outliner(ref sceneObjects, ref selectedMesh);
             ImGuiWindows.ObjectProperties(ref sceneObjects, selectedMesh);
-            ImGui.ShowDemoWindow();
+            //ImGui.ShowDemoWindow();
+
+            if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
+            {
+                SN.Vector2 mousePos = new SN.Vector2(MouseState.Position.X, MouseState.Position.Y) - new SN.Vector2(20, 20);
+                ImGui.SetNextWindowPos(mousePos);
+                ImGui.OpenPopup("test popup");
+            }
+
+            if (ImGui.BeginPopup("test popup", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize))
+            {
+                ImGui.Text("Add");
+                ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
+                ImGui.Separator();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
+                if (ImGui.BeginMenu("Mesh"))
+                {
+
+
+                    ImGui.EndMenu();
+                }
+                if (ImGui.BeginMenu("Light"))
+                {
+
+
+                    ImGui.EndMenu();
+                }
+
+                ImGui.EndPopup();
+            }
 
             ImGuiWindows.Settings(ref vsyncOn, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref defaultShader);
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;

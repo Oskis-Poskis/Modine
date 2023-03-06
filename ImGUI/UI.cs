@@ -40,63 +40,66 @@ namespace GameEngine.ImGUI
 
         public static void ObjectProperties(ref List<SceneObject> sceneObjects, int selectedMesh)
         {
-            SceneObject _sceneObject = sceneObjects[selectedMesh];
             ImGui.Begin("Properties");
-
-            string newName = _sceneObject.Name;
-            if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _sceneObject.Name = newName;
-            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-            ImGui.Separator();
-
-            if (_sceneObject.Type == SceneObjectType.Mesh)
+            if (sceneObjects.Count > 0)
             {
+                SceneObject _sceneObject = sceneObjects[selectedMesh];
+
+                string newName = _sceneObject.Name;
+                if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _sceneObject.Name = newName;
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                ImGui.Checkbox(" Cast shadow", ref _sceneObject.Mesh.castShadow);
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                ImGui.Checkbox(" Smooth Shading", ref _sceneObject.Mesh.smoothShading);
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
                 ImGui.Separator();
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                if (ImGui.TreeNode("Transform"))
+                if (_sceneObject.Type == SceneObjectType.Mesh)
                 {
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-                    SN.Vector3 tempPos = new(_sceneObject.Mesh.position.X, _sceneObject.Mesh.position.Y, _sceneObject.Mesh.position.Z);
-                    ImGui.Text("Position");
-                    if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
-                    {
-                        _sceneObject.Mesh.position = new(tempPos.X, tempPos.Y, tempPos.Z);
-                    }
-
+                    ImGui.Checkbox(" Cast shadow", ref _sceneObject.Mesh.castShadow);
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Checkbox(" Smooth Shading", ref _sceneObject.Mesh.smoothShading);
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                    SN.Vector3 tempRot = new( _sceneObject.Mesh.rotation.X, _sceneObject.Mesh.rotation.Y, _sceneObject.Mesh.rotation.Z);
-                    ImGui.Text("Rotation");
-                    if (ImGui.DragFloat3("##Rotation", ref tempRot, 1))
+                    if (ImGui.TreeNode("Transform"))
                     {
-                        _sceneObject.Mesh.rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
-                    }
-                    
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                        ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                    SN.Vector3 tempScale = new(_sceneObject.Mesh.scale.X, _sceneObject.Mesh.scale.Y, _sceneObject.Mesh.scale.Z);
-                    ImGui.Text("Scale");
-                    if (ImGui.DragFloat3("##Scale", ref tempScale, 0.1f))
+                        SN.Vector3 tempPos = new(_sceneObject.Mesh.position.X, _sceneObject.Mesh.position.Y, _sceneObject.Mesh.position.Z);
+                        ImGui.Text("Position");
+                        if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
+                        {
+                            _sceneObject.Mesh.position = new(tempPos.X, tempPos.Y, tempPos.Z);
+                        }
+
+                        ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                        SN.Vector3 tempRot = new( _sceneObject.Mesh.rotation.X, _sceneObject.Mesh.rotation.Y, _sceneObject.Mesh.rotation.Z);
+                        ImGui.Text("Rotation");
+                        if (ImGui.DragFloat3("##Rotation", ref tempRot, 1))
+                        {
+                            _sceneObject.Mesh.rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
+                        }
+                        
+                        ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                        SN.Vector3 tempScale = new(_sceneObject.Mesh.scale.X, _sceneObject.Mesh.scale.Y, _sceneObject.Mesh.scale.Z);
+                        ImGui.Text("Scale");
+                        if (ImGui.DragFloat3("##Scale", ref tempScale, 0.1f))
+                        {
+                            _sceneObject.Mesh.scale = new(tempScale.X, tempScale.Y, tempScale.Z);
+                        }
+                    }
+
+                    else if (_sceneObject.Type == SceneObjectType.Light)
                     {
-                        _sceneObject.Mesh.scale = new(tempScale.X, tempScale.Y, tempScale.Z);
+                        SN.Vector3 tempPos = new(_sceneObject.Light.position.X, _sceneObject.Light.position.Y, _sceneObject.Light.position.Z);
+                        ImGui.Text("Position");
+                        if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
+                        {
+                            _sceneObject.Light.position = new(tempPos.X, tempPos.Y, tempPos.Z);
+                        }
                     }
-                }
-            }
-
-            else if (_sceneObject.Type == SceneObjectType.Light)
-            {
-                SN.Vector3 tempPos = new(_sceneObject.Light.position.X, _sceneObject.Light.position.Y, _sceneObject.Light.position.Z);
-                ImGui.Text("Position");
-                if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
-                {
-                     _sceneObject.Light.position = new(tempPos.X, tempPos.Y, tempPos.Z);
                 }
             }
 
@@ -253,9 +256,15 @@ namespace GameEngine.ImGUI
             ImGui.End();
         }
 
-        public static void Outliner(List<SceneObject> sceneObjects, ref int selectedMeshIndex)
+        public static void Outliner(ref List<SceneObject> sceneObjects, ref int selectedMeshIndex)
         {
             ImGui.Begin("Outliner");
+
+            if (ImGui.Button("Remove Selected"))
+            {
+                sceneObjects.RemoveAt(selectedMeshIndex);
+                if (selectedMeshIndex != 0) selectedMeshIndex -= 1;
+            }
 
             if (ImGui.BeginTable("table", 2, ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersOuter))
             {

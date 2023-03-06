@@ -33,7 +33,7 @@ namespace GameEngine.Rendering
         public Vector3 rotation = Vector3.Zero;
         public Vector3 scale = Vector3.One;
 
-        public Mesh(string Type, VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading, bool CastShadow, Material material) : base()
+        public Mesh(VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading, bool CastShadow, Material material) : base()
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -68,10 +68,10 @@ namespace GameEngine.Rendering
         public void Render()
         {   
             Matrix4 model = Matrix4.Identity;
+            model *= Matrix4.CreateScale(scale);
             model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(rotation.X)) *
                      Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rotation.Y)) *
                      Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(rotation.Z));
-            model *= Matrix4.CreateScale(scale);
             model *= Matrix4.CreateTranslation(position);
 
             meshShader.SetMatrix4("model", model);

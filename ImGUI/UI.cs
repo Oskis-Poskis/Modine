@@ -13,7 +13,7 @@ namespace GameEngine.ImGUI
     {
         static float spacing = 5;
 
-        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, float yaw, float pitch, double fps, double ms, int objectCount, int triangleCount)
+        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, double fps, double ms, int objectCount, int triangleCount)
         {
             ImGui.GetForegroundDrawList().AddRectFilled(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
@@ -30,7 +30,6 @@ namespace GameEngine.ImGUI
                 GL.GetString(StringName.Renderer) + "\n" +
                 "Size: " + viewportSize.X + " x " + viewportSize.Y + "\n" +
                 "Pos: " + viewportPos.X + " x " + viewportPos.Y + "\n" +
-                "Object: " + yaw.ToString("0.0") + "\n" +
                 "Meshes: " + objectCount + "\n" +
                 "Triangles: " + triangleCount.ToString("N0") + "\n" +
                 "\n" +
@@ -138,31 +137,38 @@ namespace GameEngine.ImGUI
             ImGui.Image((IntPtr)depthMap, new(width, height), new(0, 1), new(1, 0), SN.Vector4.One, SN.Vector4.Zero); ImGui.End();
         }
 
-        public static void MaterialEditor(ref Material _material, ref Shader meshShader, ref Mesh mesh)
+        public static void MaterialEditor(ref List<SceneObject> sceneObjects, ref Shader meshShader, int selectedIndex)
         {
             ImGui.Begin("Material Editor");
 
-            SN.Vector3 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z);
-            if (ImGui.ColorPicker3("Albedo", ref color, ImGuiColorEditFlags.NoInputs))
+            if (sceneObjects.Count > 0)
             {
-                _material.Color = new(color.X, color.Y, color.Z);
-                _material.SetShaderUniforms(meshShader);
-            }
+                if (sceneObjects[selectedIndex].Type == SceneObjectType.Mesh)
+                {
+                    Material _material = sceneObjects[selectedIndex].Mesh.Material;
+                    SN.Vector3 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z);
+                    if (ImGui.ColorPicker3("Albedo", ref color, ImGuiColorEditFlags.NoInputs))
+                    {
+                        _material.Color = new(color.X, color.Y, color.Z);
+                        _material.SetShaderUniforms(meshShader);
+                    }
 
-            float tempRoughness = _material.Roughness;
-            if (ImGui.SliderFloat("Roughness", ref tempRoughness, 0, 1))
-            {
-                _material.Roughness = tempRoughness;
-                _material.SetShaderUniforms(meshShader);
-            }
+                    float tempRoughness = _material.Roughness;
+                    if (ImGui.SliderFloat("Roughness", ref tempRoughness, 0, 1))
+                    {
+                        _material.Roughness = tempRoughness;
+                        _material.SetShaderUniforms(meshShader);
+                    }
 
-            float tempMetallic = _material.Metallic;
-            if (ImGui.SliderFloat("Metallic", ref tempMetallic, 0, 1))
-            {
-                _material.Metallic = tempMetallic;
-                _material.SetShaderUniforms(meshShader);
+                    float tempMetallic = _material.Metallic;
+                    if (ImGui.SliderFloat("Metallic", ref tempMetallic, 0, 1))
+                    {
+                        _material.Metallic = tempMetallic;
+                        _material.SetShaderUniforms(meshShader);
+                    }
+                }
             }
-
+            
             ImGui.End();
         }
 
@@ -256,13 +262,14 @@ namespace GameEngine.ImGUI
             ImGui.End();
         }
 
-        public static void Outliner(ref List<SceneObject> sceneObjects, ref int selectedMeshIndex)
+        public static void Outliner(ref List<SceneObject> sceneObjects, ref int selectedMeshIndex, ref int triCount)
         {
             ImGui.Begin("Outliner");
 
-            if (ImGui.Button("Remove Selected"))
+            if (ImGui.Button("Remove Selected") && sceneObjects.Count != 0)
             {
                 sceneObjects.RemoveAt(selectedMeshIndex);
+                triCount = Game.CalculateTriangles();
                 if (selectedMeshIndex != 0) selectedMeshIndex -= 1;
             }
 

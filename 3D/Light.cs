@@ -31,7 +31,7 @@ namespace GameEngine.Rendering
              1, -1, 0
         };
 
-        public Light(Shader shader, string Type) : base()
+        public Light(Shader shader) : base()
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);

@@ -65,13 +65,13 @@ namespace GameEngine.Rendering
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
         }
 
-        public override void Render()
+        public void Render()
         {   
             Matrix4 model = Matrix4.Identity;
-            model *= Matrix4.CreateScale(scale);
             model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(rotation.X)) *
-                     Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rotation.Y)) * 
+                     Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rotation.Y)) *
                      Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(rotation.Z));
+            model *= Matrix4.CreateScale(scale);
             model *= Matrix4.CreateTranslation(position);
 
             meshShader.SetMatrix4("model", model);

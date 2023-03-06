@@ -8,6 +8,7 @@ using ImGuiNET;
 using GameEngine.Common;
 using GameEngine.Importer;
 using GameEngine.Rendering;
+using static GameEngine.Rendering.SceneObject;
 using GameEngine.ImGUI;
 
 namespace GameEngine
@@ -156,7 +157,7 @@ namespace GameEngine
             ModelImporter.LoadModel("Importing/Floor.fbx", out vertexData2, out indices2);
             floor = new Mesh("Mesh", vertexData2, indices2, defaultShader, true, true, _material);
             floor.position = new(0, 0, 0);
-            floor.scale = new(3);
+            floor.scale = new(1);
             floor.rotation = new(-90, 0, 0);
 
             ModelImporter.LoadModel("Importing/Cube.fbx", out vertexData3, out indices3);
@@ -175,12 +176,6 @@ namespace GameEngine
             sphere.position = new(1, 3, 1);
             sphere.scale = new(1);
             sphere.rotation = new(-90, 0, 0);
-
-            //Meshes.Add(suzanne);
-            //Meshes.Add(floor);
-            //Meshes.Add(cube);
-            //Meshes.Add(cube2);
-            //Meshes.Add(sphere);
             
             foreach (Mesh mesh in Meshes) triangleCount += mesh.vertexCount / 3;
 
@@ -189,14 +184,18 @@ namespace GameEngine
             light.position = new(3, 4, -3);
             light2.position = new(-2, 7, -6);
 
-            SceneObject _mesh1 = new("Monkey", "Mesh", suzanne);
-            SceneObject _mesh2 = new("Floor", "Mesh", floor);
-            SceneObject _light = new("Light1", "Light", null, light);
-            SceneObject _light2 = new("Light2", "Light", null, light2);
+            SceneObject _mesh1 = new("Monkey", SceneObjectType.Mesh, suzanne);
+            SceneObject _mesh2 = new("Floor", SceneObjectType.Mesh, floor);
+            SceneObject _light = new("Light1", SceneObjectType.Light, null, light);
+            SceneObject _light2 = new("Light2", SceneObjectType.Light, null, light2);
+            SceneObject _mesh3 = new("Sphere", SceneObjectType.Mesh, sphere);
+            SceneObject _mesh4 = new("Cube", SceneObjectType.Mesh, cube);
             sceneObjects.Add(_mesh1);
             sceneObjects.Add(_mesh2);
             sceneObjects.Add(_light);
             sceneObjects.Add(_light2);
+            sceneObjects.Add(_mesh3);
+            sceneObjects.Add(_mesh4);
 
             ImGuiController = new ImGuiController(viewportSize.X, viewportSize.Y);
             ImGuiWindows.LoadTheme();
@@ -268,10 +267,10 @@ namespace GameEngine
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
             GL.Clear(ClearBufferMask.DepthBufferBit);
 
-            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == "Mesh") sceneObject.Mesh.meshShader = shadowShader;
+            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = shadowShader;
             renderShadowMap = true;
             UpdateMatrices();
-            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == "Mesh" && sceneObject.Mesh.castShadow == true) sceneObject.Mesh.Render();
+            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Mesh.Render();
 
             // Render normal scene
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
@@ -280,7 +279,7 @@ namespace GameEngine
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
 
-            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == "Mesh") sceneObject.Mesh.meshShader = defaultShader;
+            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = defaultShader;
             defaultShader.SetVector3("viewPos", camera.position);
             renderShadowMap = false;
             UpdateMatrices();
@@ -290,13 +289,17 @@ namespace GameEngine
 
             foreach (SceneObject sceneObject in sceneObjects)
             {
-                if (sceneObject.Type == "Mesh")
+                if (sceneObject.Type == SceneObjectType.Mesh)
                 {
                     defaultShader.Use();
                     sceneObject.Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObject.Mesh.smoothShading));
                     sceneObject.Mesh.Render();
                 }
-                if (sceneObject.Type == "Light") sceneObject.RenderLight(camera.position, camera.direction, pitch, yaw);
+                else if (sceneObject.Type == SceneObjectType.Light)
+                {
+                    lightShader.Use();
+                    sceneObject.Light.Render(camera.position, camera.direction, pitch, yaw);
+                }
             }
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
@@ -329,7 +332,7 @@ namespace GameEngine
             ImGuiWindows.MaterialEditor(ref _material, ref defaultShader, ref suzanne);
             ImGuiWindows.Outliner(sceneObjects, ref selectedMesh);
             ImGuiWindows.ObjectProperties(ref sceneObjects, selectedMesh);
-            //ImGui.ShowDemoWindow();
+            ImGui.ShowDemoWindow();
 
             ImGuiWindows.Settings(ref vsyncOn, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref defaultShader);
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;

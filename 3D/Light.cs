@@ -48,16 +48,14 @@ namespace GameEngine.Rendering
 
             _light = this;
 
-            lightShader = shader;
+            this.lightShader = shader;
             this.lightName = Name;
         }
 
         Matrix4 viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
 
-        public override void RenderLight(Vector3 cameraPosition, Vector3 direction, float pitch, float yaw)
+        public void Render(Vector3 cameraPosition, Vector3 direction, float pitch, float yaw)
         {   
-            lightShader.Use();
-
             viewMatrix = Matrix4.LookAt(cameraPosition, cameraPosition + direction, Vector3.UnitY);
 
             Matrix4 model = Matrix4.Identity;

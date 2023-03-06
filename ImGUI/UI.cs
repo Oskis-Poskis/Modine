@@ -4,12 +4,15 @@ using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using GameEngine.Rendering;
+using static GameEngine.Rendering.SceneObject;
 using GameEngine.Common;
 
 namespace GameEngine.ImGUI
 {
     public static class ImGuiWindows
     {
+        static float spacing = 5;
+
         public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, float yaw, float pitch, double fps, double ms, int objectCount, int triangleCount)
         {
             ImGui.GetForegroundDrawList().AddRectFilled(
@@ -40,37 +43,60 @@ namespace GameEngine.ImGUI
             SceneObject _sceneObject = sceneObjects[selectedMesh];
             ImGui.Begin("Properties");
 
-            if (_sceneObject.Type == "Mesh")
+            string newName = _sceneObject.Name;
+            if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _sceneObject.Name = newName;
+            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+            ImGui.Separator();
+
+            if (_sceneObject.Type == SceneObjectType.Mesh)
             {
-                string newName = _sceneObject.Name;
-                if (ImGui.InputTextWithHint("##Name", newName, ref newName, 30))
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Checkbox(" Cast shadow", ref _sceneObject.Mesh.castShadow);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Checkbox(" Smooth Shading", ref _sceneObject.Mesh.smoothShading);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Separator();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                if (ImGui.TreeNode("Transform"))
                 {
-                    //_sceneObject.Mesh.meshName = newName;
-                    _sceneObject.Name = newName;
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    SN.Vector3 tempPos = new(_sceneObject.Mesh.position.X, _sceneObject.Mesh.position.Y, _sceneObject.Mesh.position.Z);
+                    ImGui.Text("Position");
+                    if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
+                    {
+                        _sceneObject.Mesh.position = new(tempPos.X, tempPos.Y, tempPos.Z);
+                    }
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    SN.Vector3 tempRot = new( _sceneObject.Mesh.rotation.X, _sceneObject.Mesh.rotation.Y, _sceneObject.Mesh.rotation.Z);
+                    ImGui.Text("Rotation");
+                    if (ImGui.DragFloat3("##Rotation", ref tempRot, 1))
+                    {
+                        _sceneObject.Mesh.rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
+                    }
+                    
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    SN.Vector3 tempScale = new(_sceneObject.Mesh.scale.X, _sceneObject.Mesh.scale.Y, _sceneObject.Mesh.scale.Z);
+                    ImGui.Text("Scale");
+                    if (ImGui.DragFloat3("##Scale", ref tempScale, 0.1f))
+                    {
+                        _sceneObject.Mesh.scale = new(tempScale.X, tempScale.Y, tempScale.Z);
+                    }
                 }
+            }
 
-                ImGui.Checkbox("Cast shadow", ref _sceneObject.Mesh.castShadow);
-                ImGui.Checkbox("Smooth Shading", ref _sceneObject.Mesh.smoothShading);
-
-                SN.Vector3 tempPos = new(_sceneObject.Mesh.position.X, _sceneObject.Mesh.position.Y, _sceneObject.Mesh.position.Z);
+            else if (_sceneObject.Type == SceneObjectType.Light)
+            {
+                SN.Vector3 tempPos = new(_sceneObject.Light.position.X, _sceneObject.Light.position.Y, _sceneObject.Light.position.Z);
                 ImGui.Text("Position");
                 if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
                 {
-                     _sceneObject.Mesh.position = new(tempPos.X, tempPos.Y, tempPos.Z);
-                }
-
-                SN.Vector3 tempRot = new( _sceneObject.Mesh.rotation.X, _sceneObject.Mesh.rotation.Y, _sceneObject.Mesh.rotation.Z);
-                ImGui.Text("Rotation");
-                if (ImGui.DragFloat3("##Rotation", ref tempRot, 1))
-                {
-                     _sceneObject.Mesh.rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
-                }
-                
-                SN.Vector3 tempScale = new(_sceneObject.Mesh.scale.X, _sceneObject.Mesh.scale.Y, _sceneObject.Mesh.scale.Z);
-                ImGui.Text("Scale");
-                if (ImGui.DragFloat3("##Scale", ref tempScale, 0.1f))
-                {
-                    _sceneObject.Mesh.scale = new(tempScale.X, tempScale.Y, tempScale.Z);
+                     _sceneObject.Light.position = new(tempPos.X, tempPos.Y, tempPos.Z);
                 }
             }
 
@@ -204,7 +230,7 @@ namespace GameEngine.ImGUI
         }
 
 
-        public static void Outliner(List<SceneObject> sceneObjects, ref int selectedMeshIndex)
+        public static void OldOutliner(List<SceneObject> sceneObjects, ref int selectedMeshIndex)
         {
             ImGui.Begin("Outliner", ImGuiWindowFlags.None);
 
@@ -214,9 +240,12 @@ namespace GameEngine.ImGUI
 
                 if (ImGui.Selectable(sceneObjects[i].Name, selectedMeshIndex == i))
                 {
-                    // Handle mesh selection
                     selectedMeshIndex = i;
                 }
+                ImGui.SameLine(ImGui.GetWindowWidth() - 55);
+                ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.5f)));
+                ImGui.Text(sceneObjects[i].Type.ToString().ToLower());
+                ImGui.PopStyleColor();
 
                 ImGui.EndGroup();
             }
@@ -224,17 +253,73 @@ namespace GameEngine.ImGUI
             ImGui.End();
         }
 
+        public static void Outliner(List<SceneObject> sceneObjects, ref int selectedMeshIndex)
+        {
+            ImGui.Begin("Outliner");
+
+            if (ImGui.BeginTable("table", 2, ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersOuter))
+            {
+                ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch, 0.5f);
+                ImGui.TableSetupColumn("Type");
+
+                for (int i = 0; i < sceneObjects.Count; i++)
+                {
+                    ImGui.TableNextRow();
+
+                    if (i % 2 == 0) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.15f)));
+                    if (i % 2 == 1) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
+
+                    ImGui.TableSetColumnIndex(0);
+                    if (ImGui.Selectable(sceneObjects[i].Name, selectedMeshIndex == i)) selectedMeshIndex = i;
+
+                    ImGui.TableSetColumnIndex(1);
+                    ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.5f)));
+                    ImGui.Text(sceneObjects[i].Type.ToString().ToLower() + " ");
+                    ImGui.PopStyleColor();
+                }
+
+                float tableHeight = ImGui.GetContentRegionAvail().Y;
+                float itemHeight = ImGui.GetTextLineHeightWithSpacing();
+                int numRows = Convert.ToInt16(tableHeight / (itemHeight + 4)) - 1;
+
+                for (int i = 0; i < numRows; i++)
+                {
+                    ImGui.TableNextRow();
+
+                    if (i % 2 == 0) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.15f)));
+                    if (i % 2 == 1) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
+
+                    ImGui.TableSetColumnIndex(0);
+                    ImGui.Text("");
+
+                    ImGui.TableSetColumnIndex(1);
+                    ImGui.Text("");
+                }
+
+                ImGui.EndTable();
+            }
+
+            ImGui.End();
+        }
+
+
         public static void LoadTheme()
         {
-            ImGui.GetStyle().FrameRounding = 6;
-            ImGui.GetStyle().FrameBorderSize = 1;
+            ImGui.GetStyle().FrameRounding = 2;
+            ImGui.GetStyle().FrameBorderSize = 2;
+            ImGui.GetStyle().FramePadding = new System.Numerics.Vector2(4);
+            ImGui.GetStyle().CellPadding = new SN.Vector2(3, 3);
+            ImGui.GetStyle().ItemSpacing = new System.Numerics.Vector2(4, 2);
+            ImGui.GetStyle().ItemInnerSpacing = new System.Numerics.Vector2(0, 4);
             ImGui.GetStyle().TabRounding = 2;
-            ImGui.GetStyle().WindowRounding = 7;
+            ImGui.GetStyle().WindowRounding = 5;
             ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;
+            
             ImGui.GetStyle().GrabMinSize = 15;
 
             ImGui.PushStyleColor(ImGuiCol.Border, new System.Numerics.Vector4(25, 25, 25, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.MenuBarBg, new System.Numerics.Vector4(15, 15, 15, 200f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.CheckMark, new System.Numerics.Vector4(255, 140, 0, 255) / 255);
 
             // Background color
             ImGui.PushStyleColor(ImGuiCol.WindowBg, new System.Numerics.Vector4(15f, 15f, 15f, 255f) / 255);
@@ -264,7 +349,7 @@ namespace GameEngine.ImGUI
             ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(0f, 153f, 76f, 255f) / 255);
 
             // Rezising bar
-            ImGui.PushStyleColor(ImGuiCol.Separator, new System.Numerics.Vector4(30f, 30f, 30f, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.Separator, new System.Numerics.Vector4(40f, 40f, 40f, 255) / 255);
             ImGui.PushStyleColor(ImGuiCol.SeparatorHovered, new System.Numerics.Vector4(60f, 60f, 60f, 255) / 255);
             ImGui.PushStyleColor(ImGuiCol.SeparatorActive, new System.Numerics.Vector4(80f, 80f, 80f, 255) / 255);
 

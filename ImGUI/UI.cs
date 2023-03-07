@@ -300,7 +300,10 @@ namespace GameEngine.ImGUI
                     if (i % 2 == 1) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
 
                     ImGui.TableSetColumnIndex(0);
-                    if (ImGui.Selectable(sceneObjects[i].Name, selectedMeshIndex == i)) selectedMeshIndex = i;
+                    if (ImGui.Selectable(sceneObjects[i].Name, selectedMeshIndex == i))
+                    {
+                        selectedMeshIndex = i;
+                    }
 
                     ImGui.TableSetColumnIndex(1);
                     ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.5f)));

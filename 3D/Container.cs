@@ -8,6 +8,7 @@ namespace GameEngine.Rendering
         public string Name { get; set;}
         public bool SmoothShading;
         public bool CastShadow;
+        public bool IsSelected = false;
         public Mesh Mesh;
         public Light Light;
 

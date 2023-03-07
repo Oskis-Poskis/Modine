@@ -117,7 +117,7 @@ namespace GameEngine
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.StencilTest);
-            GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
+            GL.StencilOp(StencilOp.Keep, StencilOp.Replace, StencilOp.Replace);
             //GL.Enable(EnableCap.FramebufferSrgb);
             GL.LineWidth(2);
             GL.PointSize(5);
@@ -136,7 +136,7 @@ namespace GameEngine
             defaultShader = new Shader("Shaders/mesh.vert", "Shaders/mesh.frag");
             lightShader = new Shader("Shaders/light.vert", "Shaders/light.frag");
             shadowShader = new Shader("Shaders/shadow.vert", "Shaders/shadow.frag");
-            outlineShader = new Shader("Shaders/outline.vert", "Shaders/outline.frag");
+            outlineShader = new Shader("Shaders/outline.vert", "Shaders/outline.frag", "Shaders/outline.geom");
             postprocessShader = new Shader("Shaders/postprocess.vert", "Shaders/postprocess.frag");
 
             VAO = GL.GenVertexArray();
@@ -180,8 +180,8 @@ namespace GameEngine
             cube.scale = new(0.5f);
             cube.rotation = new(-90, -40, 0);
 
-            light = new Light(lightShader);
-            light2 = new Light(lightShader);
+            light = new Light(lightShader, new(1, 1, 0));
+            light2 = new Light(lightShader, new(1, 0, 1));
             light.position = new(3, 4, -3);
             light2.position = new(-2, 7, -6);
 
@@ -282,6 +282,7 @@ namespace GameEngine
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
 
             foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = defaultShader;
+            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Light) sceneObject.Light.lightShader = lightShader;
             defaultShader.SetVector3("viewPos", camera.position);
             renderShadowMap = false;
             UpdateMatrices();
@@ -289,71 +290,8 @@ namespace GameEngine
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, depthMap);
 
-            GL.StencilMask(0xFF);
-            for (int i = 0; i < sceneObjects.Count; i++)
-            {
-                if (i != selectedSceneObject)
-                {
-                    if (sceneObjects[i].Type == SceneObjectType.Mesh)
-                    {
-                    defaultShader.Use();
-                    sceneObjects[i].Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObjects[i].Mesh.smoothShading));
-                    sceneObjects[i].Mesh.Material.SetShaderUniforms(defaultShader);
-                    sceneObjects[i].Mesh.Render();
-                    }
-                    else if (sceneObjects[i].Type == SceneObjectType.Light)
-                    {
-                        lightShader.Use();
-                        sceneObjects[i].Light.Render(camera.position, camera.direction, pitch, yaw);
-                    }
-                }
-            }
+            RenderOutlineAndObjects();
 
-            GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
-            GL.StencilMask(0xFF);
-            if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh)
-            {
-            defaultShader.Use();
-            sceneObjects[selectedSceneObject].Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObjects[selectedSceneObject].Mesh.smoothShading));
-            sceneObjects[selectedSceneObject].Mesh.Material.SetShaderUniforms(defaultShader);
-            sceneObjects[selectedSceneObject].Mesh.Render();
-            }
-            else if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light)
-            {
-                lightShader.Use();
-                sceneObjects[selectedSceneObject].Light.Render(camera.position, camera.direction, pitch, yaw);
-            }
-
-            GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
-            GL.StencilMask(0x00);
-            GL.Disable(EnableCap.DepthTest);
-
-            sceneObjects[selectedSceneObject].Mesh.meshShader = outlineShader;
-            outlineShader.Use();
-            outlineShader.SetMatrix4("projection", projectionMatrix);
-            outlineShader.SetMatrix4("view", viewMatrix);
-            sceneObjects[selectedSceneObject].Mesh.Render();
-
-            GL.StencilMask(0xFF);
-            GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
-            GL.Enable(EnableCap.DepthTest);
-
-
-/*
-            GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
-            GL.StencilMask(0x00);
-            GL.Disable(EnableCap.DepthTest);
-
-            sceneObjects[selectedSceneObject].Mesh.meshShader = outlineShader;
-            outlineShader.Use();
-            outlineShader.SetMatrix4("projection", projectionMatrix);
-            outlineShader.SetMatrix4("view", viewMatrix);
-            sceneObjects[selectedSceneObject].Mesh.Render();
-
-            GL.StencilMask(0xFF);
-            GL.StencilFunc(StencilFunction.Always, 0, 0xFF);
-            GL.Enable(EnableCap.DepthTest);
-*/
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
             // Post processing here
@@ -490,6 +428,69 @@ namespace GameEngine
             Vector3 direction = Vector3.Normalize(targetPosition - camera.position);
 
             camera.direction = direction;
+        }
+
+        public void RenderOutlineAndObjects()
+        {
+            GL.StencilMask(0x00);
+            foreach (SceneObject sceneObject in sceneObjects)
+            {
+                if (!sceneObject.IsSelected)
+                {
+                    if (sceneObject.Type == SceneObjectType.Mesh)
+                    {
+                        defaultShader.Use();
+                        sceneObject.Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObject.Mesh.smoothShading));
+                        sceneObject.Mesh.Material.SetShaderUniforms(defaultShader);
+                        sceneObject.Mesh.Render();
+                    }
+                    else if (sceneObject.Type == SceneObjectType.Light)
+                    {
+                        lightShader.Use();
+                        lightShader.SetVector3("lightColor", sceneObject.Light.lightColor);
+                        sceneObject.Light.Render(camera.position, camera.direction, pitch, yaw);
+                    }
+                }
+            }
+
+            if (sceneObjects.Count > 0)
+            {
+                GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
+                GL.StencilMask(0xFF);
+                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh)
+                {
+                    defaultShader.Use();
+                    sceneObjects[selectedSceneObject].Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObjects[selectedSceneObject].Mesh.smoothShading));
+                    sceneObjects[selectedSceneObject].Mesh.Material.SetShaderUniforms(defaultShader);
+                    sceneObjects[selectedSceneObject].Mesh.Render();
+                }
+                else if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light)
+                {
+                    lightShader.Use();
+                    lightShader.SetVector3("lightColor", sceneObjects[selectedSceneObject].Light.lightColor);
+                    sceneObjects[selectedSceneObject].Light.Render(camera.position, camera.direction, pitch, yaw);
+                }
+
+                GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
+                GL.StencilMask(0x00);
+                GL.Disable(EnableCap.DepthTest);
+
+                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) sceneObjects[selectedSceneObject].Mesh.meshShader = outlineShader;
+                else if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) sceneObjects[selectedSceneObject].Light.lightShader = outlineShader;
+                outlineShader.Use();
+                outlineShader.SetMatrix4("projection", projectionMatrix);
+                outlineShader.SetMatrix4("view", viewMatrix);
+                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) sceneObjects[selectedSceneObject].Mesh.Render();
+                else if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) sceneObjects[selectedSceneObject].Light.Render(camera.position, camera.direction, pitch, yaw);
+
+                GL.StencilMask(0xFF);
+                GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
+                GL.Enable(EnableCap.DepthTest);
+            }
+
+            //////////////////
+
+            
         }
 
         public void UpdateMatrices()

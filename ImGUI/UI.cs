@@ -173,11 +173,14 @@ namespace GameEngine.ImGUI
         }
 
         static int selectedIndex = 3;
-        public static void Settings(ref bool vsyncOn, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader)
+        static bool debugBool = true;
+        static float strength = 1;
+        public static void Settings(ref bool vsyncOn, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader)
         {
             ImGui.Begin("Settings");
 
             ImGui.Checkbox("VSync", ref vsyncOn);
+            if (ImGui.Checkbox("ACES Tonemap", ref debugBool)) ppshader.SetInt("ACES", Convert.ToInt32(debugBool));
 
             SN.Vector3 dir = new(direction.X, direction.Y, direction.Z);
             ImGui.Text("Sun Direction");
@@ -187,9 +190,15 @@ namespace GameEngine.ImGUI
                 shader.SetVector3("direction", direction);
             }
 
+            ImGui.Text("Strength");
+            if (ImGui.SliderFloat("##Strength", ref strength, 0, 10, "%.1f"))
+            {
+                shader.SetFloat("dirStrength", strength);
+            }
+
             SN.Vector3 color = new(ambient.X, ambient.Y, ambient.Z);            
             ImGui.Text("Ambient Color");
-            if (ImGui.ColorPicker3("##Ambient Color", ref color, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoSidePreview))
+            if (ImGui.ColorPicker3("##Ambient Color", ref color, ImGuiColorEditFlags.NoInputs))
             {
                 ambient = new(color.X, color.Y, color.Z);
                 shader.SetVector3("ambient", ambient);

@@ -14,6 +14,7 @@ uniform sampler2D shadowMap;
 uniform vec3 viewPos;
 uniform float shadowFactor;
 uniform vec3 direction;
+uniform float dirStrength;
 
 const float constant = 1;
 const float linear = 0.09;
@@ -72,7 +73,7 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
     // Calc per light radiance
     vec3 L = normalize(direction);
     vec3 H = normalize(V + L);
-    vec3 radiance = vec3(1);
+    vec3 radiance = vec3(1) * dirStrength;
 
     // Cook-Torrance BRDF
     float NDF = DistributionGGX(N, H, rough);   
@@ -136,7 +137,7 @@ void main()
 
     Lo += CalcDirectionalLight(direction, V, N, F0, albedo, roughness, metallic);
 
-    vec3 result = vec3(1) - exp(-Lo);
+    vec3 result = Lo;
     result = pow(result, vec3(1 / 2.2));
 
     float shadow = ShadowCalculation(fragPosLightSpace, N, direction); 

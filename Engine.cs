@@ -50,8 +50,9 @@ namespace GameEngine
         Vector3 ambient = new(0.05f);
         Vector3 direction = new(1);
         float shadowFactor = 0.75f;
-        Material _material;
-        Material _material2;
+        Material mat_monkey;
+        Material mat_cube;
+        Material mat_floor;
         public Shader defaultShader;
         public Shader lightShader;
         public Shader shadowShader;
@@ -114,6 +115,7 @@ namespace GameEngine
             IsVisible = true;
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.CullFace);
+            //GL.Enable(EnableCap.FramebufferSrgb);
             GL.LineWidth(2);
             GL.PointSize(5);
 
@@ -144,30 +146,35 @@ namespace GameEngine
             GL.VertexAttribPointer(postprocessShader.GetAttribLocation("aPosition"), 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
 
             camera = new Camera(new(0, 1, 2), -Vector3.UnitZ, 10);
-            _material = new(new(1, 1, 1), 0, 0.2f);
-            _material2 = new(new(1, 0.5f, 0), 0, 0.4f);
-            _material.SetShaderUniforms(defaultShader);
-            _material2.SetShaderUniforms(defaultShader);
+            mat_monkey = new(new(1, 0.35f, 0), 0, 0.2f);
+            mat_cube = new(new(0.875f, 0.6f, 0.185f), 1, 0.45f);
+            mat_floor = new(new(1, 1, 1), 0, 0.2f);
+            mat_monkey.SetShaderUniforms(defaultShader);
+            mat_floor.SetShaderUniforms(defaultShader);
+
             defaultShader.SetVector3("ambient", ambient);
             defaultShader.SetVector3("direction", direction);
             defaultShader.SetFloat("shadowFactor", shadowFactor);
+            defaultShader.SetFloat("dirStrength", 1);
 
             ModelImporter.LoadModel("Importing/Suzanne.fbx", out vertexData, out indices);
-            ModelImporter.LoadModel("Importing/Floor.fbx", out planeVertexData, out planeIndices);  
-            ModelImporter.LoadModel("Importing/Cube.fbx", out cubeVertexData, out cubeIndices);
+            ModelImporter.LoadModel("Importing/Cube.fbx", out planeVertexData, out planeIndices);  
+            ModelImporter.LoadModel("Importing/RoundedCube.fbx", out cubeVertexData, out cubeIndices);
             ModelImporter.LoadModel("Importing/Sphere.fbx", out sphereVertexData, out sphereIndices);
-            suzanne = new Mesh(vertexData, indices, defaultShader, true, true, _material);
+            suzanne = new Mesh(vertexData, indices, defaultShader, true, true, mat_monkey);
+            suzanne.scale = new(0.75f);
             suzanne.position = new(0, 2, 0);
             suzanne.rotation = new(-125, 0, 0);
 
-            floor = new Mesh(planeVertexData, planeIndices, defaultShader, true, true, _material);
+            floor = new Mesh(planeVertexData, planeIndices, defaultShader, true, true, mat_floor);
             floor.position = new(0, 0, 0);
-            floor.scale = new(1);
+            floor.scale = new(5, 5, 0.2f);
             floor.rotation = new(-90, 0, 0);
 
-            cube = new Mesh(cubeVertexData, cubeIndices, defaultShader, true, true, _material2);
+            cube = new Mesh(cubeVertexData, cubeIndices, defaultShader, true, true, mat_cube);
             cube.position = new(3, 1, 0);
-            cube.rotation = new(-90, 30, 0);
+            cube.scale = new(0.5f);
+            cube.rotation = new(-90, -40, 0);
 
             light = new Light(lightShader);
             light2 = new Light(lightShader);
@@ -175,12 +182,12 @@ namespace GameEngine
             light2.position = new(-2, 7, -6);
 
             SceneObject _monkey = new("Monkey", SceneObjectType.Mesh, suzanne);
-            SceneObject _plane = new("Floor", SceneObjectType.Mesh, floor);
             SceneObject _cube = new("Cube", SceneObjectType.Mesh, cube);
+            SceneObject _floor = new("Floor", SceneObjectType.Mesh, floor);
             SceneObject _light = new("Light1", SceneObjectType.Light, null, light);
             SceneObject _light2 = new("Light2", SceneObjectType.Light, null, light2);
             sceneObjects.Add(_monkey);
-            sceneObjects.Add(_plane);
+            sceneObjects.Add(_floor);
             sceneObjects.Add(_light);
             sceneObjects.Add(_light2);
             sceneObjects.Add(_cube);
@@ -345,7 +352,7 @@ namespace GameEngine
                     int randomNum = rnd.Next(1, 101);
                     if (ImGui.MenuItem("Cube"))
                     {
-                        Mesh cube = new Mesh(cubeVertexData, cubeIndices, defaultShader, true, true, _material);
+                        Mesh cube = new Mesh(cubeVertexData, cubeIndices, defaultShader, true, true, mat_monkey);
                         cube.rotation.X = -90;
                         SceneObject _cube = new("Cube" + randomNum, SceneObjectType.Mesh, cube);
                         sceneObjects.Add(_cube);
@@ -359,7 +366,7 @@ namespace GameEngine
 
                     if (ImGui.MenuItem("Sphere"))
                     {
-                        Mesh sphere = new Mesh(sphereVertexData, sphereIndices, defaultShader, true, true, _material2);
+                        Mesh sphere = new Mesh(sphereVertexData, sphereIndices, defaultShader, true, true, mat_floor);
                         sphere.rotation.X = -90;
                         SceneObject _sphere = new("Sphere" + randomNum, SceneObjectType.Mesh, sphere);
                         sceneObjects.Add(_sphere);
@@ -373,7 +380,7 @@ namespace GameEngine
 
                     if (ImGui.MenuItem("Plane"))
                     {
-                        Mesh plane = new Mesh(planeVertexData, planeIndices, defaultShader, true, true, _material);
+                        Mesh plane = new Mesh(planeVertexData, planeIndices, defaultShader, true, true, mat_monkey);
                         plane.rotation.X = -90;
                         SceneObject _plane = new("Plane" + randomNum, SceneObjectType.Mesh, plane);
                         sceneObjects.Add(_plane);
@@ -406,7 +413,7 @@ namespace GameEngine
                 ImGui.EndPopup();
             }
 
-            ImGuiWindows.Settings(ref vsyncOn, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref defaultShader);
+            ImGuiWindows.Settings(ref vsyncOn, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref defaultShader, ref postprocessShader);
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
 
             ImGuiController.Render();

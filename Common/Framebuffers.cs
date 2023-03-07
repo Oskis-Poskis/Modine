@@ -5,7 +5,7 @@ namespace GameEngine.Common
 {
     public class Framebuffers
     {
-        public static void SetupFBO(ref int framebufferTexture, ref int depthTexture, Vector2i viewportSize)
+        public static void SetupFBO(ref int framebufferTexture, ref int depthStencil,  Vector2i viewportSize)
         {
             // Color Texture
             framebufferTexture = GL.GenTexture();
@@ -19,15 +19,15 @@ namespace GameEngine.Common
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, framebufferTexture, 0);
 
             // Depth Texture
-            depthTexture = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, depthTexture);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
+            depthStencil = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, depthStencil);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.DepthStencil, PixelType.UnsignedShort, IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
             // Attach Depth to FBO
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, depthTexture, 0);
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, TextureTarget.Texture2D, depthStencil, 0);
         }
 
         public static void SetupShadowFBO(ref int depthMapFBO, ref int depthMap, int shadowRes)

@@ -57,6 +57,7 @@ namespace GameEngine
         public Shader lightShader;
         public Shader shadowShader;
         public Shader postprocessShader;
+        public Shader outlineShader;
         Matrix4 projectionMatrix;
         Matrix4 viewMatrix;
 
@@ -76,7 +77,7 @@ namespace GameEngine
         Camera camera;
         List<Mesh> Meshes = new List<Mesh>();
         static List<SceneObject> sceneObjects = new List<SceneObject>();
-        int selectedMesh = 0;
+        int selectedSceneObject = 0;
         Light light;
         Light light2;
 
@@ -86,7 +87,7 @@ namespace GameEngine
         private ImGuiController ImGuiController;
         int FBO;
         int framebufferTexture;
-        int depthTexture;
+        int depthStencilTexture;
 
         int depthMapFBO;
         int depthMap;
@@ -115,6 +116,8 @@ namespace GameEngine
             IsVisible = true;
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.CullFace);
+            GL.Enable(EnableCap.StencilTest);
+            GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
             //GL.Enable(EnableCap.FramebufferSrgb);
             GL.LineWidth(2);
             GL.PointSize(5);
@@ -124,7 +127,7 @@ namespace GameEngine
 
             VSync = VSyncMode.Adaptive;
 
-            Framebuffers.SetupFBO(ref framebufferTexture, ref depthTexture, viewportSize);
+            Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, viewportSize);
             Framebuffers.SetupShadowFBO(ref depthMapFBO, ref depthMap, shadowRes);
 
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1280 / 768, 0.1f, 100);
@@ -133,6 +136,7 @@ namespace GameEngine
             defaultShader = new Shader("Shaders/mesh.vert", "Shaders/mesh.frag");
             lightShader = new Shader("Shaders/light.vert", "Shaders/light.frag");
             shadowShader = new Shader("Shaders/shadow.vert", "Shaders/shadow.frag");
+            outlineShader = new Shader("Shaders/outline.vert", "Shaders/outline.frag");
             postprocessShader = new Shader("Shaders/postprocess.vert", "Shaders/postprocess.frag");
 
             VAO = GL.GenVertexArray();
@@ -274,7 +278,7 @@ namespace GameEngine
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
             GL.ClearColor(new Color4(ambient.X, ambient.Y, ambient.Z, 1));
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
 
             foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = defaultShader;
@@ -285,21 +289,71 @@ namespace GameEngine
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, depthMap);
 
-            foreach (SceneObject sceneObject in sceneObjects)
+            GL.StencilMask(0xFF);
+            for (int i = 0; i < sceneObjects.Count; i++)
             {
-                if (sceneObject.Type == SceneObjectType.Mesh)
+                if (i != selectedSceneObject)
                 {
+                    if (sceneObjects[i].Type == SceneObjectType.Mesh)
+                    {
                     defaultShader.Use();
-                    sceneObject.Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObject.Mesh.smoothShading));
-                    sceneObject.Mesh.Material.SetShaderUniforms(defaultShader);
-                    sceneObject.Mesh.Render();
-                }
-                else if (sceneObject.Type == SceneObjectType.Light)
-                {
-                    lightShader.Use();
-                    sceneObject.Light.Render(camera.position, camera.direction, pitch, yaw);
+                    sceneObjects[i].Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObjects[i].Mesh.smoothShading));
+                    sceneObjects[i].Mesh.Material.SetShaderUniforms(defaultShader);
+                    sceneObjects[i].Mesh.Render();
+                    }
+                    else if (sceneObjects[i].Type == SceneObjectType.Light)
+                    {
+                        lightShader.Use();
+                        sceneObjects[i].Light.Render(camera.position, camera.direction, pitch, yaw);
+                    }
                 }
             }
+
+            GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
+            GL.StencilMask(0xFF);
+            if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh)
+            {
+            defaultShader.Use();
+            sceneObjects[selectedSceneObject].Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObjects[selectedSceneObject].Mesh.smoothShading));
+            sceneObjects[selectedSceneObject].Mesh.Material.SetShaderUniforms(defaultShader);
+            sceneObjects[selectedSceneObject].Mesh.Render();
+            }
+            else if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light)
+            {
+                lightShader.Use();
+                sceneObjects[selectedSceneObject].Light.Render(camera.position, camera.direction, pitch, yaw);
+            }
+
+            GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
+            GL.StencilMask(0x00);
+            GL.Disable(EnableCap.DepthTest);
+
+            sceneObjects[selectedSceneObject].Mesh.meshShader = outlineShader;
+            outlineShader.Use();
+            outlineShader.SetMatrix4("projection", projectionMatrix);
+            outlineShader.SetMatrix4("view", viewMatrix);
+            sceneObjects[selectedSceneObject].Mesh.Render();
+
+            GL.StencilMask(0xFF);
+            GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
+            GL.Enable(EnableCap.DepthTest);
+
+
+/*
+            GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
+            GL.StencilMask(0x00);
+            GL.Disable(EnableCap.DepthTest);
+
+            sceneObjects[selectedSceneObject].Mesh.meshShader = outlineShader;
+            outlineShader.Use();
+            outlineShader.SetMatrix4("projection", projectionMatrix);
+            outlineShader.SetMatrix4("view", viewMatrix);
+            sceneObjects[selectedSceneObject].Mesh.Render();
+
+            GL.StencilMask(0xFF);
+            GL.StencilFunc(StencilFunction.Always, 0, 0xFF);
+            GL.Enable(EnableCap.DepthTest);
+*/
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
             // Post processing here
@@ -315,7 +369,7 @@ namespace GameEngine
             {
                 GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
-                GL.BindTexture(TextureTarget.Texture2D, depthTexture);
+                GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, viewportSize.X, viewportSize.Y, 0, PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero);
 
                 UpdateMatrices();
@@ -327,10 +381,10 @@ namespace GameEngine
 
             ImGuiWindows.Header();
             ImGuiWindows.SmallStats(viewportSize, viewportPos, fps, ms, sceneObjects.Count, triangleCount);
-            ImGuiWindows.Viewport(framebufferTexture, depthTexture, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
-            ImGuiWindows.MaterialEditor(ref sceneObjects, ref defaultShader, selectedMesh);
-            ImGuiWindows.Outliner(ref sceneObjects, ref selectedMesh, ref triangleCount);
-            ImGuiWindows.ObjectProperties(ref sceneObjects, selectedMesh);
+            ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
+            ImGuiWindows.MaterialEditor(ref sceneObjects, ref defaultShader, selectedSceneObject);
+            ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
+            ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
             //ImGui.ShowDemoWindow();
 
             if (IsKeyPressed(Keys.Space))
@@ -358,7 +412,7 @@ namespace GameEngine
                         SceneObject _cube = new("Cube" + randomNum, SceneObjectType.Mesh, cube);
                         sceneObjects.Add(_cube);
 
-                        selectedMesh = sceneObjects.Count - 1;
+                        selectedSceneObject = sceneObjects.Count - 1;
 
                         triangleCount = CalculateTriangles();
                     }
@@ -372,7 +426,7 @@ namespace GameEngine
                         SceneObject _sphere = new("Sphere" + randomNum, SceneObjectType.Mesh, sphere);
                         sceneObjects.Add(_sphere);
 
-                        selectedMesh = sceneObjects.Count - 1;
+                        selectedSceneObject = sceneObjects.Count - 1;
 
                         triangleCount = CalculateTriangles();
                     }
@@ -386,7 +440,7 @@ namespace GameEngine
                         SceneObject _plane = new("Plane" + randomNum, SceneObjectType.Mesh, plane);
                         sceneObjects.Add(_plane);
 
-                        selectedMesh = sceneObjects.Count - 1;
+                        selectedSceneObject = sceneObjects.Count - 1;
 
                         triangleCount = CalculateTriangles();
                     }
@@ -405,10 +459,10 @@ namespace GameEngine
 
                 if (ImGui.Button("Remove Selected") && sceneObjects.Count != 0)
                 {
-                    sceneObjects[selectedMesh].Dispose();
-                    sceneObjects.RemoveAt(selectedMesh);
+                    sceneObjects[selectedSceneObject].Dispose();
+                    sceneObjects.RemoveAt(selectedSceneObject);
                     triangleCount = Game.CalculateTriangles();
-                    if (selectedMesh != 0) selectedMesh -= 1;
+                    if (selectedSceneObject != 0) selectedSceneObject -= 1;
                 }
 
                 ImGui.EndPopup();

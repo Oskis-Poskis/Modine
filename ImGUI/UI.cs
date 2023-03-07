@@ -173,6 +173,7 @@ namespace GameEngine.ImGUI
         }
 
         static int selectedIndex = 3;
+        static int pcfres = 2;
         static bool debugBool = true;
         static float strength = 1;
         public static void Settings(ref bool vsyncOn, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader)
@@ -211,6 +212,8 @@ namespace GameEngine.ImGUI
                 ShadowFactor = shadowFac;
                 shader.SetFloat("shadowFactor", ShadowFactor);
             }
+
+            if (ImGui.SliderInt("Shadow PCF res", ref pcfres, 0, 10)) shader.SetInt("shadowPCFres", pcfres);
 
             int[] options = new int[] { 256, 512, 1024, 2048, 4096, 8192 };
             ImGui.Text("Shadow Resolution");

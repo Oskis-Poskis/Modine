@@ -15,6 +15,7 @@ uniform vec3 viewPos;
 uniform float shadowFactor;
 uniform vec3 direction;
 uniform float dirStrength;
+uniform int shadowPCFres = 2;
 
 const float constant = 1;
 const float linear = 0.09;
@@ -93,27 +94,27 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
     return (kD * alb / PI + specular) * radiance * NDotL;
 }
 
-float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
+float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir, int kernelSize)
 {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
     float closestDepth = texture(shadowMap, projCoords.xy).r; 
     float currentDepth = projCoords.z;
 
-    float bias = max(0.01 * (1.0 - dot(normal, lightDir)), 0.0025);
+    float bias = max(0.01 * (1.0 - dot(normal, lightDir)), 0.004);
 
     // PCF
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    for(int x = -1; x <= 1; ++x)
+    for(int x = -kernelSize; x <= kernelSize; ++x)
     {
-        for(int y = -1; y <= 1; ++y)
+        for(int y = -kernelSize; y <= kernelSize; ++y)
         {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
             shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
         }    
     }
-    shadow /= 9.0;
+    shadow /= (kernelSize * 2 + 1) * (kernelSize * 2 + 1);
     
     if(projCoords.z > 1.0)
         shadow = 0.0;
@@ -140,7 +141,7 @@ void main()
     vec3 result = Lo;
     result = pow(result, vec3(1 / 2.2));
 
-    float shadow = ShadowCalculation(fragPosLightSpace, N, direction); 
+    float shadow = ShadowCalculation(fragPosLightSpace, N, direction, shadowPCFres); 
     result = result * (1 - shadow * shadowFactor) + (albedo * ambient);
 
     fragColor = vec4(result, 1);

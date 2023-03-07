@@ -264,6 +264,7 @@ namespace GameEngine
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
             GL.Clear(ClearBufferMask.DepthBufferBit);
 
+            // Draw only meshes
             foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = shadowShader;
             renderShadowMap = true;
             UpdateMatrices();
@@ -326,7 +327,7 @@ namespace GameEngine
 
             ImGuiWindows.Header();
             ImGuiWindows.SmallStats(viewportSize, viewportPos, fps, ms, sceneObjects.Count, triangleCount);
-            ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
+            ImGuiWindows.Viewport(framebufferTexture, depthTexture, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
             ImGuiWindows.MaterialEditor(ref sceneObjects, ref defaultShader, selectedMesh);
             ImGuiWindows.Outliner(ref sceneObjects, ref selectedMesh, ref triangleCount);
             ImGuiWindows.ObjectProperties(ref sceneObjects, selectedMesh);

@@ -170,7 +170,7 @@ namespace GameEngine
             defaultShader.SetFloat("dirStrength", 1);
 
             ModelImporter.LoadModel("Importing/Suzanne.fbx", out vertexData, out indices);
-            ModelImporter.LoadModel("Importing/Cube.fbx", out planeVertexData, out planeIndices);  
+            ModelImporter.LoadModel("Importing/Floor.fbx", out planeVertexData, out planeIndices);  
             ModelImporter.LoadModel("Importing/RoundedCube.fbx", out cubeVertexData, out cubeIndices);
             ModelImporter.LoadModel("Importing/Sphere.fbx", out sphereVertexData, out sphereIndices);
             suzanne = new Mesh(vertexData, indices, defaultShader, true, true, mat_monkey);
@@ -180,7 +180,7 @@ namespace GameEngine
 
             floor = new Mesh(planeVertexData, planeIndices, defaultShader, true, true, mat_floor);
             floor.position = new(0, 0, 0);
-            floor.scale = new(5, 5, 0.2f);
+            floor.scale = new(1, 1, 1);
             floor.rotation = new(-90, 0, 0);
 
             cube = new Mesh(cubeVertexData, cubeIndices, defaultShader, true, true, mat_cube);
@@ -484,7 +484,7 @@ namespace GameEngine
 
                     if (ImGui.MenuItem("Plane"))
                     {
-                        Mesh plane = new Mesh(planeVertexData, planeIndices, defaultShader, true, true, mat_monkey);
+                        Mesh plane = new Mesh(planeVertexData, planeIndices, defaultShader, true, true, mat_floor);
                         plane.rotation.X = -90;
                         SceneObject _plane = new("Plane" + randomNum, SceneObjectType.Mesh, plane);
                         sceneObjects.Add(_plane);

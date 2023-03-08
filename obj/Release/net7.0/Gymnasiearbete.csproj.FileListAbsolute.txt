@@ -64,3 +64,8 @@ E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\R
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\Sphere.fbx
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\Suzanne.fbx
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\TriangleExample.fbx
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Fonts\Rubik-Bold.ttf
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Fonts\Rubik-ExtraBold.ttf
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Fonts\Rubik-Light.ttf
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Fonts\Rubik-Medium.ttf
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Fonts\Rubik-SemiBold.ttf

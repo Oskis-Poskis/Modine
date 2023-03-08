@@ -1,6 +1,6 @@
 {
   "files.autoSave": "afterDelay",
   "files.exclude": {
-    "bin/*": true
+    "bin\\*": true
   }
 }

@@ -127,3 +127,15 @@ E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\obj\Debug\net7.0\refint\Gymnas
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\obj\Debug\net7.0\Gymnasiearbete.pdb
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\obj\Debug\net7.0\Gymnasiearbete.genruntimeconfig.cache
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\obj\Debug\net7.0\ref\Gymnasiearbete.dll
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\light.frag
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\light.vert
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\mesh.frag
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\mesh.vert
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\outline.frag
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\outline.geom
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\outline.vert
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\postprocess.frag
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\postprocess.vert
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\shadow.frag
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\shadow.vert
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\imgui.ini

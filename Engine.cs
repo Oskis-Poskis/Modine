@@ -158,7 +158,7 @@ namespace GameEngine
             GL.VertexAttribPointer(postprocessShader.GetAttribLocation("aPosition"), 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
 
             camera = new Camera(new(0, 1, 2), -Vector3.UnitZ, 10);
-            mat_monkey = new(new(1, 0.35f, 0), 0, 0.2f);
+            mat_monkey = new(new(0, 0.45f, 1), 0, 0.2f);
             mat_cube = new(new(0.875f, 0.6f, 0.185f), 1, 0.45f);
             mat_floor = new(new(1, 1, 1), 0, 0.2f);
             mat_monkey.SetShaderUniforms(defaultShader);

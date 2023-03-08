@@ -181,6 +181,9 @@ namespace GameEngine.ImGUI
         static float strength = 1;
         static float fontSize = 0.9f;
 
+        static float outlineWidth = 3;
+        static int outlineSteps = 32;
+
         public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader)
         {
             ImGui.Begin("Settings");
@@ -196,6 +199,10 @@ namespace GameEngine.ImGUI
                 if (ImGui.Checkbox(" ACES Tonemap", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.Checkbox(" Show Depth", ref showDepth)) ppshader.SetInt("showDepth", Convert.ToInt32(showDepth));
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                if (ImGui.SliderFloat(" Outline Width", ref outlineWidth, 0.5f, 20, "%.1f")) ppshader.SetFloat("radius", outlineWidth);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                if (ImGui.SliderInt(" Outline Steps", ref outlineSteps, 1, 32)) ppshader.SetInt("numSteps", outlineSteps);
 
                 ImGui.TreePop();
             }

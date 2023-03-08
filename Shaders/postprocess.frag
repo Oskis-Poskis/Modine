@@ -7,7 +7,7 @@ uniform usampler2D stencilTexture;
 uniform bool ACES = true;
 uniform bool showDepth = false;
 
-uniform float steps = 32.0;
+uniform int numSteps = 32;
 uniform float radius = 3;
 
 in vec2 UV;
@@ -48,7 +48,8 @@ void main()
     vec2 aspect = 1.0 / vec2(textureSize(stencilTexture, 0));
     
 	vec4 outline = vec4(0, 0, 0, 1.0);
-	for (float i = 0.0; i < TAU; i += TAU / steps) {
+	for (float i = 0.0; i < TAU; i += TAU / numSteps)
+    {
 		// Sample image in a circular pattern
         vec2 offset = vec2(sin(i), cos(i)) * aspect * radius;
 		vec4 col = texture(stencilTexture, clamp(UV + offset, 0.0, 1.0));
@@ -63,5 +64,5 @@ void main()
 	float factor = smoothstep(0.5, 0.7, distance(mat.rgb, target));
 	outline = mix(outline, vec4(0), factor);
 
-    fragColor = mix(vec4(color, 1), vec4(1, 0, 0, 1), outline);
+    fragColor = mix(vec4(color, 1), vec4(1, 0.35, 0.0, 1), outline);
 }

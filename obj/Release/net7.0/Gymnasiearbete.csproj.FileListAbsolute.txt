@@ -55,3 +55,12 @@ E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Shaders\pos
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Shaders\shadow.frag
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Shaders\shadow.vert
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\imgui.ini
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\CoolMotorCycle.fbx
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\Creature.fbx
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\Cube.fbx
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\Floor.fbx
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\ImportClass.cs
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\RoundedCube.fbx
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\Sphere.fbx
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\Suzanne.fbx
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Importing\TriangleExample.fbx

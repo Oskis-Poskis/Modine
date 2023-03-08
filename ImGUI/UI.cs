@@ -40,6 +40,8 @@ namespace GameEngine.ImGUI
         public static void ObjectProperties(ref List<SceneObject> sceneObjects, int selectedMesh)
         {
             ImGui.Begin("Properties");
+
+            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
             if (sceneObjects.Count > 0)
             {
                 SceneObject _sceneObject = sceneObjects[selectedMesh];
@@ -174,56 +176,118 @@ namespace GameEngine.ImGUI
 
         static int selectedIndex = 3;
         static int pcfres = 2;
-        static bool debugBool = true;
+        static bool ACESonoff = true;
+        static bool showImGUIdemo = false;
         static float strength = 1;
-        public static void Settings(ref bool vsyncOn, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader)
+        static float fontSize = 0.9f;
+
+        public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader)
         {
             ImGui.Begin("Settings");
 
-            ImGui.Checkbox("VSync", ref vsyncOn);
-            if (ImGui.Checkbox("ACES Tonemap", ref debugBool)) ppshader.SetInt("ACES", Convert.ToInt32(debugBool));
+            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-            SN.Vector3 dir = new(direction.X, direction.Y, direction.Z);
-            ImGui.Text("Sun Direction");
-            if (ImGui.SliderFloat3("##Sun Direction", ref dir, -1, 1))
+            if (ImGui.TreeNode("Rendering"))
             {
-                direction = new(dir.X, dir.Y, dir.Z);
-                shader.SetVector3("direction", direction);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Checkbox(" VSync", ref vsyncOn);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                if (ImGui.Checkbox(" ACES Tonemap", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                if (ImGui.Checkbox(" Show Depth", ref showDepth)) ppshader.SetInt("showDepth", Convert.ToInt32(showDepth));
+
+                ImGui.TreePop();
             }
 
-            ImGui.Text("Strength");
-            if (ImGui.SliderFloat("##Strength", ref strength, 0, 10, "%.1f"))
+            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+            ImGui.Separator();
+            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+            if (ImGui.TreeNode("Environment"))
             {
-                shader.SetFloat("dirStrength", strength);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                SN.Vector3 dir = new(direction.X, direction.Y, direction.Z);
+                ImGui.Text("Sun Direction");
+                if (ImGui.SliderFloat3("##Sun Direction", ref dir, -1, 1))
+                {
+                    direction = new(dir.X, dir.Y, dir.Z);
+                    shader.SetVector3("direction", direction);
+                }
+
+                ImGui.Text("Strength");
+                if (ImGui.SliderFloat("##Strength", ref strength, 0, 10, "%.1f"))
+                {
+                    shader.SetFloat("dirStrength", strength);
+                }
+
+                SN.Vector3 color = new(ambient.X, ambient.Y, ambient.Z);            
+                ImGui.Text("Ambient Color");
+                if (ImGui.ColorPicker3("##Ambient Color", ref color, ImGuiColorEditFlags.NoInputs))
+                {
+                    ambient = new(color.X, color.Y, color.Z);
+                    shader.SetVector3("ambient", ambient);
+                }
+
+                ImGui.TreePop();
             }
 
-            SN.Vector3 color = new(ambient.X, ambient.Y, ambient.Z);            
-            ImGui.Text("Ambient Color");
-            if (ImGui.ColorPicker3("##Ambient Color", ref color, ImGuiColorEditFlags.NoInputs))
+            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+            ImGui.Separator();
+            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+            if (ImGui.TreeNode("Shadows"))
             {
-                ambient = new(color.X, color.Y, color.Z);
-                shader.SetVector3("ambient", ambient);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                float shadowFac = ShadowFactor;
+                ImGui.Text("Shadow Factor");
+                if (ImGui.SliderFloat("##Shadow Factor", ref shadowFac, 0, 1))
+                {
+                    ShadowFactor = shadowFac;
+                    shader.SetFloat("shadowFactor", ShadowFactor);
+                }
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Text("Shadow PCF Resolution");
+                if (ImGui.SliderInt("##Shadow PCF", ref pcfres, 0, 10)) shader.SetInt("shadowPCFres", pcfres);
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                int[] options = new int[] { 256, 512, 1024, 2048, 4096, 8192 };
+                ImGui.Text("Shadow Resolution");
+                if (ImGui.SliderInt("##Resolution", ref selectedIndex, 0, 5, options[selectedIndex].ToString()))
+                {
+                    // Use the selected resolution in your application logic
+                    shadowRes = options[selectedIndex];
+                    GL.BindTexture(TextureTarget.Texture2D, depthMap);
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, shadowRes, shadowRes, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
+                }
+
+                ImGui.TreePop();
             }
 
-            float shadowFac = ShadowFactor;
-            ImGui.Text("Shadow Factor");
-            if (ImGui.SliderFloat("##Shadow Factor", ref shadowFac, 0, 1))
+            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+            ImGui.Separator();
+            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+            if (ImGui.TreeNode("Editor"))
             {
-                ShadowFactor = shadowFac;
-                shader.SetFloat("shadowFactor", ShadowFactor);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Text("Font Size");
+                if (ImGui.SliderFloat("##Font Size", ref fontSize, 0.1f, 2)) ImGui.GetIO().FontGlobalScale = fontSize;
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                if (ImGui.Checkbox("Show ImGUI Demo", ref showImGUIdemo))
+
+                ImGui.TreePop();
             }
 
-            if (ImGui.SliderInt("Shadow PCF res", ref pcfres, 0, 10)) shader.SetInt("shadowPCFres", pcfres);
-
-            int[] options = new int[] { 256, 512, 1024, 2048, 4096, 8192 };
-            ImGui.Text("Shadow Resolution");
-            if (ImGui.SliderInt("##Resolution", ref selectedIndex, 0, 5, options[selectedIndex].ToString()))
-            {
-                // Use the selected resolution in your application logic
-                shadowRes = options[selectedIndex];
-                GL.BindTexture(TextureTarget.Texture2D, depthMap);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, shadowRes, shadowRes, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
-            }
+            if (showImGUIdemo) ImGui.ShowDemoWindow();
             
             ImGui.End();
         }
@@ -344,6 +408,7 @@ namespace GameEngine.ImGUI
             ImGui.GetStyle().CellPadding = new SN.Vector2(3, 3);
             ImGui.GetStyle().ItemSpacing = new System.Numerics.Vector2(4, 2);
             ImGui.GetStyle().ItemInnerSpacing = new System.Numerics.Vector2(0, 4);
+            ImGui.GetStyle().WindowPadding = new System.Numerics.Vector2(4, 2);
             ImGui.GetStyle().TabRounding = 2;
             ImGui.GetStyle().WindowRounding = 5;
             ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;

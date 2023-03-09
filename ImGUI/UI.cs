@@ -13,7 +13,7 @@ namespace GameEngine.ImGUI
     {
         static float spacing = 5;
 
-        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, double fps, double ms, int objectCount, int triangleCount)
+        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, double fps, double ms, int meshCount, int plCount, int triangleCount)
         {
             ImGui.GetForegroundDrawList().AddRectFilled(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
@@ -31,7 +31,8 @@ namespace GameEngine.ImGUI
                 GL.GetString(StringName.Version) + "\n" +
                 "Size: " + viewportSize.X + " x " + viewportSize.Y + "\n" +
                 "Pos: " + viewportPos.X + " x " + viewportPos.Y + "\n" +
-                "Meshes: " + objectCount + "\n" +
+                "Meshes: " + meshCount + "\n" +
+                "Lights: " + plCount + "\n" +
                 "Triangles: " + triangleCount.ToString("N0") + "\n" +
                 "\n" +
                 fps.ToString("0") + " FPS" + "\n" +
@@ -101,6 +102,26 @@ namespace GameEngine.ImGUI
                         {
                             _sceneObject.Light.position = new(tempPos.X, tempPos.Y, tempPos.Z);
                         }
+                    }
+                }
+
+                else if (_sceneObject.Type == SceneObjectType.Light)
+                {
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    SN.Vector3 tempPos = new(_sceneObject.Light.position.X, _sceneObject.Light.position.Y, _sceneObject.Light.position.Z);
+                    ImGui.Text("Position");
+                    if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
+                    {
+                        _sceneObject.Light.position = new(tempPos.X, tempPos.Y, tempPos.Z);
+                    }
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    SN.Vector3 color = new(_sceneObject.Light.lightColor.X, _sceneObject.Light.lightColor.Y, _sceneObject.Light.lightColor.Z);
+                    if (ImGui.ColorPicker3("Albedo", ref color, ImGuiColorEditFlags.NoInputs))
+                    {
+                        _sceneObject.Light.lightColor = new(color.X, color.Y, color.Z);
                     }
                 }
             }

@@ -56,7 +56,7 @@ namespace GameEngine
         Material mat_monkey;
         Material mat_cube;
         Material mat_floor;
-        public Shader defaultShader;
+        public Shader PBRShader;
         public Shader lightShader;
         public Shader shadowShader;
         public Shader postprocessShader;
@@ -83,6 +83,7 @@ namespace GameEngine
         int selectedSceneObject = 0;
         Light light;
         Light light2;
+        int count_PointLights, count_Meshes = 0;
 
         PolygonMode _polygonMode = PolygonMode.Fill;
         private bool vsyncOn = true;
@@ -171,7 +172,7 @@ namespace GameEngine
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1280 / 768, 0.1f, 100);
             viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
 
-            defaultShader = new Shader("Shaders/PBR/mesh.vert", "Shaders/PBR/mesh.frag");
+            PBRShader = new Shader("Shaders/PBR/mesh.vert", "Shaders/PBR/mesh.frag");
             shadowShader = new Shader("Shaders/PBR/shadow.vert", "Shaders/PBR/shadow.frag");
             lightShader = new Shader("Shaders/Lights/light.vert", "Shaders/Lights/light.frag");
             postprocessShader = new Shader("Shaders/Postprocessing/postprocess.vert", "Shaders/Postprocessing/postprocess.frag");
@@ -191,29 +192,28 @@ namespace GameEngine
             mat_monkey = new(new(0, 0.45f, 1), 0, 0.2f);
             mat_cube = new(new(0.875f, 0.6f, 0.185f), 1, 0.45f);
             mat_floor = new(new(1, 1, 1), 0, 0.2f);
-            mat_monkey.SetShaderUniforms(defaultShader);
-            mat_floor.SetShaderUniforms(defaultShader);
+            mat_monkey.SetShaderUniforms(PBRShader);
+            mat_floor.SetShaderUniforms(PBRShader);
 
-            defaultShader.SetVector3("ambient", ambient);
-            defaultShader.SetVector3("direction", direction);
-            defaultShader.SetFloat("shadowFactor", shadowFactor);
-            defaultShader.SetFloat("dirStrength", 1);
+            PBRShader.SetVector3("ambient", ambient);
+            PBRShader.SetVector3("direction", direction);
+            PBRShader.SetFloat("shadowFactor", shadowFactor);
 
             ModelImporter.LoadModel("Importing/Suzanne.fbx", out vertexData, out indices);
             ModelImporter.LoadModel("Importing/Floor.fbx", out planeVertexData, out planeIndices);  
             ModelImporter.LoadModel("Importing/RoundedCube.fbx", out cubeVertexData, out cubeIndices);
             ModelImporter.LoadModel("Importing/Sphere.fbx", out sphereVertexData, out sphereIndices);
-            suzanne = new Mesh(vertexData, indices, defaultShader, true, true, mat_monkey);
+            suzanne = new Mesh(vertexData, indices, PBRShader, true, true, mat_monkey);
             suzanne.scale = new(0.75f);
             suzanne.position = new(0, 2, 0);
             suzanne.rotation = new(-125, 0, 0);
 
-            floor = new Mesh(planeVertexData, planeIndices, defaultShader, true, true, mat_floor);
+            floor = new Mesh(planeVertexData, planeIndices, PBRShader, true, true, mat_floor);
             floor.position = new(0, 0, 0);
             floor.scale = new(1, 1, 1);
             floor.rotation = new(-90, 0, 0);
 
-            cube = new Mesh(cubeVertexData, cubeIndices, defaultShader, true, true, mat_cube);
+            cube = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, true, mat_cube);
             cube.position = new(3, 1, 0);
             cube.scale = new(0.5f);
             cube.rotation = new(-90, -40, 0);
@@ -233,6 +233,14 @@ namespace GameEngine
             sceneObjects.Add(_light);
             sceneObjects.Add(_light2);
             sceneObjects.Add(_cube);
+
+            count_Meshes = 0;
+            count_PointLights = 0;
+            foreach (SceneObject sceneObject in sceneObjects)
+            {
+                if (sceneObject.Type == SceneObjectType.Mesh) count_Meshes += 1;
+                else if (sceneObject.Type == SceneObjectType.Light) count_PointLights += 1;
+            }
 
             triangleCount = CalculateTriangles();
 
@@ -301,6 +309,14 @@ namespace GameEngine
 
         public void RenderScene(double time)
         {
+            count_Meshes = 0;
+            count_PointLights = 0;
+            foreach (SceneObject sceneObject in sceneObjects)
+            {
+                if (sceneObject.Type == SceneObjectType.Mesh) count_Meshes += 1;
+                else if (sceneObject.Type == SceneObjectType.Light) count_PointLights += 1;
+            }
+
             // Render shadow scene
             GL.Viewport(0, 0, shadowRes, shadowRes);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
@@ -321,11 +337,13 @@ namespace GameEngine
 
             foreach (SceneObject sceneObject in sceneObjects)
             {
-                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = defaultShader;
+                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = PBRShader;
                 if (sceneObject.Type == SceneObjectType.Light) sceneObject.Light.lightShader = lightShader;
             }
 
-            defaultShader.SetVector3("viewPos", camera.position);
+            PBRShader.SetVector3("viewPos", camera.position);
+            PBRShader.SetInt("countPL", count_PointLights);
+
             renderShadowMap = false;
             UpdateMatrices();
 
@@ -343,19 +361,27 @@ namespace GameEngine
 
                 for (int i = 0; i < sceneObjects.Count; i++)
                 {
-                    if (sceneObjects[i].Type == SceneObjectType.Mesh)
+                    if (sceneObjects[i].Type == SceneObjectType.Light)
                     {
-                    defaultShader.Use();
-                    sceneObjects[i].Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObjects[i].Mesh.smoothShading));
-                    sceneObjects[i].Mesh.Material.SetShaderUniforms(defaultShader);
-                    sceneObjects[i].Mesh.Render();
-                    }
-                    else if (sceneObjects[i].Type == SceneObjectType.Light)
-                    {
-                        lightShader.Use();
-                        sceneObjects[i].Light.Render(camera.position, camera.direction, pitch, yaw);
+                        PBRShader.SetVector3("pointLights[" + i + "].lightColor", sceneObjects[i].Light.lightColor);
+                        PBRShader.SetVector3("pointLights[" + i + "].lightPos", sceneObjects[i].Light.position);
+                        //PBRShader.SetFloat("pointLights[" + j + "].strength", Lights[j].Strength);
                     }
                 }
+                
+                PBRShader.Use();
+                for (int i = 0; i < sceneObjects.Count; i++)
+                {
+                    if (sceneObjects[i].Type == SceneObjectType.Mesh)
+                    {
+                        sceneObjects[i].Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObjects[i].Mesh.smoothShading));
+                        sceneObjects[i].Mesh.Material.SetShaderUniforms(PBRShader);
+                        sceneObjects[i].Mesh.Render();
+                    }
+                }
+
+                lightShader.Use();
+                for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Light.Render(camera.position, camera.direction, pitch, yaw);
 
                 // Render selected sceneobject infront of everything and dont write to color buffer
                 GL.Disable(EnableCap.DepthTest);
@@ -366,9 +392,9 @@ namespace GameEngine
 
                 if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh)
                 {
-                    defaultShader.Use();
+                    PBRShader.Use();
                     sceneObjects[selectedSceneObject].Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObjects[selectedSceneObject].Mesh.smoothShading));
-                    sceneObjects[selectedSceneObject].Mesh.Material.SetShaderUniforms(defaultShader);
+                    sceneObjects[selectedSceneObject].Mesh.Material.SetShaderUniforms(PBRShader);
                     sceneObjects[selectedSceneObject].Mesh.Render();
                 }
                 else if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light)
@@ -442,9 +468,9 @@ namespace GameEngine
             ImGui.DockSpaceOverViewport();
 
             ImGuiWindows.Header();
-            ImGuiWindows.SmallStats(viewportSize, viewportPos, fps, ms, sceneObjects.Count, triangleCount);
+            ImGuiWindows.SmallStats(viewportSize, viewportPos, fps, ms, count_Meshes, count_PointLights, triangleCount);
             ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
-            ImGuiWindows.MaterialEditor(ref sceneObjects, ref defaultShader, selectedSceneObject);
+            ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject);
             ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
             ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
             //ImGui.ShowDemoWindow();
@@ -469,7 +495,7 @@ namespace GameEngine
                     int randomNum = rnd.Next(1, 101);
                     if (ImGui.MenuItem("Cube"))
                     {
-                        Mesh cube = new Mesh(cubeVertexData, cubeIndices, defaultShader, true, true, mat_monkey);
+                        Mesh cube = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, true, mat_monkey);
                         cube.rotation.X = -90;
                         SceneObject _cube = new("Cube" + randomNum, SceneObjectType.Mesh, cube);
                         sceneObjects.Add(_cube);
@@ -483,7 +509,7 @@ namespace GameEngine
 
                     if (ImGui.MenuItem("Sphere"))
                     {
-                        Mesh sphere = new Mesh(sphereVertexData, sphereIndices, defaultShader, true, true, mat_floor);
+                        Mesh sphere = new Mesh(sphereVertexData, sphereIndices, PBRShader, true, true, mat_floor);
                         sphere.rotation.X = -90;
                         SceneObject _sphere = new("Sphere" + randomNum, SceneObjectType.Mesh, sphere);
                         sceneObjects.Add(_sphere);
@@ -497,7 +523,7 @@ namespace GameEngine
 
                     if (ImGui.MenuItem("Plane"))
                     {
-                        Mesh plane = new Mesh(planeVertexData, planeIndices, defaultShader, true, true, mat_floor);
+                        Mesh plane = new Mesh(planeVertexData, planeIndices, PBRShader, true, true, mat_floor);
                         plane.rotation.X = -90;
                         SceneObject _plane = new("Plane" + randomNum, SceneObjectType.Mesh, plane);
                         sceneObjects.Add(_plane);
@@ -530,7 +556,7 @@ namespace GameEngine
                 ImGui.EndPopup();
             }
 
-            ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref defaultShader, ref postprocessShader, ref outlineShader);
+            ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref PBRShader, ref postprocessShader, ref outlineShader);
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
 
             ImGuiController.Render();
@@ -563,9 +589,9 @@ namespace GameEngine
             {
                 projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, 0.1f, 100);
                 viewMatrix = Matrix4.LookAt(camera.position, camera.position + camera.direction, Vector3.UnitY);
-                defaultShader.SetMatrix4("projection", projectionMatrix);
-                defaultShader.SetMatrix4("view", viewMatrix);
-                defaultShader.SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
+                PBRShader.SetMatrix4("projection", projectionMatrix);
+                PBRShader.SetMatrix4("view", viewMatrix);
+                PBRShader.SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
                 lightShader.SetMatrix4("projection", projectionMatrix);
                 lightShader.SetMatrix4("view", viewMatrix);
             }

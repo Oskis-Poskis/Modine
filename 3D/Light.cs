@@ -68,6 +68,7 @@ namespace GameEngine.Rendering
 
             lightShader.SetMatrix4("model", model);
             lightShader.SetMatrix4("view", viewMatrix);
+            lightShader.SetVector3("lightColor", lightColor);
 
             GL.BindVertexArray(vaoHandle);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);

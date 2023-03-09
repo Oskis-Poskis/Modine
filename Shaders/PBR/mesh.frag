@@ -9,19 +9,30 @@ uniform vec3 ambient;
 uniform vec3 albedo;
 uniform float metallic;
 uniform float roughness;
-uniform bool smoothShading;
+
 uniform sampler2D shadowMap;
-uniform vec3 viewPos;
 uniform float shadowFactor;
-uniform vec3 direction;
-uniform float dirStrength;
 uniform int shadowPCFres = 2;
+
+uniform bool smoothShading;
+uniform vec3 viewPos;
+
+uniform vec3 direction;
+uniform float dirStrength = 1;
+uniform int countPL = 0;
 
 const float constant = 1;
 const float linear = 0.09;
 const float quadratic = 0.032;
 
-uniform float NoiseAmount = 0.001;
+struct PointLight {
+    vec3 lightPos;
+    vec3 lightColor;
+    //float strength;
+};
+
+uniform PointLight pointLights[32];
+
 highp float random(vec2 coords)
 {
    return fract(sin(dot(coords.xy, vec2(12.9898, 78.233))) * 43758.5453);
@@ -66,6 +77,34 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 CalcPointLight(PointLight pl, vec3 V, vec3 N, vec3 F0, vec3 alb, float rough, float metal)
+{
+    // Calc per light radiance
+    vec3 L = normalize(pl.lightPos - fragPos);
+    vec3 H = normalize(V + L);
+    float distance = length(pl.lightPos - fragPos);
+    float attenuation = 1.0 / (distance * distance);
+    //float _attenuation = pow(smoothstep(pl.radius, 0, distance), pl.falloff); // Non-PBR attenuation
+    vec3 radiance = pl.lightColor * attenuation; // * pl.strength;
+
+    // Cook-Torrance BRDF
+    float NDF = DistributionGGX(N, H, rough);   
+    float G   = GeometrySmith(N, V, L, rough);
+    vec3 F    = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
+
+    vec3 numerator    = NDF * G * F; 
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
+    vec3 specular = numerator / denominator;
+
+    vec3 kS = F;
+    vec3 kD = vec3(1) - kS;
+    kD *= 1 - metal;
+
+    float NDotL = max(dot(N, L), 0.0);
+
+    return (kD * alb / PI + specular) * radiance * NDotL;
 }
 
 vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, float rough, float metal)
@@ -136,7 +175,7 @@ void main()
     vec3 Lo = vec3(0.0);
 
     Lo += CalcDirectionalLight(direction, V, N, F0, albedo, roughness, metallic);
-    //Lo += vec3(random(fragPos.xy)) * NoiseAmount;
+    for (int i = 0; i < countPL; i++) Lo += CalcPointLight(pointLights[i], V, N, F0, albedo, roughness, metallic);
 
     vec3 result = Lo;
     result = pow(result, vec3(1 / 2.2));

@@ -5,10 +5,7 @@ in vec3 fragPos;
 in vec4 fragPosLightSpace;
 out vec4 fragColor;
 
-uniform vec3 ambient;
-uniform vec3 albedo;
-uniform float metallic;
-uniform float roughness;
+uniform vec3  ambient;
 
 uniform sampler2D shadowMap;
 uniform float shadowFactor;
@@ -25,13 +22,20 @@ const float constant = 1;
 const float linear = 0.09;
 const float quadratic = 0.032;
 
+struct Material {
+    vec3 albedo;
+    float metallic;
+    float roughness;
+};
+
 struct PointLight {
     vec3 lightPos;
     vec3 lightColor;
-    //float strength;
+    float strength;
 };
 
 uniform PointLight pointLights[32];
+uniform Material material;
 
 highp float random(vec2 coords)
 {
@@ -104,7 +108,7 @@ vec3 CalcPointLight(PointLight pl, vec3 V, vec3 N, vec3 F0, vec3 alb, float roug
 
     float NDotL = max(dot(N, L), 0.0);
 
-    return (kD * alb / PI + specular) * radiance * NDotL;
+    return (kD * alb / PI + specular) * radiance * NDotL * pl.strength;
 }
 
 vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, float rough, float metal)
@@ -170,18 +174,20 @@ void main()
     vec3 V = normalize(viewPos - fragPos);
 
     vec3 F0 = vec3(0.04);
-    F0 = mix(F0, albedo, metallic);
+    F0 = mix(F0, material.albedo, material.metallic);
 
-    vec3 Lo = vec3(0.0);
+    vec3 dirLighting = vec3(0.0);
+    dirLighting += CalcDirectionalLight(direction, V, N, F0, material.albedo, material.roughness,  material.metallic);
+    dirLighting = pow(dirLighting, vec3(1 / 2.2));
 
-    Lo += CalcDirectionalLight(direction, V, N, F0, albedo, roughness, metallic);
-    for (int i = 0; i < countPL; i++) Lo += CalcPointLight(pointLights[i], V, N, F0, albedo, roughness, metallic);
+    vec3 pointLighting = vec3(0);
+    for (int i = 0; i < countPL; i++) pointLighting += CalcPointLight(pointLights[i], V, N, F0, material.albedo, material.roughness, material.metallic);
+    pointLighting = pow(pointLighting, vec3(1 / 2.2));
 
-    vec3 result = Lo;
-    result = pow(result, vec3(1 / 2.2));
-
+    vec3 result = vec3(0);
     float shadow = ShadowCalculation(fragPosLightSpace, N, direction, shadowPCFres); 
-    result = result * (1 - shadow * shadowFactor) + (albedo * ambient);
+    result = dirLighting * (1 - shadow * shadowFactor) + (material.albedo * ambient);
+    result += pointLighting;
 
     fragColor = vec4(result, 1);
 }

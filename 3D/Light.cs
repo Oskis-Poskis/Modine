@@ -12,9 +12,9 @@ namespace GameEngine.Rendering
         public Shader lightShader;
 
         public Vector3 position = Vector3.Zero;
-        public Vector3 scale = Vector3.One * 0.25f;
+        public Vector3 scale = Vector3.One * 0.15f;
         public Vector3 lightColor = new(1, 1, 0);
-        public float intensity = 1.0f;
+        public float strength = 1.0f;
         public string lightName;
 
         public static Light _light;
@@ -31,7 +31,7 @@ namespace GameEngine.Rendering
              1, -1, 0
         };
 
-        public Light(Shader shader, Vector3 _color) : base()
+        public Light(Shader shader, Vector3 _color, float _strength) : base()
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -51,6 +51,7 @@ namespace GameEngine.Rendering
             this.lightShader = shader;
             this.lightName = Name;
             this.lightColor = _color;
+            this.strength = _strength;
         }
 
         Matrix4 viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);

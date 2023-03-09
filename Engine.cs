@@ -218,8 +218,8 @@ namespace GameEngine
             cube.scale = new(0.5f);
             cube.rotation = new(-90, -40, 0);
 
-            light = new Light(lightShader, new(1, 1, 0));
-            light2 = new Light(lightShader, new(1, 0, 1));
+            light = new Light(lightShader, new(1, 1, 0), 5);
+            light2 = new Light(lightShader, new(1, 0, 1), 5);
             light.position = new(3, 4, -3);
             light2.position = new(-2, 7, -6);
 
@@ -359,13 +359,15 @@ namespace GameEngine
                 GL.StencilOp(StencilOp.Replace, StencilOp.Replace, StencilOp.Replace);
                 GL.StencilMask(0x00);
 
+                int index = 0;
                 for (int i = 0; i < sceneObjects.Count; i++)
                 {
                     if (sceneObjects[i].Type == SceneObjectType.Light)
                     {
-                        PBRShader.SetVector3("pointLights[" + i + "].lightColor", sceneObjects[i].Light.lightColor);
-                        PBRShader.SetVector3("pointLights[" + i + "].lightPos", sceneObjects[i].Light.position);
-                        //PBRShader.SetFloat("pointLights[" + j + "].strength", Lights[j].Strength);
+                        PBRShader.SetVector3("pointLights[" + index + "].lightColor", sceneObjects[i].Light.lightColor);
+                        PBRShader.SetVector3("pointLights[" + index + "].lightPos", sceneObjects[i].Light.position);
+                        PBRShader.SetFloat("pointLights[" + index + "].strength", sceneObjects[i].Light.strength);
+                        index += 1;
                     }
                 }
                 
@@ -489,10 +491,11 @@ namespace GameEngine
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
 
+                Random rnd = new Random();
+                int randomNum = rnd.Next(1, 101);
+
                 if (ImGui.BeginMenu("Mesh"))
                 {
-                    Random rnd = new Random();
-                    int randomNum = rnd.Next(1, 101);
                     if (ImGui.MenuItem("Cube"))
                     {
                         Mesh cube = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, true, mat_monkey);
@@ -538,6 +541,15 @@ namespace GameEngine
 
                 if (ImGui.BeginMenu("Light"))
                 {
+                    if (ImGui.MenuItem("Point Light"))
+                    {
+                        Light light = new Light(lightShader, new(1, 1, 1), 5);
+                        SceneObject _light = new("Light" + randomNum, SceneObjectType.Light, null, light);
+                        sceneObjects.Add(_light);
+
+                        selectedSceneObject = sceneObjects.Count - 1;
+                    }
+
                     ImGui.EndMenu();
                 }
 

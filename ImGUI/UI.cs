@@ -17,11 +17,11 @@ namespace GameEngine.ImGUI
         {
             ImGui.GetForegroundDrawList().AddRectFilled(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
-                new(viewportPos.X + 300, viewportPos.Y + 200),
+                new(viewportPos.X + 300, viewportPos.Y + 220),
                 ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
             ImGui.GetForegroundDrawList().AddRect(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
-                new(viewportPos.X + 300, viewportPos.Y + 200),
+                new(viewportPos.X + 300, viewportPos.Y + 220),
                 ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.3f)));
 
             ImGui.GetForegroundDrawList().AddText(

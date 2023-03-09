@@ -21,9 +21,9 @@ namespace GameEngine.Rendering
         public void SetShaderUniforms(Shader shader)
         {
             shader.Use();
-            shader.SetVector3("albedo", Color);
-            shader.SetFloat("metallic", Metallic);
-            shader.SetFloat("roughness", Roughness);
+            shader.SetVector3("material.albedo", Color);
+            shader.SetFloat("material.metallic", Metallic);
+            shader.SetFloat("material.roughness", Roughness);
         }
     }
 }

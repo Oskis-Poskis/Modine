@@ -171,11 +171,11 @@ namespace GameEngine
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1280 / 768, 0.1f, 100);
             viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
 
-            defaultShader = new Shader("Shaders/mesh.vert", "Shaders/mesh.frag");
-            lightShader = new Shader("Shaders/light.vert", "Shaders/light.frag");
-            shadowShader = new Shader("Shaders/shadow.vert", "Shaders/shadow.frag");
-            postprocessShader = new Shader("Shaders/postprocess.vert", "Shaders/postprocess.frag");
-            outlineShader = new Shader("Shaders/outlineSelection.vert", "Shaders/outlineSelection.frag");
+            defaultShader = new Shader("Shaders/PBR/mesh.vert", "Shaders/PBR/mesh.frag");
+            shadowShader = new Shader("Shaders/PBR/shadow.vert", "Shaders/PBR/shadow.frag");
+            lightShader = new Shader("Shaders/Lights/light.vert", "Shaders/Lights/light.frag");
+            postprocessShader = new Shader("Shaders/Postprocessing/postprocess.vert", "Shaders/Postprocessing/postprocess.frag");
+            outlineShader = new Shader("Shaders/Postprocessing/outlineSelection.vert", "Shaders/Postprocessing/outlineSelection.frag");
 
             VAO = GL.GenVertexArray();
             GL.BindVertexArray(VAO);
@@ -279,7 +279,7 @@ namespace GameEngine
             if (elapsedTime >= 0.1f)
             {
                 fps = frameCount / elapsedTime;
-                ms = 1000.0 / fps;
+                ms = 1000 * elapsedTime / frameCount;
                 frameCount = 0;
                 elapsedTime = 0.0;
             }
@@ -318,7 +318,6 @@ namespace GameEngine
             GL.ClearColor(new Color4(ambient.X, ambient.Y, ambient.Z, 1));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
-
 
             foreach (SceneObject sceneObject in sceneObjects)
             {
@@ -396,7 +395,7 @@ namespace GameEngine
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
-
+            
             // Render quad with framebuffer and postprocessing
             postprocessShader.Use();
             GL.BindVertexArray(VAO);

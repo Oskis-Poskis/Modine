@@ -17,11 +17,11 @@ namespace GameEngine.ImGUI
         {
             ImGui.GetForegroundDrawList().AddRectFilled(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
-                new(viewportPos.X + 200, viewportPos.Y + 200),
+                new(viewportPos.X + 300, viewportPos.Y + 200),
                 ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
             ImGui.GetForegroundDrawList().AddRect(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
-                new(viewportPos.X + 200, viewportPos.Y + 200),
+                new(viewportPos.X + 300, viewportPos.Y + 200),
                 ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.3f)));
 
             ImGui.GetForegroundDrawList().AddText(
@@ -183,7 +183,7 @@ namespace GameEngine.ImGUI
         static float fontSize = 0.9f;
 
         static float outlineWidth = 3;
-        static int outlineSteps = 32;
+        static int outlineSteps = 16;
 
         public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader, ref Shader outlineShader)
         {

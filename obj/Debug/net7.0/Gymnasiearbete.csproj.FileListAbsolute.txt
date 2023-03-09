@@ -127,17 +127,6 @@ E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\obj\Debug\net7.0\refint\Gymnas
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\obj\Debug\net7.0\Gymnasiearbete.pdb
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\obj\Debug\net7.0\Gymnasiearbete.genruntimeconfig.cache
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\obj\Debug\net7.0\ref\Gymnasiearbete.dll
-E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\light.frag
-E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\light.vert
-E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\mesh.frag
-E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\mesh.vert
-E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\outline.frag
-E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\outline.geom
-E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\outline.vert
-E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\postprocess.frag
-E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\postprocess.vert
-E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\shadow.frag
-E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\shadow.vert
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\imgui.ini
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Importing\CoolMotorCycle.fbx
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Importing\Creature.fbx
@@ -181,3 +170,13 @@ C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin
 C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Fonts\Rubik-SemiBold.ttf
 C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\outlineSelection.frag
 C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\outlineSelection.vert
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Lights\light.frag
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Lights\light.vert
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\PBR\mesh.frag
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\PBR\mesh.vert
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\PBR\shadow.frag
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\PBR\shadow.vert
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Postprocessing\outlineSelection.frag
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Postprocessing\outlineSelection.vert
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Postprocessing\postprocess.frag
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Postprocessing\postprocess.vert

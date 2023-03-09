@@ -118,8 +118,18 @@ namespace GameEngine.ImGUI
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
+                    float tempStrength = _sceneObject.Light.strength;
+                    ImGui.Text("Strength");
+                    if (ImGui.DragFloat("##Strength", ref tempStrength, 0.1f))
+                    {
+                        _sceneObject.Light.strength = tempStrength;
+                    }
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
                     SN.Vector3 color = new(_sceneObject.Light.lightColor.X, _sceneObject.Light.lightColor.Y, _sceneObject.Light.lightColor.Z);
-                    if (ImGui.ColorPicker3("Albedo", ref color, ImGuiColorEditFlags.NoInputs))
+                    ImGui.Text("Albedo");
+                    if (ImGui.ColorPicker3("##Albedo", ref color, ImGuiColorEditFlags.NoInputs))
                     {
                         _sceneObject.Light.lightColor = new(color.X, color.Y, color.Z);
                     }
@@ -200,7 +210,7 @@ namespace GameEngine.ImGUI
         static int pcfres = 2;
         static bool ACESonoff = true;
         static bool showImGUIdemo = false;
-        static float strength = 1;
+        static float strength = 1.75f;
         static float fontSize = 0.9f;
 
         static float outlineWidth = 3;

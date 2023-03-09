@@ -50,12 +50,11 @@ namespace GameEngine
         int frameCount = 0;
         double elapsedTime = 0.0, fps = 0.0, ms;
 
-        Vector3 ambient = new(0.05f);
+        Vector3 ambient = new(0.1f);
         Vector3 direction = new(1);
         float shadowFactor = 0.75f;
-        Material mat_monkey;
-        Material mat_cube;
-        Material mat_floor;
+        
+        Material defaultMat;
         public Shader PBRShader;
         public Shader lightShader;
         public Shader shadowShader;
@@ -65,8 +64,6 @@ namespace GameEngine
         Matrix4 viewMatrix;
 
         Mesh suzanne;
-        Mesh floor;
-        Mesh cube;
         VertexData[] vertexData;
         int[] indices;
         VertexData[] planeVertexData;
@@ -188,12 +185,9 @@ namespace GameEngine
             GL.EnableVertexAttribArray(postprocessShader.GetAttribLocation("aPosition"));
             GL.VertexAttribPointer(postprocessShader.GetAttribLocation("aPosition"), 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
 
-            camera = new Camera(new(0, 1, 2), -Vector3.UnitZ, 10);
-            mat_monkey = new(new(0, 0.45f, 1), 0, 0.2f);
-            mat_cube = new(new(0.875f, 0.6f, 0.185f), 1, 0.45f);
-            mat_floor = new(new(1, 1, 1), 0, 0.2f);
-            mat_monkey.SetShaderUniforms(PBRShader);
-            mat_floor.SetShaderUniforms(PBRShader);
+            camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 10);
+            defaultMat = new(new(0.8f), 0, 0.5f);
+            defaultMat.SetShaderUniforms(PBRShader);
 
             PBRShader.SetVector3("ambient", ambient);
             PBRShader.SetVector3("direction", direction);
@@ -203,36 +197,13 @@ namespace GameEngine
             ModelImporter.LoadModel("Importing/Floor.fbx", out planeVertexData, out planeIndices);  
             ModelImporter.LoadModel("Importing/RoundedCube.fbx", out cubeVertexData, out cubeIndices);
             ModelImporter.LoadModel("Importing/Sphere.fbx", out sphereVertexData, out sphereIndices);
-            suzanne = new Mesh(vertexData, indices, PBRShader, true, true, mat_monkey);
+            suzanne = new Mesh(vertexData, indices, PBRShader, true, true, defaultMat);
             suzanne.scale = new(0.75f);
-            suzanne.position = new(0, 2, 0);
-            suzanne.rotation = new(-125, 0, 0);
-
-            floor = new Mesh(planeVertexData, planeIndices, PBRShader, true, true, mat_floor);
-            floor.position = new(0, 0, 0);
-            floor.scale = new(1, 1, 1);
-            floor.rotation = new(-90, 0, 0);
-
-            cube = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, true, mat_cube);
-            cube.position = new(3, 1, 0);
-            cube.scale = new(0.5f);
-            cube.rotation = new(-90, -40, 0);
-
-            light = new Light(lightShader, new(1, 1, 0), 5);
-            light2 = new Light(lightShader, new(1, 0, 1), 5);
-            light.position = new(3, 4, -3);
-            light2.position = new(-2, 7, -6);
+            suzanne.position = new(0, 0, 0);
+            suzanne.rotation = new(-90, 0, 0);
 
             SceneObject _monkey = new("Monkey", SceneObjectType.Mesh, suzanne);
-            SceneObject _cube = new("Cube", SceneObjectType.Mesh, cube);
-            SceneObject _floor = new("Floor", SceneObjectType.Mesh, floor);
-            SceneObject _light = new("Light1", SceneObjectType.Light, null, light);
-            SceneObject _light2 = new("Light2", SceneObjectType.Light, null, light2);
             sceneObjects.Add(_monkey);
-            sceneObjects.Add(_floor);
-            sceneObjects.Add(_light);
-            sceneObjects.Add(_light2);
-            sceneObjects.Add(_cube);
 
             count_Meshes = 0;
             count_PointLights = 0;
@@ -326,7 +297,9 @@ namespace GameEngine
             foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = shadowShader;
             renderShadowMap = true;
             UpdateMatrices();
+            GL.CullFace(CullFaceMode.Front);
             foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Mesh.Render();
+            GL.CullFace(CullFaceMode.Back);
 
             // Render normal scene
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
@@ -498,7 +471,7 @@ namespace GameEngine
                 {
                     if (ImGui.MenuItem("Cube"))
                     {
-                        Mesh cube = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, true, mat_monkey);
+                        Mesh cube = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, true, defaultMat);
                         cube.rotation.X = -90;
                         SceneObject _cube = new("Cube" + randomNum, SceneObjectType.Mesh, cube);
                         sceneObjects.Add(_cube);
@@ -512,7 +485,7 @@ namespace GameEngine
 
                     if (ImGui.MenuItem("Sphere"))
                     {
-                        Mesh sphere = new Mesh(sphereVertexData, sphereIndices, PBRShader, true, true, mat_floor);
+                        Mesh sphere = new Mesh(sphereVertexData, sphereIndices, PBRShader, true, true, defaultMat);
                         sphere.rotation.X = -90;
                         SceneObject _sphere = new("Sphere" + randomNum, SceneObjectType.Mesh, sphere);
                         sceneObjects.Add(_sphere);
@@ -526,7 +499,7 @@ namespace GameEngine
 
                     if (ImGui.MenuItem("Plane"))
                     {
-                        Mesh plane = new Mesh(planeVertexData, planeIndices, PBRShader, true, true, mat_floor);
+                        Mesh plane = new Mesh(planeVertexData, planeIndices, PBRShader, true, true, defaultMat);
                         plane.rotation.X = -90;
                         SceneObject _plane = new("Plane" + randomNum, SceneObjectType.Mesh, plane);
                         sceneObjects.Add(_plane);

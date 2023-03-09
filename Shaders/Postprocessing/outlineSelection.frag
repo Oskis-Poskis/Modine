@@ -29,5 +29,5 @@ void main()
 	}
 	
 	outlinemask = mix(outlinemask, 0.0, stencil);
-    fragColor = mix(vec4(color, 1.0), vec4(1, 0.35, 0.0, 1.0), outlinemask);
+    fragColor = mix(vec4(color, 1.0), vec4(0.75, 0.4, 0.0, 1.0), outlinemask);
 }

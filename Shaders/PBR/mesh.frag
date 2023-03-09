@@ -143,7 +143,9 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir, int 
     float closestDepth = texture(shadowMap, projCoords.xy).r; 
     float currentDepth = projCoords.z;
 
-    float bias = max(0.01 * (1.0 - dot(normal, lightDir)), 0.004);
+    //float bias = max(0.0005 * (1.0 - dot(normal, lightDir)), 0.001);
+    float bias = 0.005 * tan(acos(clamp(dot(normal, lightDir), 0, 1))); // cosTheta is dot( n,l ), clamped between 0 and 1
+    bias = clamp(bias, 0,0.01);
 
     // PCF
     float shadow = 0.0;
@@ -153,7 +155,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir, int 
         for(int y = -kernelSize; y <= kernelSize; ++y)
         {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
+            shadow += currentDepth > pcfDepth  ? 1.0 : 0.0;        
         }    
     }
     shadow /= (kernelSize * 2 + 1) * (kernelSize * 2 + 1);

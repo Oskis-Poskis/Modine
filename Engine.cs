@@ -386,40 +386,44 @@ namespace GameEngine
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
-            // Post processing here
+            // Bind framebuffer texture
             postprocessShader.SetInt("frameBufferTexture", 0);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
 
+            // Bind depth texture
             postprocessShader.SetInt("depth", 1);
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
 
+            // Render quad with framebuffer and postprocessing
             postprocessShader.Use();
             GL.BindVertexArray(VAO);
             GL.Disable(EnableCap.DepthTest);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
             GL.Enable(EnableCap.DepthTest);
 
+            // Bind framebuffer texture
             outlineShader.SetInt("frameBufferTexture", 0);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
 
+            // Bind stencil texture for outline in fragshader
             outlineShader.SetInt("stencilTexture", 2);
             GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
 
+            // Render quad with framebuffer and added outline
             outlineShader.Use();
-            //GL.BindVertexArray(VAO);
             GL.Disable(EnableCap.DepthTest);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
             GL.Enable(EnableCap.DepthTest);
 
-            // Resize framebuffer
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            //Resize framebuffer textures
             if (viewportSize != previousViewportSize)
             {
                 GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);

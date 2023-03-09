@@ -4,7 +4,7 @@
     {
         static void Main()
         {
-            using Game game = new Game(1920, 1080, "Game Engine");
+            using Game game = new Game(1280, 786, "Game Engine");
             game.Run();
         }
     }

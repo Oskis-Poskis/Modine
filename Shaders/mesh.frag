@@ -21,9 +21,8 @@ const float constant = 1;
 const float linear = 0.09;
 const float quadratic = 0.032;
 
-uniform highp float NoiseAmount;
-highp float NoiseCalc = NoiseAmount / 255;
-highp float random(highp vec2 coords)
+uniform float NoiseAmount = 0.001;
+highp float random(vec2 coords)
 {
    return fract(sin(dot(coords.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
@@ -137,6 +136,7 @@ void main()
     vec3 Lo = vec3(0.0);
 
     Lo += CalcDirectionalLight(direction, V, N, F0, albedo, roughness, metallic);
+    //Lo += vec3(random(fragPos.xy)) * NoiseAmount;
 
     vec3 result = Lo;
     result = pow(result, vec3(1 / 2.2));

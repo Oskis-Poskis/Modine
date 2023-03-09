@@ -12,6 +12,7 @@ using GameEngine.Importer;
 using GameEngine.Rendering;
 using static GameEngine.Rendering.SceneObject;
 using GameEngine.ImGUI;
+using System.Runtime.InteropServices;
 
 namespace GameEngine
 {
@@ -28,7 +29,8 @@ namespace GameEngine
                 WindowState = WindowState.Normal,
                 API = ContextAPI.OpenGL,
                 Profile = ContextProfile.Core,
-                APIVersion = new Version(4, 3)
+                APIVersion = new Version(4, 3),
+                Flags = ContextFlags.Debug
             })
         {
             CenterWindow();
@@ -89,7 +91,6 @@ namespace GameEngine
         int FBO;
         int framebufferTexture;
         int depthStencilTexture;
-        int stencilView;
 
         int depthMapFBO;
         int depthMap;
@@ -110,9 +111,40 @@ namespace GameEngine
              1f, -1f,
         };
 
+        private static void OnDebugMessage(
+            DebugSource source,     // Source of the debugging message.
+            DebugType type,         // Type of the debugging message.
+            int id,                 // ID associated with the message.
+            DebugSeverity severity, // Severity of the message.
+            int length,             // Length of the string in pMessage.
+            IntPtr pMessage,        // Pointer to message string.
+            IntPtr pUserParam)      // The pointer you gave to OpenGL, explained later.
+        {
+            // In order to access the string pointed to by pMessage, you can use Marshal
+            // class to copy its contents to a C# string without unsafe code. You can
+            // also use the new function Marshal.PtrToStringUTF8 since .NET Core 1.1.
+            string message = Marshal.PtrToStringAnsi(pMessage, length);
+
+            // The rest of the function is up to you to implement, however a debug output
+            // is always useful.
+            Console.WriteLine("[{0} source={1} type={2} id={3}] \n{4}", severity, source, type, id, message);
+
+            // Potentially, you may want to throw from the function for certain severity
+            // messages.
+            if (type == DebugType.DebugTypeError)
+            {
+                throw new Exception(message);
+            }
+        }
+
+        private static DebugProc DebugMessageDelegate = OnDebugMessage;
+
         unsafe protected override void OnLoad()
         {
             base.OnLoad();
+
+            GL.DebugMessageCallback(DebugMessageDelegate, IntPtr.Zero);
+            GL.Enable(EnableCap.DebugOutput);
 
             MakeCurrent();
             IsVisible = true;
@@ -120,7 +152,6 @@ namespace GameEngine
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.StencilTest);
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
-            GL.LineWidth(2);
             GL.PointSize(5);
 
             VSync = VSyncMode.Adaptive;
@@ -131,9 +162,8 @@ namespace GameEngine
             Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, viewportSize);
             FramebufferErrorCode status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
 
-            stencilView = GL.GenTexture();
-            GL.TextureView(stencilView, TextureTarget.Texture2D, depthStencilTexture, PixelInternalFormat.Depth24Stencil8, 0, 1, 0, 1);
-
+            OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
+            if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());
             if (status != FramebufferErrorCode.FramebufferComplete) Console.WriteLine($"Framebuffer is incomplete: {status}");
 
             Framebuffers.SetupShadowFBO(ref depthMapFBO, ref depthMap, shadowRes);
@@ -144,8 +174,8 @@ namespace GameEngine
             defaultShader = new Shader("Shaders/mesh.vert", "Shaders/mesh.frag");
             lightShader = new Shader("Shaders/light.vert", "Shaders/light.frag");
             shadowShader = new Shader("Shaders/shadow.vert", "Shaders/shadow.frag");
-            outlineShader = new Shader("Shaders/outline.vert", "Shaders/outline.frag", "Shaders/outline.geom");
             postprocessShader = new Shader("Shaders/postprocess.vert", "Shaders/postprocess.frag");
+            outlineShader = new Shader("Shaders/outlineSelection.vert", "Shaders/outlineSelection.frag");
 
             VAO = GL.GenVertexArray();
             GL.BindVertexArray(VAO);
@@ -209,7 +239,7 @@ namespace GameEngine
             ImGuiController = new ImGuiController(viewportSize.X, viewportSize.Y);
             ImGuiWindows.LoadTheme();
 
-            //GLFW.MaximizeWindow(WindowPtr);
+            GLFW.MaximizeWindow(WindowPtr);
         }
 
         protected override void OnUpdateFrame(FrameEventArgs args)
@@ -289,8 +319,13 @@ namespace GameEngine
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
 
-            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = defaultShader;
-            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Light) sceneObject.Light.lightShader = lightShader;
+
+            foreach (SceneObject sceneObject in sceneObjects)
+            {
+                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = defaultShader;
+                if (sceneObject.Type == SceneObjectType.Light) sceneObject.Light.lightShader = lightShader;
+            }
+
             defaultShader.SetVector3("viewPos", camera.position);
             renderShadowMap = false;
             UpdateMatrices();
@@ -298,34 +333,9 @@ namespace GameEngine
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, depthMap);
 
-
-            /*
-            GL.Enable(EnableCap.StencilTest);
-            GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
-
-            foreach (SceneObject sceneObject in sceneObjects)
-            {
-                if (sceneObject.Type == SceneObjectType.Mesh)
-                {
-                    defaultShader.Use();
-                    sceneObject.Mesh.meshShader.SetInt("smoothShading", Convert.ToInt32(sceneObject.Mesh.smoothShading));
-                    sceneObject.Mesh.Material.SetShaderUniforms(defaultShader);
-                    sceneObject.Mesh.Render();
-                }
-                else if (sceneObject.Type == SceneObjectType.Light)
-                {
-                    lightShader.Use();
-                    lightShader.SetVector3("lightColor", sceneObject.Light.lightColor);
-                    sceneObject.Light.Render(camera.position, camera.direction, pitch, yaw);
-                }
-            }
-            GL.Disable(EnableCap.StencilTest);
-
-
-            */
-
             if (sceneObjects.Count > 0)
             {
+                // Render sceneobject list
                 GL.Enable(EnableCap.StencilTest);
 
                 GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
@@ -348,7 +358,9 @@ namespace GameEngine
                     }
                 }
 
+                // Render selected sceneobject infront of everything and dont write to color buffer
                 GL.Disable(EnableCap.DepthTest);
+                GL.Disable(EnableCap.CullFace);
                 GL.ColorMask(false, false, false, false);
                 GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
                 GL.StencilMask(0xFF);
@@ -368,6 +380,7 @@ namespace GameEngine
 
                 GL.ColorMask(true, true, true, true);
                 GL.Enable(EnableCap.DepthTest);
+                GL.Enable(EnableCap.CullFace);
                 GL.Disable(EnableCap.StencilTest);
             }
 
@@ -381,15 +394,25 @@ namespace GameEngine
             postprocessShader.SetInt("depth", 1);
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.Depth24Stencil8);
-
-            postprocessShader.SetInt("stencilTexture", 2);
-            GL.ActiveTexture(TextureUnit.Texture2);
-            GL.BindTexture(TextureTarget.Texture2D, stencilView);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
 
             postprocessShader.Use();
             GL.BindVertexArray(VAO);
+            GL.Disable(EnableCap.DepthTest);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+            GL.Enable(EnableCap.DepthTest);
+
+            outlineShader.SetInt("frameBufferTexture", 0);
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
+
+            outlineShader.SetInt("stencilTexture", 2);
+            GL.ActiveTexture(TextureUnit.Texture2);
+            GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
+
+            outlineShader.Use();
+            //GL.BindVertexArray(VAO);
             GL.Disable(EnableCap.DepthTest);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
             GL.Enable(EnableCap.DepthTest);
@@ -402,24 +425,11 @@ namespace GameEngine
                 GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
 
-                GL.DeleteTexture(depthStencilTexture);
-                depthStencilTexture = GL.GenTexture();
                 GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, viewportSize.X, viewportSize.Y, 0, PixelFormat.DepthStencil, PixelType.UnsignedInt248, IntPtr.Zero);
 
-                GL.TexStorage2D(TextureTarget2d.Texture2D, 1, SizedInternalFormat.Depth24Stencil8, viewportSize.X, viewportSize.Y);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
-                GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, TextureTarget.Texture2D, depthStencilTexture, 0);
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-
-                GL.DeleteTexture(stencilView);
-
-                stencilView = GL.GenTexture();
-                GL.TextureView(stencilView, TextureTarget.Texture2D, depthStencilTexture, PixelInternalFormat.Depth24Stencil8, 0, 1, 0, 1);
+                OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
+                if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());
 
                 UpdateMatrices();
                 previousViewportSize = viewportSize;
@@ -517,7 +527,7 @@ namespace GameEngine
                 ImGui.EndPopup();
             }
 
-            ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref defaultShader, ref postprocessShader);
+            ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref defaultShader, ref postprocessShader, ref outlineShader);
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
 
             ImGuiController.Render();

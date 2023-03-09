@@ -35,7 +35,7 @@ namespace GameEngine.Importer
                 }
             }
 
-            Console.WriteLine($"Imported mesh '{mesh.Name}'\nVertices: {vertexCount}\nIndices: {indexCount}\n");
+            //Console.WriteLine($"Imported mesh '{mesh.Name}'\nVertices: {vertexCount}\nIndices: {indexCount}\n");
         }
 
         private static Vector3 FromVector(Assimp.Vector3D vec)

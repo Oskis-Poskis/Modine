@@ -28,6 +28,7 @@ namespace GameEngine.ImGUI
                 new(viewportPos.X + 20, viewportPos.Y + 40),
                 ImGui.ColorConvertFloat4ToU32(new SN.Vector4(150, 150, 150, 255)),
                 GL.GetString(StringName.Renderer) + "\n" +
+                GL.GetString(StringName.Version) + "\n" +
                 "Size: " + viewportSize.X + " x " + viewportSize.Y + "\n" +
                 "Pos: " + viewportPos.X + " x " + viewportPos.Y + "\n" +
                 "Meshes: " + objectCount + "\n" +
@@ -114,7 +115,7 @@ namespace GameEngine.ImGUI
             ImGui.Image((IntPtr)framebufferTexture, new(
                 MathHelper.Abs(ImGui.GetWindowContentRegionMin().X - ImGui.GetWindowContentRegionMax().X),
                 MathHelper.Abs(ImGui.GetWindowContentRegionMin().Y - ImGui.GetWindowContentRegionMax().Y)),
-                new(0, 1), new(1, 0), SN.Vector4.One, SN.Vector4.Zero);
+                new(0, 1), new(1, 0), SN.Vector4.One, new(0));
 
             windowSize = new(
                 Convert.ToInt32(MathHelper.Abs(ImGui.GetWindowContentRegionMin().X - ImGui.GetWindowContentRegionMax().X)),
@@ -184,7 +185,7 @@ namespace GameEngine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 32;
 
-        public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader)
+        public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader, ref Shader outlineShader)
         {
             ImGui.Begin("Settings");
 
@@ -200,9 +201,9 @@ namespace GameEngine.ImGUI
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.Checkbox(" Show Depth", ref showDepth)) ppshader.SetInt("showDepth", Convert.ToInt32(showDepth));
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.SliderFloat(" Outline Width", ref outlineWidth, 0.5f, 20, "%.1f")) ppshader.SetFloat("radius", outlineWidth);
+                if (ImGui.SliderFloat(" Outline Width", ref outlineWidth, 0.5f, 20, "%.1f")) outlineShader.SetFloat("radius", outlineWidth);
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.SliderInt(" Outline Steps", ref outlineSteps, 1, 32)) ppshader.SetInt("numSteps", outlineSteps);
+                if (ImGui.SliderInt(" Outline Steps", ref outlineSteps, 1, 32)) outlineShader.SetInt("numSteps", outlineSteps);
 
                 ImGui.TreePop();
             }

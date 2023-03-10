@@ -217,7 +217,7 @@ namespace GameEngine.ImGUI
         }
 
         static int selectedIndex = 3;
-        static int pcfres = 2;
+        static int pcfres = 5;
         static bool fxaaOnOff = true;
         static bool ACESonoff = true;
         static bool showImGUIdemo = false;

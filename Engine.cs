@@ -273,12 +273,15 @@ namespace GameEngine
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
             GL.Clear(ClearBufferMask.DepthBufferBit);
 
-            // Draw only meshes
-            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = shadowShader;
+            // Draw meshes to shadow map with different shaders
             renderShadowMap = true;
             UpdateMatrices();
             GL.CullFace(CullFaceMode.Front);
-            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Mesh.Render();
+            foreach (SceneObject sceneObject in sceneObjects)
+            {
+                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = shadowShader;
+                if (sceneObject.Type == SceneObjectType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Mesh.Render();
+            }
             GL.CullFace(CullFaceMode.Back);
 
             // Render normal scene
@@ -367,7 +370,6 @@ namespace GameEngine
             Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
-
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
             // Resize depth and framebuffer texture if size has changed

@@ -42,16 +42,24 @@ namespace GameEngine.ImGUI
         public static void ObjectProperties(ref List<SceneObject> sceneObjects, int selectedMesh)
         {
             ImGui.Begin("Properties");
-
             ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+            Properties(ref sceneObjects, selectedMesh);
+
+            ImGui.End();
+        }
+
+        public static void Properties(ref List<SceneObject> sceneObjects, int selectedMesh)
+        {
             if (sceneObjects.Count > 0)
             {
                 SceneObject _sceneObject = sceneObjects[selectedMesh];
 
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 string newName = _sceneObject.Name;
                 if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _sceneObject.Name = newName;
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();
 
                 if (_sceneObject.Type == SceneObjectType.Mesh)
@@ -135,19 +143,11 @@ namespace GameEngine.ImGUI
                     }
                 }
             }
-
-            ImGui.End();
         }
 
         public static void Viewport(int framebufferTexture, int depthMap, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered, int shadowRes)
         {
             ImGui.Begin("Viewport");
-            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
-            ImGui.Image((IntPtr)framebufferTexture, new(
-                MathHelper.Abs(ImGui.GetWindowContentRegionMin().X - ImGui.GetWindowContentRegionMax().X),
-                MathHelper.Abs(ImGui.GetWindowContentRegionMin().Y - ImGui.GetWindowContentRegionMax().Y)),
-                new(0, 1), new(1, 0), SN.Vector4.One, new(0));
-
             windowSize = new(
                 Convert.ToInt32(MathHelper.Abs(ImGui.GetWindowContentRegionMin().X - ImGui.GetWindowContentRegionMax().X)),
                 Convert.ToInt32(MathHelper.Abs(ImGui.GetWindowContentRegionMin().Y - ImGui.GetWindowContentRegionMax().Y)));
@@ -155,9 +155,15 @@ namespace GameEngine.ImGUI
                 Convert.ToInt32(ImGui.GetWindowPos().X),
                 Convert.ToInt32(ImGui.GetWindowPos().Y));
 
+            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
+            ImGui.Image((IntPtr)framebufferTexture, new(windowSize.X, windowSize.Y), new(0, 1), new(1, 0), SN.Vector4.One, new(0));
+
             viewportHovered = ImGui.IsWindowHovered() ? true : false;
             ImGui.End();
-        
+        }
+
+        public static void ShadowView(int depthMap)
+        {
             ImGui.Begin("Shadow View");
             float width = 400;
             float height = 400;
@@ -171,6 +177,8 @@ namespace GameEngine.ImGUI
 
             GL.BindTexture(TextureTarget.Texture2D, depthMap);
             ImGui.Image((IntPtr)depthMap, new(width, height), new(0, 1), new(1, 0), SN.Vector4.One, SN.Vector4.Zero); ImGui.End();
+
+            ImGui.End();
         }
 
         public static void MaterialEditor(ref List<SceneObject> sceneObjects, ref Shader meshShader, int selectedIndex)
@@ -370,7 +378,6 @@ namespace GameEngine.ImGUI
             ImGui.EndMainMenuBar();
         }
 
-
         public static void OldOutliner(List<SceneObject> sceneObjects, ref int selectedMeshIndex)
         {
             ImGui.Begin("Outliner", ImGuiWindowFlags.None);
@@ -397,15 +404,6 @@ namespace GameEngine.ImGUI
         public static void Outliner(ref List<SceneObject> sceneObjects, ref int selectedMeshIndex, ref int triCount)
         {
             ImGui.Begin("Outliner");
-
-            if (ImGui.Button("Remove Selected") && sceneObjects.Count != 0)
-            {
-                sceneObjects[selectedMeshIndex].Dispose();
-                sceneObjects.RemoveAt(selectedMeshIndex);   
-                
-                triCount = Game.CalculateTriangles();
-                if (selectedMeshIndex != 0) selectedMeshIndex -= 1;
-            }
 
             if (ImGui.BeginTable("table", 2, ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersOuter))
             {
@@ -454,7 +452,6 @@ namespace GameEngine.ImGUI
 
             ImGui.End();
         }
-
 
         public static void LoadTheme()
         {

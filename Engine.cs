@@ -83,6 +83,7 @@ namespace GameEngine
 
         PolygonMode _polygonMode = PolygonMode.Fill;
         private bool vsyncOn = true;
+        private bool fullscreen = false;
 
         private ImGuiController ImGuiController;
         int FBO;
@@ -320,6 +321,7 @@ namespace GameEngine
                     }
                 }
                 
+                GL.BindTexture(TextureTarget.Texture2D, depthMap);
                 PBRShader.Use();
                 for (int i = 0; i < sceneObjects.Count; i++)
                 {
@@ -360,12 +362,13 @@ namespace GameEngine
                 GL.Disable(EnableCap.StencilTest);
             }
 
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-
             // Use different shaders for engine and viewport effects
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
             // Resize depth and framebuffer texture if size has changed
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture);
@@ -373,24 +376,33 @@ namespace GameEngine
             // Show all the ImGUI windows
             ImGuiController.Update(this, (float)time);
             ImGui.DockSpaceOverViewport();
-            ImGuiWindows.Header();
-            ImGuiWindows.SmallStats(viewportSize, viewportPos, fps, ms, count_Meshes, count_PointLights, triangleCount);
-            ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
-            ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject);
-            ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
-            ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
-            //ImGui.ShowDemoWindow();
 
-            if (IsKeyPressed(Keys.Space))
+            ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
+            if (!fullscreen)
+            {
+                ImGuiWindows.Header();
+                ImGuiWindows.SmallStats(viewportSize, viewportPos, fps, ms, count_Meshes, count_PointLights, triangleCount);
+                ImGuiWindows.ShadowView(depthMap);
+                ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject);
+                ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
+                ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
+                ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref PBRShader, ref postprocessShader, ref outlineShader, ref fxaaShader);
+            }
+            
+            // Quick menu
+            if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
             {
                 SN.Vector2 mousePos = new SN.Vector2(MouseState.Position.X, MouseState.Position.Y);
                 ImGui.SetNextWindowPos(mousePos);
                 ImGui.OpenPopup("QuickMenu");
             }
 
+            // Toggle fullscreen
+            if (IsKeyDown(Keys.LeftControl) && IsKeyPressed(Keys.Space)) fullscreen = ToggleBool(fullscreen);
+
             if (ImGui.BeginPopup("QuickMenu", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize))
             {
-                ImGui.Text("Add");
+                ImGui.Text("Quick Menu");
                 ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
@@ -461,7 +473,7 @@ namespace GameEngine
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
 
-                if (ImGui.Button("Remove Selected") && sceneObjects.Count != 0)
+                if (ImGui.Button("Delete selection") && sceneObjects.Count != 0)
                 {
                     sceneObjects[selectedSceneObject].Dispose();
                     sceneObjects.RemoveAt(selectedSceneObject);
@@ -469,15 +481,32 @@ namespace GameEngine
                     if (selectedSceneObject != 0) selectedSceneObject -= 1;
                 }
 
+                ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
+                ImGui.Separator();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
+
+                if (ImGui.TreeNode("Properties")) ImGuiWindows.Properties(ref sceneObjects, selectedSceneObject);
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
+
                 ImGui.EndPopup();
             }
 
-            ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref PBRShader, ref postprocessShader, ref outlineShader, ref fxaaShader);
-            VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
-
             ImGuiController.Render();
 
+            VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
+
             SwapBuffers();
+        }
+
+        public bool ToggleBool(bool toggleBool)
+        {
+            bool _bool = false;
+
+            if (toggleBool == true) _bool = false;
+            if (toggleBool == false) _bool = true;
+
+            return _bool;
         }
 
         public static int CalculateTriangles()

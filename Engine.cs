@@ -45,8 +45,8 @@ namespace GameEngine
         private Vector2i viewportSize;
         private Vector2i previousViewportSize;
         private Vector2i viewportPos;
-        private float pitch = 0.0f, yaw = 0.0f;
-        float sensitivity = 0.0075f;
+        private float pitch = 0, yaw = (MathHelper.Pi / 2) * 3;
+        float sensitivity = 0.005f;
 
         int frameCount = 0;
         double elapsedTime = 0.0, fps = 0.0, ms;
@@ -154,9 +154,6 @@ namespace GameEngine
 
             Framebuffers.SetupShadowFBO(ref depthMapFBO, ref depthMap, shadowRes);
 
-            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1280 / 768, 0.1f, 100);
-            viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
-
             PBRShader = new Shader("Shaders/PBR/mesh.vert", "Shaders/PBR/mesh.frag");
             shadowShader = new Shader("Shaders/PBR/shadow.vert", "Shaders/PBR/shadow.frag");
             lightShader = new Shader("Shaders/Lights/light.vert", "Shaders/Lights/light.frag");
@@ -166,6 +163,8 @@ namespace GameEngine
 
             Postprocessing.SetupPPRect(ref postprocessShader);
 
+            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1, 0.1f, 100);
+            viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, new(0, 1, 0));
             camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 10);
             defaultMat = new(new(0.8f), 0, 0.3f);
             defaultMat.SetShaderUniforms(PBRShader);
@@ -236,7 +235,7 @@ namespace GameEngine
 
             frameCount++;
             elapsedTime += args.Time;
-            if (elapsedTime >= 0.1f)
+            if (elapsedTime >= 0.5f)
             {
                 fps = frameCount / elapsedTime;
                 ms = 1000 * elapsedTime / frameCount;
@@ -368,7 +367,7 @@ namespace GameEngine
             if (!fullscreen)
             {
                 ImGuiWindows.Header();
-                ImGuiWindows.SmallStats(viewportSize, viewportPos, fps, ms, count_Meshes, count_PointLights, triangleCount);
+                ImGuiWindows.SmallStats(viewportSize, viewportPos, fps, ms, count_Meshes, count_PointLights, triangleCount, camera.direction, yaw, pitch);
                 ImGuiWindows.ShadowView(depthMap);
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);

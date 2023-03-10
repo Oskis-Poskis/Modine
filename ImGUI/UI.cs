@@ -13,7 +13,7 @@ namespace GameEngine.ImGUI
     {
         static float spacing = 5;
 
-        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, double fps, double ms, int meshCount, int plCount, int triangleCount)
+        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, double fps, double ms, int meshCount, int plCount, int triangleCount, Vector3 direction, float yaw, float pitch)
         {
             ImGui.GetForegroundDrawList().AddRectFilled(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
@@ -31,6 +31,7 @@ namespace GameEngine.ImGUI
                 GL.GetString(StringName.Version) + "\n" +
                 "Size: " + viewportSize.X + " x " + viewportSize.Y + "\n" +
                 "Pos: " + viewportPos.X + " x " + viewportPos.Y + "\n" +
+                //"X:" + direction.X + " Y: " + direction.Y  + " Z: " + direction.Z  +"\n" + 
                 "Meshes: " + meshCount + "\n" +
                 "Lights: " + plCount + "\n" +
                 "Triangles: " + triangleCount.ToString("N0") + "\n" +

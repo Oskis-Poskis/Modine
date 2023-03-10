@@ -9,7 +9,7 @@ uniform vec3  ambient;
 
 uniform sampler2D shadowMap;
 uniform float shadowFactor;
-uniform int shadowPCFres = 2;
+uniform int shadowPCFres = 5;
 
 uniform bool smoothShading;
 uniform vec3 viewPos;

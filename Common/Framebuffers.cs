@@ -30,6 +30,28 @@ namespace GameEngine.Common
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, TextureTarget.Texture2D, depthStencilTexture, 0);
         }
 
+        public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, Vector2i ClientSize, ref int frameBufferTexture, ref int depthStencilTexture)
+        {
+            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            
+            //Resize framebuffer textures
+            if (viewportSize != previousViewportSize)
+            {
+                GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+
+                GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, viewportSize.X, viewportSize.Y, 0, PixelFormat.DepthStencil, PixelType.UnsignedInt248, IntPtr.Zero);
+
+                OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
+                if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());
+
+                //UpdateMatrices();
+                previousViewportSize = viewportSize;
+            }
+        }
+
         public static void SetupShadowFBO(ref int depthMapFBO, ref int depthMap, int shadowRes)
         {
             depthMapFBO = GL.GenFramebuffer();

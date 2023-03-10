@@ -168,6 +168,8 @@ namespace GameEngine.ImGUI
                 else height = width;
                 ImGui.SetWindowSize(new(width, height));
             }
+
+            GL.BindTexture(TextureTarget.Texture2D, depthMap);
             ImGui.Image((IntPtr)depthMap, new(width, height), new(0, 1), new(1, 0), SN.Vector4.One, SN.Vector4.Zero); ImGui.End();
         }
 

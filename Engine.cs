@@ -95,19 +95,6 @@ namespace GameEngine
 
         bool renderShadowMap = false;
 
-        private int VAO;
-        private int VBO;
-
-        float[] PPvertices =
-        {
-            -1f,  1f,
-            -1f, -1f,
-             1f,  1f,
-             1f,  1f,
-            -1f, -1f,
-             1f, -1f,
-        };
-
         private static void OnDebugMessage(
             DebugSource source,     // Source of the debugging message.
             DebugType type,         // Type of the debugging message.
@@ -175,15 +162,7 @@ namespace GameEngine
             outlineShader = new Shader("Shaders/Postprocessing/outlineSelection.vert", "Shaders/Postprocessing/outlineSelection.frag");
             fxaaShader = new Shader("Shaders/Postprocessing/fxaa.vert", "Shaders/Postprocessing/fxaa.frag");
 
-            VAO = GL.GenVertexArray();
-            GL.BindVertexArray(VAO);
-
-            VBO = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
-            GL.BufferData(BufferTarget.ArrayBuffer, PPvertices.Length * sizeof(float), PPvertices, BufferUsageHint.StaticDraw);
-
-            GL.EnableVertexAttribArray(postprocessShader.GetAttribLocation("aPosition"));
-            GL.VertexAttribPointer(postprocessShader.GetAttribLocation("aPosition"), 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
+            Postprocessing.SetupPPRect(ref postprocessShader);
 
             camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 10);
             defaultMat = new(new(0.8f), 0, 0.3f);
@@ -320,9 +299,6 @@ namespace GameEngine
             renderShadowMap = false;
             UpdateMatrices();
 
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, depthMap);
-
             if (sceneObjects.Count > 0)
             {
                 // Render sceneobject list
@@ -386,73 +362,17 @@ namespace GameEngine
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
-            // Bind framebuffer texture
-            postprocessShader.SetInt("frameBufferTexture", 0);
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
+            // Use different shaders for engine and viewport effects
+            Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture);
+            Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
+            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
 
-            // Bind depth texture
-            postprocessShader.SetInt("depth", 1);
-            GL.ActiveTexture(TextureUnit.Texture1);
-            GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
-            
-            // Render quad with framebuffer and postprocessing
-            postprocessShader.Use();
-            GL.BindVertexArray(VAO);
-            GL.Disable(EnableCap.DepthTest);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
-            GL.Enable(EnableCap.DepthTest);
+            // Resize depth and framebuffer texture if size has changed
+            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture);
 
-            // Bind framebuffer texture
-            outlineShader.SetInt("frameBufferTexture", 0);
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
-
-            // Bind stencil texture for outline in fragshader
-            outlineShader.SetInt("stencilTexture", 2);
-            GL.ActiveTexture(TextureUnit.Texture2);
-            GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
-
-            // Render quad with framebuffer and added outline
-            outlineShader.Use();
-            GL.Disable(EnableCap.DepthTest);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
-            GL.Enable(EnableCap.DepthTest);
-
-            // Bind framebuffer texture
-            fxaaShader.SetInt("frameBufferTexture", 0);
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
-
-            // Render quad with framebuffer and added outline
-            fxaaShader.Use();
-            GL.Disable(EnableCap.DepthTest);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
-            GL.Enable(EnableCap.DepthTest);
-
-            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            //Resize framebuffer textures
-            if (viewportSize != previousViewportSize)
-            {
-                GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
-
-                GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, viewportSize.X, viewportSize.Y, 0, PixelFormat.DepthStencil, PixelType.UnsignedInt248, IntPtr.Zero);
-
-                OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
-                if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());
-
-                UpdateMatrices();
-                previousViewportSize = viewportSize;
-            }
-
+            // Show all the ImGUI windows
             ImGuiController.Update(this, (float)time);
             ImGui.DockSpaceOverViewport();
-
             ImGuiWindows.Header();
             ImGuiWindows.SmallStats(viewportSize, viewportPos, fps, ms, count_Meshes, count_PointLights, triangleCount);
             ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);

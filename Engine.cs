@@ -10,9 +10,10 @@ using SN = System.Numerics;
 using GameEngine.Common;
 using GameEngine.Importer;
 using GameEngine.Rendering;
-using static GameEngine.Rendering.SceneObject;
 using GameEngine.ImGUI;
 using System.Runtime.InteropServices;
+
+using static GameEngine.Rendering.SceneObject;
 
 namespace GameEngine
 {
@@ -63,16 +64,18 @@ namespace GameEngine
         public Shader fxaaShader;
         Matrix4 projectionMatrix;
         Matrix4 viewMatrix;
+        Matrix4 lightSpaceMatrix;
 
         Mesh suzanne;
-        VertexData[] vertexData;
+        
         int[] indices;
-        VertexData[] planeVertexData;
-        int[] planeIndices;
-        VertexData[] cubeVertexData;
         int[] cubeIndices;
-        VertexData[] sphereVertexData;
+        int[] planeIndices;
         int[] sphereIndices;
+        VertexData[] vertexData;
+        VertexData[] cubeVertexData;
+        VertexData[] planeVertexData;
+        VertexData[] sphereVertexData;
         int triangleCount = 0;
 
         Camera camera;
@@ -93,8 +96,6 @@ namespace GameEngine
         int depthMapFBO;
         int depthMap;
         int shadowRes = 2048;
-
-        bool renderShadowMap = false;
 
         private static void OnDebugMessage(
             DebugSource source,     // Source of the debugging message.
@@ -268,21 +269,7 @@ namespace GameEngine
                 else if (sceneObject.Type == SceneObjectType.Light) count_PointLights += 1;
             }
 
-            // Render shadow scene
-            GL.Viewport(0, 0, shadowRes, shadowRes);
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
-            GL.Clear(ClearBufferMask.DepthBufferBit);
-
-            // Draw meshes to shadow map with different shaders
-            renderShadowMap = true;
-            UpdateMatrices();
-            GL.CullFace(CullFaceMode.Front);
-            foreach (SceneObject sceneObject in sceneObjects)
-            {
-                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = shadowShader;
-                if (sceneObject.Type == SceneObjectType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Mesh.Render();
-            }
-            GL.CullFace(CullFaceMode.Back);
+            GameEngine.Rendering.Rendering.RenderShadowScene(shadowRes, ref depthMapFBO, lightSpaceMatrix, ref sceneObjects, shadowShader);
 
             // Render normal scene
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
@@ -299,9 +286,6 @@ namespace GameEngine
 
             PBRShader.SetVector3("viewPos", camera.position);
             PBRShader.SetInt("countPL", count_PointLights);
-
-            renderShadowMap = false;
-            UpdateMatrices();
 
             if (sceneObjects.Count > 0)
             {
@@ -325,6 +309,7 @@ namespace GameEngine
                 }
                 
                 GL.BindTexture(TextureTarget.Texture2D, depthMap);
+                UpdateMatrices();
                 PBRShader.Use();
                 for (int i = 0; i < sceneObjects.Count; i++)
                 {
@@ -530,22 +515,15 @@ namespace GameEngine
         public void UpdateMatrices()
         {
             float aspectRatio = (float)viewportSize.X / viewportSize.Y;
-            Matrix4 lightSpaceMatrix = Matrix4.LookAt(direction * 10, new(0, 0, 0), Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-10, 10, -10, 10, 0.1f, 100);
+            lightSpaceMatrix = Matrix4.LookAt(direction * 10, new(0, 0, 0), Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-10, 10, -10, 10, 0.1f, 100);
             
-            if (!renderShadowMap)
-            {
-                projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, 0.1f, 100);
-                viewMatrix = Matrix4.LookAt(camera.position, camera.position + camera.direction, Vector3.UnitY);
-                PBRShader.SetMatrix4("projection", projectionMatrix);
-                PBRShader.SetMatrix4("view", viewMatrix);
-                PBRShader.SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
-                lightShader.SetMatrix4("projection", projectionMatrix);
-                lightShader.SetMatrix4("view", viewMatrix);
-            }
-            else
-            {
-                shadowShader.SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
-            }
+            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, 0.1f, 100);
+            viewMatrix = Matrix4.LookAt(camera.position, camera.position + camera.direction, Vector3.UnitY);
+            PBRShader.SetMatrix4("projection", projectionMatrix);
+            PBRShader.SetMatrix4("view", viewMatrix);
+            PBRShader.SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
+            lightShader.SetMatrix4("projection", projectionMatrix);
+            lightShader.SetMatrix4("view", viewMatrix);
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)

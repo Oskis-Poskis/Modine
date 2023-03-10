@@ -6,6 +6,8 @@ uniform sampler2D depth;
 uniform bool ACES = true;
 uniform bool showDepth = false;
 
+const float DISTORTION_AMOUNT = 0.5;
+
 in vec2 UV;
 out vec4 fragColor;
 
@@ -26,8 +28,6 @@ float LinearizeDepth(float depth)
     float z = depth * 2.0 - 1.0; // back to NDC 
     return (2.0 * near * far) / (far + near - z * (far - near));	
 }
-
-// Outline taken from: https://www.shadertoy.com/view/sltcRf
 
 void main()
 {

@@ -44,8 +44,8 @@ namespace GameEngine
         private Vector2i viewportSize;
         private Vector2i previousViewportSize;
         private Vector2i viewportPos;
-        private float pitch = 0.5f, yaw = 0.0f;
-        float sensitivity = 0.01f;
+        private float pitch = 0.0f, yaw = 0.0f;
+        float sensitivity = 0.0075f;
 
         int frameCount = 0;
         double elapsedTime = 0.0, fps = 0.0, ms;
@@ -60,6 +60,7 @@ namespace GameEngine
         public Shader shadowShader;
         public Shader postprocessShader;
         public Shader outlineShader;
+        public Shader fxaaShader;
         Matrix4 projectionMatrix;
         Matrix4 viewMatrix;
 
@@ -78,8 +79,6 @@ namespace GameEngine
         List<Mesh> Meshes = new List<Mesh>();
         static List<SceneObject> sceneObjects = new List<SceneObject>();
         int selectedSceneObject = 0;
-        Light light;
-        Light light2;
         int count_PointLights, count_Meshes = 0;
 
         PolygonMode _polygonMode = PolygonMode.Fill;
@@ -174,6 +173,7 @@ namespace GameEngine
             lightShader = new Shader("Shaders/Lights/light.vert", "Shaders/Lights/light.frag");
             postprocessShader = new Shader("Shaders/Postprocessing/postprocess.vert", "Shaders/Postprocessing/postprocess.frag");
             outlineShader = new Shader("Shaders/Postprocessing/outlineSelection.vert", "Shaders/Postprocessing/outlineSelection.frag");
+            fxaaShader = new Shader("Shaders/Postprocessing/fxaa.vert", "Shaders/Postprocessing/fxaa.frag");
 
             VAO = GL.GenVertexArray();
             GL.BindVertexArray(VAO);
@@ -421,6 +421,17 @@ namespace GameEngine
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
             GL.Enable(EnableCap.DepthTest);
 
+            // Bind framebuffer texture
+            fxaaShader.SetInt("frameBufferTexture", 0);
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
+
+            // Render quad with framebuffer and added outline
+            fxaaShader.Use();
+            GL.Disable(EnableCap.DepthTest);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+            GL.Enable(EnableCap.DepthTest);
+
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             //Resize framebuffer textures
@@ -452,12 +463,12 @@ namespace GameEngine
 
             if (IsKeyPressed(Keys.Space))
             {
-                SN.Vector2 mousePos = new SN.Vector2(MouseState.Position.X, MouseState.Position.Y) - new SN.Vector2(20, 20);
+                SN.Vector2 mousePos = new SN.Vector2(MouseState.Position.X, MouseState.Position.Y);
                 ImGui.SetNextWindowPos(mousePos);
-                ImGui.OpenPopup("test popup");
+                ImGui.OpenPopup("QuickMenu");
             }
 
-            if (ImGui.BeginPopup("test popup", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize))
+            if (ImGui.BeginPopup("QuickMenu", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize))
             {
                 ImGui.Text("Add");
                 ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
@@ -541,7 +552,7 @@ namespace GameEngine
                 ImGui.EndPopup();
             }
 
-            ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref PBRShader, ref postprocessShader, ref outlineShader);
+            ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref PBRShader, ref postprocessShader, ref outlineShader, ref fxaaShader);
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
 
             ImGuiController.Render();

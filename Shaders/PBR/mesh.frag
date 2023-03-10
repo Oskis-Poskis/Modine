@@ -188,7 +188,7 @@ void main()
 
     vec3 result = vec3(0);
     float shadow = ShadowCalculation(fragPosLightSpace, N, direction, shadowPCFres); 
-    result = dirLighting * (1 - shadow * shadowFactor) + (material.albedo * ambient);
+    result = dirLighting * (1 - shadow * shadowFactor) + (ambient);
     result += pointLighting;
 
     fragColor = vec4(result, 1);

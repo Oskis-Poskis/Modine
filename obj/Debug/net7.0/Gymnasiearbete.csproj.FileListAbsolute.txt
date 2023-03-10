@@ -180,3 +180,5 @@ E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Postp
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Postprocessing\outlineSelection.vert
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Postprocessing\postprocess.frag
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Postprocessing\postprocess.vert
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Postprocessing\fxaa.frag
+E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Debug\net7.0\Shaders\Postprocessing\fxaa.vert

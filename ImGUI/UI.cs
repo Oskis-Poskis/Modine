@@ -208,6 +208,7 @@ namespace GameEngine.ImGUI
 
         static int selectedIndex = 3;
         static int pcfres = 2;
+        static bool fxaaOnOff = true;
         static bool ACESonoff = true;
         static bool showImGUIdemo = false;
         static float strength = 1.75f;
@@ -216,7 +217,7 @@ namespace GameEngine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 16;
 
-        public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader, ref Shader outlineShader)
+        public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader)
         {
             ImGui.Begin("Settings");
 
@@ -228,13 +229,25 @@ namespace GameEngine.ImGUI
 
                 ImGui.Checkbox(" VSync", ref vsyncOn);
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.Checkbox(" ACES Tonemap", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.Checkbox(" Show Depth", ref showDepth)) ppshader.SetInt("showDepth", Convert.ToInt32(showDepth));
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.SliderFloat(" Outline Width", ref outlineWidth, 0.5f, 20, "%.1f")) outlineShader.SetFloat("radius", outlineWidth);
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.SliderInt(" Outline Steps", ref outlineSteps, 1, 32)) outlineShader.SetInt("numSteps", outlineSteps);
+
+                ImGui.TreePop();
+            }
+
+            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+            ImGui.Separator();
+            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+            if (ImGui.TreeNode("Post Processing"))
+            {
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                if (ImGui.Checkbox(" ACES Tonemap", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
 
                 ImGui.TreePop();
             }
@@ -255,7 +268,7 @@ namespace GameEngine.ImGUI
                     shader.SetVector3("direction", direction);
                 }
 
-                ImGui.Text("Strength");
+                ImGui.Text("Sun Strength");
                 if (ImGui.SliderFloat("##Strength", ref strength, 0, 10, "%.1f"))
                 {
                     shader.SetFloat("dirStrength", strength);

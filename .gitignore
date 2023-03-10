@@ -1,3 +1,4 @@
 **/bin/*
-**obj/*
-*.cache*
+**/obj/*
+*.dll
+*.cache

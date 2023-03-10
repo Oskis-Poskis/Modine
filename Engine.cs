@@ -174,7 +174,7 @@ namespace GameEngine
 
             ModelImporter.LoadModel("Importing/Suzanne.fbx", out vertexData, out indices);
             ModelImporter.LoadModel("Importing/Floor.fbx", out planeVertexData, out planeIndices);  
-            ModelImporter.LoadModel("Importing/RoundedCube.fbx", out cubeVertexData, out cubeIndices);
+            ModelImporter.LoadModel("Importing/Cube.fbx", out cubeVertexData, out cubeIndices);
             ModelImporter.LoadModel("Importing/Sphere.fbx", out sphereVertexData, out sphereIndices);
             suzanne = new Mesh(vertexData, indices, PBRShader, true, true, defaultMat);
             suzanne.scale = new(0.75f);

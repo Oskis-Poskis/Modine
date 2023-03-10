@@ -255,11 +255,15 @@ namespace GameEngine.ImGUI
                     shader.SetVector3("direction", direction);
                 }
 
-                ImGui.Text("Strength");
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Text("Sun Strength");
                 if (ImGui.SliderFloat("##Strength", ref strength, 0, 10, "%.1f"))
                 {
                     shader.SetFloat("dirStrength", strength);
                 }
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 SN.Vector3 color = new(ambient.X, ambient.Y, ambient.Z);            
                 ImGui.Text("Ambient Color");
@@ -321,7 +325,7 @@ namespace GameEngine.ImGUI
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                if (ImGui.Checkbox("Show ImGUI Demo", ref showImGUIdemo))
+                if (ImGui.Checkbox(" Show ImGUI Demo", ref showImGUIdemo))
 
                 ImGui.TreePop();
             }

@@ -5256,19 +5256,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\OskisPoskis\\.nuget\\packages\\": {}
+    "C:\\Users\\oskkas27\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\1_GymnasiearbeteRemake\\Gymnasiearbete---OpenGL\\Gymnasiearbete.csproj",
+      "projectUniqueName": "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete---OpenGL\\Gymnasiearbete.csproj",
       "projectName": "Gymnasiearbete",
-      "projectPath": "E:\\1_GymnasiearbeteRemake\\Gymnasiearbete---OpenGL\\Gymnasiearbete.csproj",
-      "packagesPath": "C:\\Users\\OskisPoskis\\.nuget\\packages\\",
-      "outputPath": "E:\\1_GymnasiearbeteRemake\\Gymnasiearbete---OpenGL\\obj\\",
+      "projectPath": "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete---OpenGL\\Gymnasiearbete.csproj",
+      "packagesPath": "C:\\Users\\oskkas27\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\oskkas27\\OneDrive - Lärande\\Gymnasiearbete\\Gymnasiearbete---OpenGL\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\OskisPoskis\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\oskkas27\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -5327,7 +5327,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.102\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.200\\RuntimeIdentifierGraph.json"
       }
     }
   }

@@ -78,8 +78,6 @@ namespace GameEngine
         List<Mesh> Meshes = new List<Mesh>();
         static List<SceneObject> sceneObjects = new List<SceneObject>();
         int selectedSceneObject = 0;
-        Light light;
-        Light light2;
         int count_PointLights, count_Meshes = 0;
 
         PolygonMode _polygonMode = PolygonMode.Fill;
@@ -186,7 +184,7 @@ namespace GameEngine
             GL.VertexAttribPointer(postprocessShader.GetAttribLocation("aPosition"), 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
 
             camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 10);
-            defaultMat = new(new(0.8f), 0, 0.5f);
+            defaultMat = new(new(0.8f), 0, 0.3f);
             defaultMat.SetShaderUniforms(PBRShader);
 
             PBRShader.SetVector3("ambient", ambient);

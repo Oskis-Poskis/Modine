@@ -59,17 +59,6 @@ E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Fonts\Rubik
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Fonts\Rubik-Medium.ttf
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Fonts\Rubik-SemiBold.ttf
 C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Gymnasiearbete.exe
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\light.frag
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\light.vert
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\mesh.frag
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\mesh.vert
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\outline.frag
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\outline.geom
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\outline.vert
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\postprocess.frag
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\postprocess.vert
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\shadow.frag
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\shadow.vert
 C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\imgui.ini
 C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Importing\CoolMotorCycle.fbx
 C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Importing\Creature.fbx
@@ -129,8 +118,6 @@ C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\obj
 C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\obj\release\net7.0\Gymnasiearbete.pdb
 C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\obj\release\net7.0\Gymnasiearbete.genruntimeconfig.cache
 C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\obj\release\net7.0\ref\Gymnasiearbete.dll
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\outlineSelection.frag
-C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\outlineSelection.vert
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Shaders\Lights\light.frag
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Shaders\Lights\light.vert
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Shaders\PBR\mesh.frag
@@ -143,3 +130,13 @@ E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Shaders\Pos
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Shaders\Postprocessing\postprocess.vert
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Shaders\depthPrepass.vert
 E:\1_GymnasiearbeteRemake\Gymnasiearbete---OpenGL\bin\Release\net7.0\Shaders\depthPresspas.frag
+C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\Lights\light.frag
+C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\Lights\light.vert
+C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\PBR\mesh.frag
+C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\PBR\mesh.vert
+C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\PBR\shadow.frag
+C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\PBR\shadow.vert
+C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\Postprocessing\outlineSelection.frag
+C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\Postprocessing\outlineSelection.vert
+C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\Postprocessing\postprocess.frag
+C:\Users\oskkas27\OneDrive - Lärande\Gymnasiearbete\Gymnasiearbete---OpenGL\bin\release\net7.0\Shaders\Postprocessing\postprocess.vert

@@ -11,7 +11,6 @@ using GameEngine.Common;
 using GameEngine.Importer;
 using GameEngine.Rendering;
 using GameEngine.ImGUI;
-using System.Runtime.InteropServices;
 
 using static GameEngine.Rendering.SceneObject;
 
@@ -46,7 +45,7 @@ namespace GameEngine
         private Vector2i previousViewportSize;
         private Vector2i viewportPos;
         private float pitch = 0, yaw = (MathHelper.Pi / 2) * 3;
-        float sensitivity = 0.005f;
+        float sensitivity = 0.006f;
 
         int frameCount = 0;
         double elapsedTime = 0.0, fps = 0.0, ms;
@@ -67,7 +66,6 @@ namespace GameEngine
         Matrix4 lightSpaceMatrix;
 
         Mesh suzanne;
-        
         int[] indices;
         int[] cubeIndices;
         int[] planeIndices;
@@ -79,7 +77,6 @@ namespace GameEngine
         int triangleCount = 0;
 
         Camera camera;
-        List<Mesh> Meshes = new List<Mesh>();
         static List<SceneObject> sceneObjects = new List<SceneObject>();
         int selectedSceneObject = 0;
         int count_PointLights, count_Meshes = 0;
@@ -97,33 +94,7 @@ namespace GameEngine
         int depthMap;
         int shadowRes = 2048;
 
-        private static void OnDebugMessage(
-            DebugSource source,     // Source of the debugging message.
-            DebugType type,         // Type of the debugging message.
-            int id,                 // ID associated with the message.
-            DebugSeverity severity, // Severity of the message.
-            int length,             // Length of the string in pMessage.
-            IntPtr pMessage,        // Pointer to message string.
-            IntPtr pUserParam)      // The pointer you gave to OpenGL, explained later.
-        {
-            // In order to access the string pointed to by pMessage, you can use Marshal
-            // class to copy its contents to a C# string without unsafe code. You can
-            // also use the new function Marshal.PtrToStringUTF8 since .NET Core 1.1.
-            string message = Marshal.PtrToStringAnsi(pMessage, length);
-
-            // The rest of the function is up to you to implement, however a debug output
-            // is always useful.
-            Console.WriteLine("[{0} source={1} type={2} id={3}] \n{4}", severity, source, type, id, message);
-
-            // Potentially, you may want to throw from the function for certain severity
-            // messages.
-            if (type == DebugType.DebugTypeError)
-            {
-                throw new Exception(message);
-            }
-        }
-
-        private static DebugProc DebugMessageDelegate = OnDebugMessage;
+        private static DebugProc DebugMessageDelegate;
 
         unsafe protected override void OnLoad()
         {
@@ -153,6 +124,7 @@ namespace GameEngine
             if (status != FramebufferErrorCode.FramebufferComplete) Console.WriteLine($"Framebuffer is incomplete: {status}");
 
             Framebuffers.SetupShadowFBO(ref depthMapFBO, ref depthMap, shadowRes);
+            DebugMessageDelegate = GameEngine.Rendering.Rendering.OnDebugMessage;
 
             PBRShader = new Shader("Shaders/PBR/mesh.vert", "Shaders/PBR/mesh.frag");
             shadowShader = new Shader("Shaders/PBR/shadow.vert", "Shaders/PBR/shadow.frag");
@@ -198,8 +170,10 @@ namespace GameEngine
             ImGuiController = new ImGuiController(viewportSize.X, viewportSize.Y);
             ImGuiWindows.LoadTheme();
 
-            GLFW.MaximizeWindow(WindowPtr);
+            //GLFW.MaximizeWindow(WindowPtr);
         }
+
+        bool isObjectPickedUp = false;
 
         protected override void OnUpdateFrame(FrameEventArgs args)
         {
@@ -230,12 +204,30 @@ namespace GameEngine
                 if (IsKeyDown(Keys.A)) camera.position -= moveAmount * Vector3.Normalize(Vector3.Cross(camera.direction, Vector3.UnitY));
                 if (IsKeyDown(Keys.D)) camera.position += moveAmount * Vector3.Normalize(Vector3.Cross(camera.direction, Vector3.UnitY));
                 if (IsKeyDown(Keys.E)) camera.position += moveAmount * Vector3.UnitY;
-                if (IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;                
+                if (IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
+
+                if (IsKeyPressed(Keys.G))
+                {
+                    isObjectPickedUp = true;
+                }
+
+                if (isObjectPickedUp)
+                {
+                    if (IsMouseButtonPressed(MouseButton.Button1))
+                    {
+                        isObjectPickedUp = false;
+                    }
+                    
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh)
+                    {
+                        sceneObjects[selectedSceneObject].Mesh.position = Raycast(camera.position, Vector3.Distance(sceneObjects[selectedSceneObject].Mesh.position, camera.position));
+                    }
+                }
             }
 
             frameCount++;
             elapsedTime += args.Time;
-            if (elapsedTime >= 0.5f)
+            if (elapsedTime >= 0.25f)
             {
                 fps = frameCount / elapsedTime;
                 ms = 1000 * elapsedTime / frameCount;
@@ -402,6 +394,7 @@ namespace GameEngine
                     {
                         Mesh cube = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, true, defaultMat);
                         cube.rotation.X = -90;
+                        //cube.position = Raycast(camera.position, 5);
                         SceneObject _cube = new("Cube" + randomNum, SceneObjectType.Mesh, cube);
                         sceneObjects.Add(_cube);
 
@@ -416,6 +409,7 @@ namespace GameEngine
                     {
                         Mesh sphere = new Mesh(sphereVertexData, sphereIndices, PBRShader, true, true, defaultMat);
                         sphere.rotation.X = -90;
+                        //sphere.position = Raycast(camera.position, 5);
                         SceneObject _sphere = new("Sphere" + randomNum, SceneObjectType.Mesh, sphere);
                         sceneObjects.Add(_sphere);
 
@@ -430,6 +424,7 @@ namespace GameEngine
                     {
                         Mesh plane = new Mesh(planeVertexData, planeIndices, PBRShader, true, true, defaultMat);
                         plane.rotation.X = -90;
+                        //plane.position = Raycast(camera.position, 5);
                         SceneObject _plane = new("Plane" + randomNum, SceneObjectType.Mesh, plane);
                         sceneObjects.Add(_plane);
 
@@ -525,6 +520,34 @@ namespace GameEngine
             lightShader.SetMatrix4("view", viewMatrix);
         }
 
+        float MapRange(float value, float inputMin, float inputMax, float outputMin, float outputMax) {
+            return ((value - inputMin) / (inputMax - inputMin)) * (outputMax - outputMin) + outputMin;
+        }
+
+        Vector3 Raycast(Vector3 origin, float distance)
+        {
+            // NDS
+            float x = MapRange(MousePosition.X, 0, viewportSize.X, -1, 1);
+            float y = MapRange(MousePosition.Y, 0, viewportSize.Y, 1, -1);
+            float z = 1.0f;
+            Vector3 ray_nds = new(x, y, z);
+
+            // 4d Homogeneous Clip Coordinates
+            Vector4 ray_clip = new(ray_nds.X, ray_nds.Y, -1.0f, 1.0f);
+
+            // 4d Eye coordinates
+            Vector4 ray_eye = ray_clip * Matrix4.Invert(projectionMatrix);
+            ray_eye = new(ray_eye.X, ray_eye.Y, -1.0f, 0.0f);
+
+            // 4d World Coordinates
+            Vector3 ray_wor = (ray_eye * Matrix4.Invert(viewMatrix)).Xyz;
+            ray_wor = Vector3.Normalize(ray_wor);
+
+            Vector3 position = origin + distance * ray_wor;
+
+            return position;
+        }
+
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
         {
             base.OnKeyDown(e);
@@ -533,7 +556,7 @@ namespace GameEngine
             {
                 if (e.Key == Keys.F) FocusObject();
 
-                if (e.Key == Keys.Escape) Close();
+                //if (e.Key == Keys.Escape) Close();
                 if (e.Key == Keys.D1)
                 {
                     GL.Enable(EnableCap.CullFace);

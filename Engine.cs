@@ -177,6 +177,7 @@ namespace GameEngine
         bool grabX = false;
         bool grabY = false;
         bool grabZ = false;
+        float originalDistance = 0;
         Vector3 originalPosition = Vector3.Zero;
         Vector3 newPosition = Vector3.Zero;
         Vector3 newPosition2 = Vector3.Zero;
@@ -219,9 +220,11 @@ namespace GameEngine
                 
                 if (IsKeyPressed(Keys.G) && !IsKeyDown(Keys.LeftAlt))
                 {
+                    if (isObjectPickedUp) return;
                     if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) originalPosition = sceneObjects[selectedSceneObject].Mesh.position;
                     if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) originalPosition = sceneObjects[selectedSceneObject].Light.position;
                     isObjectPickedUp = true;
+                    originalDistance = Vector3.Distance(camera.position, originalPosition);
                     grabX = false;
                     grabY = false;
                     grabZ = false;
@@ -229,22 +232,17 @@ namespace GameEngine
 
                 if (isObjectPickedUp)
                 {
-                    // NDS
                     float x = MapRange(MousePosition.X, 0, viewportSize.X, -1, 1);
                     float y = MapRange(MousePosition.Y, 0, viewportSize.Y, 1, -1);
                     float z = 1.0f;
                     Vector3 ray_nds = new(x, y, z);
-
-                    // 4d Homogeneous Clip Coordinates
                     Vector4 ray_clip = new(ray_nds.X, ray_nds.Y, -1.0f, 1.0f);
-
-                    // 4d Eye coordinates
                     Vector4 ray_eye = ray_clip * Matrix4.Invert(projectionMatrix);
                     ray_eye = new(ray_eye.X, ray_eye.Y, -1.0f, 1.0f);
-
                     Vector3 ray_wor = (ray_eye * Matrix4.Invert(viewMatrix)).Xyz;
 
-                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) newPosition = Raycast(camera.position, Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Mesh.position));
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) newPosition = Raycast(ray_wor, originalDistance);
+
                     if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) newPosition = Raycast(camera.position, Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Light.position));
                     if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) newPosition2 = Raycast(camera.position, Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Mesh.position));
                     if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) newPosition2 = Raycast(camera.position, Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Light.position));

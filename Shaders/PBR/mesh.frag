@@ -1,11 +1,14 @@
 #version 330 core
 
+in vec3 fragPosViewSpace;
+in vec3 normalsViewSpace;
+
 in vec3 normals;
 in vec3 fragPos;
 in vec4 fragPosLightSpace;
 layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec4 gPosition;
-layout(location = 2) out vec4 gNormal;
+layout(location = 1) out vec3 gPosition;
+layout(location = 2) out vec3 gNormal;
 
 uniform vec3 ambient;
 
@@ -193,7 +196,7 @@ void main()
     result = dirLighting * (1 - shadow * shadowFactor) + (material.albedo * ambient);
     result += pointLighting;
 
-    gPosition = vec4(fragPos, 1);
-    gNormal = vec4(normal, 0);
+    gPosition = fragPosViewSpace;
+    gNormal = normalize(normalsViewSpace);
     fragColor = vec4(result, 1);
 }

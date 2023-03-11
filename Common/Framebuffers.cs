@@ -53,10 +53,7 @@ namespace GameEngine.Common
         }
 
         public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, Vector2i ClientSize, ref int frameBufferTexture, ref int depthStencilTexture, ref int gPosition, ref int gNormal)
-        {
-            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            
+        {            
             //Resize framebuffer textures
             if (viewportSize != previousViewportSize)
             {

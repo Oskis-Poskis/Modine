@@ -1,5 +1,7 @@
 
+using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 namespace GameEngine.Common
 {
@@ -31,7 +33,35 @@ namespace GameEngine.Common
             GL.VertexAttribPointer(postprocessShader.GetAttribLocation("aPosition"), 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
         }
 
-        public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gPosition, int gNormal, int texNoise)
+        static Random random = new Random();
+        static List<Vector3> ssaoNoise = new List<Vector3>();
+        static Vector3[] sample = new Vector3[64];
+        public static void GenNoise()
+        {
+            for (int i = 0; i < 64; i++)
+            {
+                sample[i] = new Vector3(
+                    (float)random.NextDouble() * 2.0f - 1.0f, 
+                    (float)random.NextDouble() * 2.0f - 1.0f, 
+                    0.0f);
+                sample[i] = Vector3.Normalize(sample[i]);
+                sample[i] *= (float)random.NextDouble();
+
+                float scale = i / 64.0f;
+                sample[i] *= MathHelper.Lerp(0.1f, 1.0f, scale * scale);
+            }
+
+            for (int i = 0; i < 16; i++)
+            {
+                Vector3 noise = new Vector3(
+                    (float)random.NextDouble() * 2.0f - 1.0f, 
+                    (float)random.NextDouble() * 2.0f - 1.0f, 
+                    0.0f);
+                ssaoNoise.Add(noise);
+            }
+        }
+
+        public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gPosition, int gNormal, Matrix4 projectionMatrix)
         {
             // Bind framebuffer texture
             postprocessShader.SetInt("frameBufferTexture", 0);
@@ -53,14 +83,32 @@ namespace GameEngine.Common
             postprocessShader.SetInt("gNormal", 3);
             GL.ActiveTexture(TextureUnit.Texture3);
             GL.BindTexture(TextureTarget.Texture2D, gNormal);
+            
+            postprocessShader.Use();
+            int samplesLocation = GL.GetUniformLocation(postprocessShader.Handle, "samples");
+            // Generate sample kernel
+            
+            for (int i = 0; i < 64; i++)
+            {
+                GL.Uniform3(samplesLocation + i, sample[i]);
+            }
 
-            // Bind depth texture
+            // Generate noise texture
+            int noiseTexture = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, noiseTexture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb32f, 4, 4, 0, PixelFormat.Rgb, PixelType.Float, Marshal.UnsafeAddrOfPinnedArrayElement(ssaoNoise.ToArray(), 0));
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+
             postprocessShader.SetInt("texNoise", 4);
             GL.ActiveTexture(TextureUnit.Texture4);
-            GL.BindTexture(TextureTarget.Texture2D, texNoise);
-            
+            GL.BindTexture(TextureTarget.Texture2D, noiseTexture);
+
+            postprocessShader.SetMatrix4("projection", projectionMatrix);
+
             // Render quad with framebuffer and postprocessing
-            postprocessShader.Use();
             GL.BindVertexArray(VAO);
             GL.Disable(EnableCap.DepthTest);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);

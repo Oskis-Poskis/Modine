@@ -35,13 +35,13 @@ float LinearizeDepth(float depth)
     return (2.0 * near * far) / (far + near - z * (far - near));	
 }
 
-const int kernelSize = 64;
+int kernelSize = 64;
 float radius = 0.5;
 float bias = 0.025;
 
 void main()
 {
-    vec2 noiseScale = vec2(textureSize(frameBufferTexture, 0).x / 4, textureSize(frameBufferTexture, 0).y / 4);
+    vec2 noiseScale = vec2(textureSize(gPosition, 0).x / 4, textureSize(gPosition, 0).y / 4);
 
     vec3 color = texture(frameBufferTexture, UV).rgb;
     if (ACES && !showDepth) color = ACESFilm(color);
@@ -66,12 +66,13 @@ void main()
         offset.xyz /= offset.w;
         offset.xyz = offset.xyz * 0.5 + 0.5;
 
-        vec3 occluderPos = texture(gPosition, offset.xy).rgb;
+        float sampleDepth = texture(gPosition, offset.xy).z;
 
-        occlusion += (occluderPos.z >= samplePos.z + bias ? 1.0 : 0.0);
+        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
+        occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
     }
 
     occlusion = 1.0 - (occlusion / kernelSize);
 
-    fragColor = vec4(vec3(fragPos), 1);
+    fragColor = vec4(vec3(occlusion), 1);
 }

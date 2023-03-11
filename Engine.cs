@@ -157,6 +157,8 @@ namespace GameEngine
             suzanne.position = new(0, 0, 0);
             suzanne.rotation = new(-90, 0, 0);
 
+            Postprocessing.GenNoise();
+
             SceneObject _monkey = new("Monkey", SceneObjectType.Mesh, suzanne);
             sceneObjects.Add(_monkey);
 
@@ -422,48 +424,13 @@ namespace GameEngine
                 GL.Disable(EnableCap.StencilTest);
             }
 
-            // Generate sample kernel
-            Random random = new Random();
-            for (int i = 0; i < 64; i++)
-            {
-                Vector3 sample = new Vector3(
-                    (float)random.NextDouble() * 2.0f - 1.0f, 
-                    (float)random.NextDouble() * 2.0f - 1.0f, 
-                    0.0f);
-                sample = Vector3.Normalize(sample);
-                sample *= (float)random.NextDouble();
-
-                float scale = i / 64.0f;
-                sample *= MathHelper.Lerp(0.1f, 1.0f, scale * scale);
-                //postprocessShader.SetVector3("samples[" + i + "]", sample);
-                GL.Uniform3(GL.GetUniformLocation(postprocessShader.Handle, "samples[" + i + "]"), sample);
-            }
-
-            // Generate noise texture
-            List<Vector3> ssaoNoise = new List<Vector3>();
-            for (int i = 0; i < 16; i++)
-            {
-                Vector3 noise = new Vector3(
-                    (float)random.NextDouble() * 2.0f - 1.0f, 
-                    (float)random.NextDouble() * 2.0f - 1.0f, 
-                    0.0f);
-                ssaoNoise.Add(noise);
-            }
-            int noiseTexture = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, noiseTexture);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb32f, 4, 4, 0, PixelFormat.Rgb, PixelType.Float, Marshal.UnsafeAddrOfPinnedArrayElement(ssaoNoise.ToArray(), 0));
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-
-            postprocessShader.SetMatrix4("projection", projectionMatrix);
-
             // Use different shaders for engine and viewport effects
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, noiseTexture);
+            Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+
+            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
             // Resize depth and framebuffer texture if size has changed

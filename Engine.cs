@@ -179,6 +179,7 @@ namespace GameEngine
         bool grabZ = false;
         Vector3 originalPosition = Vector3.Zero;
         Vector3 newPosition = Vector3.Zero;
+        Vector3 newPosition2 = Vector3.Zero;
 
         protected override void OnUpdateFrame(FrameEventArgs args)
         {
@@ -215,73 +216,90 @@ namespace GameEngine
                     if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) sceneObjects[selectedSceneObject].Mesh.position = Vector3.Zero;
                     if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) sceneObjects[selectedSceneObject].Light.position = Vector3.Zero;
                 }
-            }
-            
-            if (IsKeyPressed(Keys.G) && !IsKeyDown(Keys.LeftAlt))
-            {
-                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) originalPosition = sceneObjects[selectedSceneObject].Mesh.position;
-                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) originalPosition = sceneObjects[selectedSceneObject].Light.position;
-                isObjectPickedUp = true;
-                grabX = false;
-                grabY = false;
-                grabZ = false;
-            }
-
-            if (isObjectPickedUp)
-            {
-                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) newPosition = Raycast(camera.position, Vector3.Distance(sceneObjects[selectedSceneObject].Mesh.position, camera.position));
-                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) newPosition = Raycast(camera.position, Vector3.Distance(sceneObjects[selectedSceneObject].Light.position, camera.position));
-                if (IsMouseButtonPressed(MouseButton.Button1)) isObjectPickedUp = false;
                 
-                if (IsKeyPressed(Keys.X))
+                if (IsKeyPressed(Keys.G) && !IsKeyDown(Keys.LeftAlt))
                 {
-                    grabX = ToggleBool(grabX);
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) originalPosition = sceneObjects[selectedSceneObject].Mesh.position;
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) originalPosition = sceneObjects[selectedSceneObject].Light.position;
+                    isObjectPickedUp = true;
+                    grabX = false;
                     grabY = false;
                     grabZ = false;
                 }
 
-                if (IsKeyPressed(Keys.Y))
+                if (isObjectPickedUp)
                 {
-                    grabX = false;
-                    grabY = ToggleBool(grabY);;
-                    grabZ = false;
-                }
+                    // NDS
+                    float x = MapRange(MousePosition.X, 0, viewportSize.X, -1, 1);
+                    float y = MapRange(MousePosition.Y, 0, viewportSize.Y, 1, -1);
+                    float z = 1.0f;
+                    Vector3 ray_nds = new(x, y, z);
 
-                if (IsKeyPressed(Keys.Z))
-                {
-                    grabX = false;
-                    grabY = false;
-                    grabZ = ToggleBool(grabZ);;
-                }
+                    // 4d Homogeneous Clip Coordinates
+                    Vector4 ray_clip = new(ray_nds.X, ray_nds.Y, -1.0f, 1.0f);
 
-                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh)
-                {
-                    if (IsKeyPressed(Keys.Escape))
+                    // 4d Eye coordinates
+                    Vector4 ray_eye = ray_clip * Matrix4.Invert(projectionMatrix);
+                    ray_eye = new(ray_eye.X, ray_eye.Y, -1.0f, 1.0f);
+
+                    Vector3 ray_wor = (ray_eye * Matrix4.Invert(viewMatrix)).Xyz;
+
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) newPosition = Raycast(ray_wor, 1);
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) newPosition = Raycast(ray_wor, 1);
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) newPosition2 = Raycast(camera.position, Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Mesh.position));
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) newPosition2 = Raycast(camera.position, Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Light.position));
+                    if (IsMouseButtonPressed(MouseButton.Button1)) isObjectPickedUp = false;
+                    
+                    if (IsKeyPressed(Keys.X))
                     {
-                        sceneObjects[selectedSceneObject].Mesh.position = originalPosition;
-                        isObjectPickedUp = false;
-                        return;
+                        grabX = ToggleBool(grabX);
+                        grabY = false;
+                        grabZ = false;
                     }
 
-                    if (grabX) sceneObjects[selectedSceneObject].Mesh.position = new(newPosition.X, originalPosition.Y, originalPosition.Z);
-                    if (grabY) sceneObjects[selectedSceneObject].Mesh.position = new(originalPosition.X, newPosition.Y, originalPosition.Z);
-                    if (grabZ) sceneObjects[selectedSceneObject].Mesh.position = new(originalPosition.X, originalPosition.Y, newPosition.Z);
-                    if (!grabX && !grabY && !grabZ) sceneObjects[selectedSceneObject].Mesh.position = newPosition;
-                }
-
-                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light)
-                {
-                    if (IsKeyPressed(Keys.Escape))
+                    if (IsKeyPressed(Keys.Y))
                     {
-                        sceneObjects[selectedSceneObject].Light.position = originalPosition;
-                        isObjectPickedUp = false;
-                        return;
+                        grabX = false;
+                        grabY = ToggleBool(grabY);;
+                        grabZ = false;
                     }
 
-                    if (grabX) sceneObjects[selectedSceneObject].Light.position = new(newPosition.X, originalPosition.Y, originalPosition.Z);
-                    if (grabY) sceneObjects[selectedSceneObject].Light.position = new(originalPosition.X, newPosition.Y, originalPosition.Z);
-                    if (grabZ) sceneObjects[selectedSceneObject].Light.position = new(originalPosition.X, originalPosition.Y, newPosition.Z);
-                    if (!grabX && !grabY && !grabZ) sceneObjects[selectedSceneObject].Light.position = newPosition;
+                    if (IsKeyPressed(Keys.Z))
+                    {
+                        grabX = false;
+                        grabY = false;
+                        grabZ = ToggleBool(grabZ);;
+                    }
+
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh)
+                    {
+                        if (IsKeyPressed(Keys.Escape))
+                        {
+                            sceneObjects[selectedSceneObject].Mesh.position = originalPosition;
+                            isObjectPickedUp = false;
+                            return;
+                        }
+
+                        if (grabX) sceneObjects[selectedSceneObject].Mesh.position = new(newPosition2.X, originalPosition.Y, originalPosition.Z);
+                        if (grabY) sceneObjects[selectedSceneObject].Mesh.position = new(originalPosition.X, newPosition2.Y, originalPosition.Z);
+                        if (grabZ) sceneObjects[selectedSceneObject].Mesh.position = new(originalPosition.X, originalPosition.Y, newPosition2.Z);
+                        if (!grabX && !grabY && !grabZ) sceneObjects[selectedSceneObject].Mesh.position = newPosition;
+                    }
+
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light)
+                    {
+                        if (IsKeyPressed(Keys.Escape))
+                        {
+                            sceneObjects[selectedSceneObject].Light.position = originalPosition;
+                            isObjectPickedUp = false;
+                            return;
+                        }
+
+                        if (grabX) sceneObjects[selectedSceneObject].Light.position = new(newPosition2.X, originalPosition.Y, originalPosition.Z);
+                        if (grabY) sceneObjects[selectedSceneObject].Light.position = new(originalPosition.X, newPosition2.Y, originalPosition.Z);
+                        if (grabZ) sceneObjects[selectedSceneObject].Light.position = new(originalPosition.X, originalPosition.Y, newPosition2.Z);
+                        if (!grabX && !grabY && !grabZ) sceneObjects[selectedSceneObject].Light.position = newPosition;
+                    }
                 }
             }
 

@@ -226,7 +226,7 @@ namespace GameEngine.ImGUI
         static float fontSize = 0.9f;
 
         static float outlineWidth = 3;
-        static int outlineSteps = 16;
+        static int outlineSteps = 12;
 
         public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader)
         {
@@ -426,8 +426,13 @@ namespace GameEngine.ImGUI
 
                     ImGui.TableSetColumnIndex(1);
                     ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.5f)));
+                    if (sceneObjects[i].Type == SceneObjectType.Light) ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(
+                        sceneObjects[i].Light.lightColor.X,
+                        sceneObjects[i].Light.lightColor.Y,
+                        sceneObjects[i].Light.lightColor.Z, 1)));
                     ImGui.Text(sceneObjects[i].Type.ToString().ToLower() + " ");
                     ImGui.PopStyleColor();
+                    if (sceneObjects[i].Type == SceneObjectType.Light) ImGui.PopStyleColor();
                 }
 
                 float tableHeight = ImGui.GetContentRegionAvail().Y;
@@ -454,7 +459,7 @@ namespace GameEngine.ImGUI
             ImGui.End();
         }
 
-        public static void LoadTheme()
+        unsafe public static void LoadTheme()
         {
             ImGui.GetStyle().FrameRounding = 2;
             ImGui.GetStyle().FrameBorderSize = 2;
@@ -468,7 +473,8 @@ namespace GameEngine.ImGUI
             ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;
             
             ImGui.GetStyle().GrabMinSize = 15;
-
+            
+            ImGui.PushStyleColor(ImGuiCol.Text, new System.Numerics.Vector4(230, 230, 230, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.Border, new System.Numerics.Vector4(25, 25, 25, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.MenuBarBg, new System.Numerics.Vector4(15, 15, 15, 200f) / 255);
             ImGui.PushStyleColor(ImGuiCol.CheckMark, new System.Numerics.Vector4(255, 140, 0, 255) / 255);

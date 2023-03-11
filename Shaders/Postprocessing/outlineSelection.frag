@@ -2,7 +2,7 @@
 
 uniform sampler2D frameBufferTexture;
 uniform usampler2D stencilTexture;
-uniform int numSteps = 16;
+uniform int numSteps = 12;
 uniform float radius = 3.0;
 
 const float TAU = 6.28318530;

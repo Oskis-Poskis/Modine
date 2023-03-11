@@ -244,8 +244,8 @@ namespace GameEngine
 
                     Vector3 ray_wor = (ray_eye * Matrix4.Invert(viewMatrix)).Xyz;
 
-                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) newPosition = Raycast(ray_wor, 1);
-                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) newPosition = Raycast(ray_wor, 1);
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) newPosition = Raycast(camera.position, Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Mesh.position));
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) newPosition = Raycast(camera.position, Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Light.position));
                     if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) newPosition2 = Raycast(camera.position, Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Mesh.position));
                     if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) newPosition2 = Raycast(camera.position, Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Light.position));
                     if (IsMouseButtonPressed(MouseButton.Button1)) isObjectPickedUp = false;

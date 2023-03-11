@@ -174,6 +174,11 @@ namespace GameEngine
         }
 
         bool isObjectPickedUp = false;
+        bool grabX = false;
+        bool grabY = false;
+        bool grabZ = false;
+        Vector3 originalPosition = Vector3.Zero;
+        Vector3 newPosition = Vector3.Zero;
 
         protected override void OnUpdateFrame(FrameEventArgs args)
         {
@@ -205,23 +210,78 @@ namespace GameEngine
                 if (IsKeyDown(Keys.D)) camera.position += moveAmount * Vector3.Normalize(Vector3.Cross(camera.direction, Vector3.UnitY));
                 if (IsKeyDown(Keys.E)) camera.position += moveAmount * Vector3.UnitY;
                 if (IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
-
-                if (IsKeyPressed(Keys.G))
+                if (IsKeyDown(Keys.LeftAlt) && IsKeyPressed(Keys.G))
                 {
-                    isObjectPickedUp = true;
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) sceneObjects[selectedSceneObject].Mesh.position = Vector3.Zero;
+                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) sceneObjects[selectedSceneObject].Light.position = Vector3.Zero;
+                }
+            }
+            
+            if (IsKeyPressed(Keys.G) && !IsKeyDown(Keys.LeftAlt))
+            {
+                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) originalPosition = sceneObjects[selectedSceneObject].Mesh.position;
+                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) originalPosition = sceneObjects[selectedSceneObject].Light.position;
+                isObjectPickedUp = true;
+                grabX = false;
+                grabY = false;
+                grabZ = false;
+            }
+
+            if (isObjectPickedUp)
+            {
+                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh) newPosition = Raycast(camera.position, Vector3.Distance(sceneObjects[selectedSceneObject].Mesh.position, camera.position));
+                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light) newPosition = Raycast(camera.position, Vector3.Distance(sceneObjects[selectedSceneObject].Light.position, camera.position));
+                if (IsMouseButtonPressed(MouseButton.Button1)) isObjectPickedUp = false;
+                
+                if (IsKeyPressed(Keys.X))
+                {
+                    grabX = ToggleBool(grabX);
+                    grabY = false;
+                    grabZ = false;
                 }
 
-                if (isObjectPickedUp)
+                if (IsKeyPressed(Keys.Y))
                 {
-                    if (IsMouseButtonPressed(MouseButton.Button1))
+                    grabX = false;
+                    grabY = ToggleBool(grabY);;
+                    grabZ = false;
+                }
+
+                if (IsKeyPressed(Keys.Z))
+                {
+                    grabX = false;
+                    grabY = false;
+                    grabZ = ToggleBool(grabZ);;
+                }
+
+                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh)
+                {
+                    if (IsKeyPressed(Keys.Escape))
                     {
+                        sceneObjects[selectedSceneObject].Mesh.position = originalPosition;
                         isObjectPickedUp = false;
+                        return;
                     }
-                    
-                    if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh)
+
+                    if (grabX) sceneObjects[selectedSceneObject].Mesh.position = new(newPosition.X, originalPosition.Y, originalPosition.Z);
+                    if (grabY) sceneObjects[selectedSceneObject].Mesh.position = new(originalPosition.X, newPosition.Y, originalPosition.Z);
+                    if (grabZ) sceneObjects[selectedSceneObject].Mesh.position = new(originalPosition.X, originalPosition.Y, newPosition.Z);
+                    if (!grabX && !grabY && !grabZ) sceneObjects[selectedSceneObject].Mesh.position = newPosition;
+                }
+
+                if (sceneObjects[selectedSceneObject].Type == SceneObjectType.Light)
+                {
+                    if (IsKeyPressed(Keys.Escape))
                     {
-                        sceneObjects[selectedSceneObject].Mesh.position = Raycast(camera.position, Vector3.Distance(sceneObjects[selectedSceneObject].Mesh.position, camera.position));
+                        sceneObjects[selectedSceneObject].Light.position = originalPosition;
+                        isObjectPickedUp = false;
+                        return;
                     }
+
+                    if (grabX) sceneObjects[selectedSceneObject].Light.position = new(newPosition.X, originalPosition.Y, originalPosition.Z);
+                    if (grabY) sceneObjects[selectedSceneObject].Light.position = new(originalPosition.X, newPosition.Y, originalPosition.Z);
+                    if (grabZ) sceneObjects[selectedSceneObject].Light.position = new(originalPosition.X, originalPosition.Y, newPosition.Z);
+                    if (!grabX && !grabY && !grabZ) sceneObjects[selectedSceneObject].Light.position = newPosition;
                 }
             }
 

@@ -1,4 +1,4 @@
-#version 440 core
+#version 330 core
 
 uniform sampler2D frameBufferTexture;
 uniform sampler2D depth;
@@ -11,8 +11,6 @@ uniform bool showDepth = false;
 
 uniform vec3 samples[64];
 uniform mat4 projection;
-
-const float DISTORTION_AMOUNT = 0.5;
 
 in vec2 UV;
 out vec4 fragColor;
@@ -35,44 +33,49 @@ float LinearizeDepth(float depth)
     return (2.0 * near * far) / (far + near - z * (far - near));	
 }
 
+uniform bool ssaoOnOff = true;
+uniform float radius = 0.5;
 int kernelSize = 64;
-float radius = 0.5;
 float bias = 0.025;
 
 void main()
 {
-    vec2 noiseScale = vec2(textureSize(gPosition, 0).x / 4, textureSize(gPosition, 0).y / 4);
-
     vec3 color = texture(frameBufferTexture, UV).rgb;
     if (ACES && !showDepth) color = ACESFilm(color);
     if (showDepth) color = vec3(LinearizeDepth(texture(depth, UV).r) / far);
 
-    vec3 fragPos = texture(gPosition, UV).xyz;
-    vec3 norm = texture(gNormal, UV).rgb;
-    vec3 randomVec = normalize(texture(texNoise, UV * noiseScale).xyz);
-
-    vec3 tangent = normalize(randomVec - norm * dot(randomVec, norm));
-    vec3 bitangent = cross(norm, tangent);
-    mat3 TBN = mat3(tangent, bitangent, norm);
-
-    float occlusion = 0.0;
-    for (int i = 0; i < kernelSize; i++)
+    if (ssaoOnOff)
     {
-        vec3 samplePos = TBN * samples[i];
-        samplePos = fragPos + samplePos * radius;
+        vec2 noiseScale = vec2(textureSize(gPosition, 0).x / 4, textureSize(gPosition, 0).y / 4);
 
-        vec4 offset = vec4(samplePos, 1.0);
-        offset = offset * projection;
-        offset.xyz /= offset.w;
-        offset.xyz = offset.xyz * 0.5 + 0.5;
+        vec3 fragPos = texture(gPosition, UV).xyz;
+        vec3 norm = texture(gNormal, UV).rgb;
+        vec3 randomVec = normalize(texture(texNoise, UV * noiseScale).xyz);
 
-        float sampleDepth = texture(gPosition, offset.xy).z;
+        vec3 tangent = normalize(randomVec - norm * dot(randomVec, norm));
+        vec3 bitangent = cross(norm, tangent);
+        mat3 TBN = mat3(tangent, bitangent, norm);
 
-        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
-        occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+        float occlusion = 0.0;
+        for (int i = 0; i < kernelSize; i++)
+        {
+            vec3 samplePos = TBN * samples[i];
+            samplePos = fragPos + samplePos * radius;
+
+            vec4 offset = vec4(samplePos, 1.0);
+            offset = offset * projection;
+            offset.xyz /= offset.w;
+            offset.xyz = offset.xyz * 0.5 + 0.5;
+
+            vec3 occluderPos = texture(gPosition, offset.xy).rgb;
+
+            float rangeCheck = smoothstep(0.0, 1.0, radius / length(fragPos - occluderPos));
+            occlusion += (occluderPos.z >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+        }
+
+        occlusion = 1.0 - (occlusion / kernelSize);
+
+        fragColor = vec4(color * occlusion, 1);
     }
-
-    occlusion = 1.0 - (occlusion / kernelSize);
-
-    fragColor = vec4(vec3(occlusion), 1);
+    else fragColor = vec4(color, 1);
 }

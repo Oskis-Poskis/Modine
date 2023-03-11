@@ -148,7 +148,7 @@ namespace GameEngine
             PBRShader.SetVector3("direction", direction);
             PBRShader.SetFloat("shadowFactor", shadowFactor);
 
-            ModelImporter.LoadModel("Importing/Suzanne.fbx", out vertexData, out indices);
+            ModelImporter.LoadModel("Importing/TestRoom.fbx", out vertexData, out indices);
             ModelImporter.LoadModel("Importing/Floor.fbx", out planeVertexData, out planeIndices);  
             ModelImporter.LoadModel("Importing/Cube.fbx", out cubeVertexData, out cubeIndices);
             ModelImporter.LoadModel("Importing/Sphere.fbx", out sphereVertexData, out sphereIndices);
@@ -430,11 +430,11 @@ namespace GameEngine
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
 
-            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-
             // Resize depth and framebuffer texture if size has changed
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gPosition, ref gNormal);
+
+            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
             // Show all the ImGUI windows
             ImGuiController.Update(this, (float)time);

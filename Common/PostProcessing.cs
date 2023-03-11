@@ -34,8 +34,10 @@ namespace GameEngine.Common
         }
 
         static Random random = new Random();
-        static List<Vector3> ssaoNoise = new List<Vector3>();
+        static Vector3[] ssaoNoise = new Vector3[16];
         static Vector3[] sample = new Vector3[64];
+        static int noiseTexture;
+
         public static void GenNoise()
         {
             for (int i = 0; i < 64; i++)
@@ -43,12 +45,13 @@ namespace GameEngine.Common
                 sample[i] = new Vector3(
                     (float)random.NextDouble() * 2.0f - 1.0f, 
                     (float)random.NextDouble() * 2.0f - 1.0f, 
-                    0.0f);
+                    (float)random.NextDouble());
                 sample[i] = Vector3.Normalize(sample[i]);
                 sample[i] *= (float)random.NextDouble();
-
                 float scale = i / 64.0f;
-                sample[i] *= MathHelper.Lerp(0.1f, 1.0f, scale * scale);
+
+                scale = MathHelper.Lerp(0.1f, 1.0f, scale * scale);
+                sample[i] *= scale;
             }
 
             for (int i = 0; i < 16; i++)
@@ -57,8 +60,17 @@ namespace GameEngine.Common
                     (float)random.NextDouble() * 2.0f - 1.0f, 
                     (float)random.NextDouble() * 2.0f - 1.0f, 
                     0.0f);
-                ssaoNoise.Add(noise);
+                ssaoNoise[i] = noise;
             }
+
+            // Generate noise texture
+            noiseTexture = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, noiseTexture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb32f, 4, 4, 0, PixelFormat.Rgb, PixelType.Float, Marshal.UnsafeAddrOfPinnedArrayElement(ssaoNoise, 0));
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
         }
 
         public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gPosition, int gNormal, Matrix4 projectionMatrix)
@@ -92,15 +104,6 @@ namespace GameEngine.Common
             {
                 GL.Uniform3(samplesLocation + i, sample[i]);
             }
-
-            // Generate noise texture
-            int noiseTexture = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, noiseTexture);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb32f, 4, 4, 0, PixelFormat.Rgb, PixelType.Float, Marshal.UnsafeAddrOfPinnedArrayElement(ssaoNoise.ToArray(), 0));
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
 
             postprocessShader.SetInt("texNoise", 4);
             GL.ActiveTexture(TextureUnit.Texture4);

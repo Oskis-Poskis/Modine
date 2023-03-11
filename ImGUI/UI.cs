@@ -221,6 +221,8 @@ namespace GameEngine.ImGUI
         static int pcfres = 5;
         static bool fxaaOnOff = true;
         static bool ACESonoff = true;
+        static bool ssaoOnOff = true;
+        static float ssaoRadius = 0.5f;
         static bool showImGUIdemo = false;
         static float strength = 1.75f;
         static float fontSize = 0.9f;
@@ -255,6 +257,10 @@ namespace GameEngine.ImGUI
 
             if (ImGui.TreeNode("Post Processing"))
             {
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                if (ImGui.SliderFloat(" SSAO Radius", ref ssaoRadius, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("radius", ssaoRadius);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff)) ppshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));

@@ -3,9 +3,11 @@
 in vec3 normals;
 in vec3 fragPos;
 in vec4 fragPosLightSpace;
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
+layout(location = 1) out vec4 gPosition;
+layout(location = 2) out vec4 gNormal;
 
-uniform vec3  ambient;
+uniform vec3 ambient;
 
 uniform sampler2D shadowMap;
 uniform float shadowFactor;
@@ -191,5 +193,7 @@ void main()
     result = dirLighting * (1 - shadow * shadowFactor) + (material.albedo * ambient);
     result += pointLighting;
 
+    gPosition = vec4(fragPos, 1);
+    gNormal = vec4(normal, 0);
     fragColor = vec4(result, 1);
 }

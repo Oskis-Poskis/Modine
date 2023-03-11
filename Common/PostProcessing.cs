@@ -31,7 +31,7 @@ namespace GameEngine.Common
             GL.VertexAttribPointer(postprocessShader.GetAttribLocation("aPosition"), 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
         }
 
-        public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture)
+        public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gPosition, int gNormal, int texNoise)
         {
             // Bind framebuffer texture
             postprocessShader.SetInt("frameBufferTexture", 0);
@@ -43,6 +43,21 @@ namespace GameEngine.Common
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
+
+            // Bind depth texture
+            postprocessShader.SetInt("gPosition", 2);
+            GL.ActiveTexture(TextureUnit.Texture2);
+            GL.BindTexture(TextureTarget.Texture2D, gPosition);
+
+            // Bind depth texture
+            postprocessShader.SetInt("gNormal", 3);
+            GL.ActiveTexture(TextureUnit.Texture3);
+            GL.BindTexture(TextureTarget.Texture2D, gNormal);
+
+            // Bind depth texture
+            postprocessShader.SetInt("texNoise", 4);
+            GL.ActiveTexture(TextureUnit.Texture4);
+            GL.BindTexture(TextureTarget.Texture2D, texNoise);
             
             // Render quad with framebuffer and postprocessing
             postprocessShader.Use();

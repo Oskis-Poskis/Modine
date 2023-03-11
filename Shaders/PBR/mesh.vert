@@ -5,7 +5,6 @@ layout(location = 1) in vec3 aNormals;
 out vec3 normals;
 out vec3 fragPos;
 out vec4 fragPosLightSpace;
-
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;

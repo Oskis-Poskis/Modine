@@ -13,6 +13,7 @@ using GameEngine.Rendering;
 using GameEngine.ImGUI;
 
 using static GameEngine.Rendering.SceneObject;
+using System.Runtime.InteropServices;
 
 namespace GameEngine
 {
@@ -89,6 +90,8 @@ namespace GameEngine
         int FBO;
         int framebufferTexture;
         int depthStencilTexture;
+        int gPosition;
+        int gNormal;
 
         int depthMapFBO;
         int depthMap;
@@ -116,7 +119,7 @@ namespace GameEngine
             FBO = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
 
-            Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, viewportSize);
+            Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, ref gPosition, ref gNormal, viewportSize);
             FramebufferErrorCode status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
 
             OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
@@ -341,6 +344,8 @@ namespace GameEngine
             // Render normal scene
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
+            DrawBuffersEnum[] buffers = new DrawBuffersEnum[]{DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2};
+            GL.DrawBuffers(3, buffers);
             GL.ClearColor(new Color4(ambient.X, ambient.Y, ambient.Z, 1));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
@@ -417,15 +422,52 @@ namespace GameEngine
                 GL.Disable(EnableCap.StencilTest);
             }
 
+            // Generate sample kernel
+            Random random = new Random();
+            for (int i = 0; i < 64; i++)
+            {
+                Vector3 sample = new Vector3(
+                    (float)random.NextDouble() * 2.0f - 1.0f, 
+                    (float)random.NextDouble() * 2.0f - 1.0f, 
+                    0.0f);
+                sample = Vector3.Normalize(sample);
+                sample *= (float)random.NextDouble();
+
+                float scale = i / 64.0f;
+                sample *= MathHelper.Lerp(0.1f, 1.0f, scale * scale);
+                //postprocessShader.SetVector3("samples[" + i + "]", sample);
+                GL.Uniform3(GL.GetUniformLocation(postprocessShader.Handle, "samples[" + i + "]"), sample);
+            }
+
+            // Generate noise texture
+            List<Vector3> ssaoNoise = new List<Vector3>();
+            for (int i = 0; i < 16; i++)
+            {
+                Vector3 noise = new Vector3(
+                    (float)random.NextDouble() * 2.0f - 1.0f, 
+                    (float)random.NextDouble() * 2.0f - 1.0f, 
+                    0.0f);
+                ssaoNoise.Add(noise);
+            }
+            int noiseTexture = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, noiseTexture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb32f, 4, 4, 0, PixelFormat.Rgb, PixelType.Float, Marshal.UnsafeAddrOfPinnedArrayElement(ssaoNoise.ToArray(), 0));
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+
+            postprocessShader.SetMatrix4("projection", projectionMatrix);
+
             // Use different shaders for engine and viewport effects
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture);
+            Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, noiseTexture);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
             // Resize depth and framebuffer texture if size has changed
-            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture);
+            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gPosition, ref gNormal);
 
             // Show all the ImGUI windows
             ImGuiController.Update(this, (float)time);

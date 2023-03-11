@@ -2,9 +2,15 @@
 
 uniform sampler2D frameBufferTexture;
 uniform sampler2D depth;
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D texNoise;
 
 uniform bool ACES = true;
 uniform bool showDepth = false;
+
+uniform vec3 samples[64];
+uniform mat4 projection;
 
 const float DISTORTION_AMOUNT = 0.5;
 
@@ -22,18 +28,50 @@ vec3 ACESFilm( vec3 x) {
 
 float near = 0.1; 
 float far  = 100.0; 
-  
+
 float LinearizeDepth(float depth) 
 {
     float z = depth * 2.0 - 1.0; // back to NDC 
     return (2.0 * near * far) / (far + near - z * (far - near));	
 }
 
+const int kernelSize = 64;
+float radius = 0.5;
+float bias = 0.025;
+
 void main()
 {
+    vec2 noiseScale = vec2(textureSize(frameBufferTexture, 0).x / 4, textureSize(frameBufferTexture, 0).y / 4);
+
     vec3 color = texture(frameBufferTexture, UV).rgb;
     if (ACES && !showDepth) color = ACESFilm(color);
     if (showDepth) color = vec3(LinearizeDepth(texture(depth, UV).r) / far);
 
-    fragColor = vec4(color, 1);
+    vec3 fragPos = texture(gPosition, UV).xyz;
+    vec3 norm = texture(gNormal, UV).rgb;
+    vec3 randomVec = normalize(texture(texNoise, UV * noiseScale).xyz);
+
+    vec3 tangent = normalize(randomVec - norm * dot(randomVec, norm));
+    vec3 bitangent = cross(norm, tangent);
+    mat3 TBN = mat3(tangent, bitangent, norm);
+
+    float occlusion = 0.0;
+    for (int i = 0; i < kernelSize; i++)
+    {
+        vec3 samplePos = TBN * samples[i];
+        samplePos = fragPos + samplePos * radius;
+
+        vec4 offset = vec4(samplePos, 1.0);
+        offset = offset * projection;
+        offset.xyz /= offset.w;
+        offset.xyz = offset.xyz * 0.5 + 0.5;
+
+        vec3 occluderPos = texture(gPosition, offset.xy).rgb;
+
+        occlusion += (occluderPos.z >= samplePos.z + bias ? 1.0 : 0.0);
+    }
+
+    occlusion = 1.0 - (occlusion / kernelSize);
+
+    fragColor = vec4(vec3(fragPos), 1);
 }

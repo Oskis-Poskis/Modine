@@ -62,6 +62,7 @@ namespace Modine
         public Shader postprocessShader;
         public Shader outlineShader;
         public Shader fxaaShader;
+        public Shader SSAOblurShader;
         Matrix4 projectionMatrix;
         Matrix4 viewMatrix;
         Matrix4 lightSpaceMatrix;
@@ -92,6 +93,7 @@ namespace Modine
         int depthStencilTexture;
         int gPosition;
         int gNormal;
+        int SSAOblur;
 
         int depthMapFBO;
         int depthMap;
@@ -145,7 +147,7 @@ namespace Modine
             FBO = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
 
-            Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, ref gPosition, ref gNormal, viewportSize);
+            Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, ref gPosition, ref gNormal, ref SSAOblur, viewportSize);
             FramebufferErrorCode status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
 
             OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
@@ -161,6 +163,7 @@ namespace Modine
             postprocessShader = new Shader("Shaders/Postprocessing/postprocess.vert", "Shaders/Postprocessing/postprocess.frag");
             outlineShader = new Shader("Shaders/Postprocessing/outlineSelection.vert", "Shaders/Postprocessing/outlineSelection.frag");
             fxaaShader = new Shader("Shaders/Postprocessing/fxaa.vert", "Shaders/Postprocessing/fxaa.frag");
+            SSAOblurShader = new Shader("Shaders/Postprocessing/SSAOblur.vert", "Shaders/Postprocessing/SSAOblur.frag");
 
             Postprocessing.SetupPPRect(ref postprocessShader);
 
@@ -372,8 +375,8 @@ namespace Modine
             // Render normal scene
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
-            DrawBuffersEnum[] buffers = new DrawBuffersEnum[]{DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2};
-            GL.DrawBuffers(3, buffers);
+            DrawBuffersEnum[] buffers = new DrawBuffersEnum[] {DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3};
+            GL.DrawBuffers(4, buffers);
             GL.ClearColor(new Color4(ambient.X, ambient.Y, ambient.Z, 1));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
@@ -453,14 +456,12 @@ namespace Modine
             // Use different shaders for engine and viewport effects
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix);
-            GL.Finish();
-            Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
-            GL.Finish();
+            Postprocessing.RenderSSAOrect(ref SSAOblurShader, SSAOblur);
+            Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture, SSAOblur);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
-            GL.Finish();
-            
+
             // Resize depth and framebuffer texture if size has changed
-            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gPosition, ref gNormal);
+            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gPosition, ref gNormal, ref SSAOblur);
             GL.Finish();
 
             OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();

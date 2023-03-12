@@ -5,7 +5,7 @@ namespace Modine.Common
 {
     public class Framebuffers
     {
-        public static void SetupFBO(ref int framebufferTexture, ref int depthStencilTexture, ref int gPosition, ref int gNormal, Vector2i viewportSize)
+        public static void SetupFBO(ref int framebufferTexture, ref int depthStencilTexture, ref int gPosition, ref int gNormal, ref int SSAOblur, Vector2i viewportSize)
         {
             // Color Texture
             framebufferTexture = GL.GenTexture();
@@ -43,7 +43,7 @@ namespace Modine.Common
             // Normal Texture
             gNormal = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, gNormal);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
@@ -51,9 +51,21 @@ namespace Modine.Common
 
             // Attach normal to FBO
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment2, TextureTarget.Texture2D, gNormal, 0);
+
+            // Normal Texture
+            SSAOblur = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, SSAOblur);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+
+            // Attach normal to FBO
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment3, TextureTarget.Texture2D, SSAOblur, 0);
         }
 
-        public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, Vector2i ClientSize, ref int frameBufferTexture, ref int depthStencilTexture, ref int gPosition, ref int gNormal)
+        public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, Vector2i ClientSize, ref int frameBufferTexture, ref int depthStencilTexture, ref int gPosition, ref int gNormal, ref int SSAOblur)
         {            
             //Resize framebuffer textures
             if (viewportSize != previousViewportSize)
@@ -68,7 +80,10 @@ namespace Modine.Common
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
 
                 GL.BindTexture(TextureTarget.Texture2D, gNormal);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+
+                GL.BindTexture(TextureTarget.Texture2D, SSAOblur);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
 
                 //UpdateMatrices();
                 previousViewportSize = viewportSize;

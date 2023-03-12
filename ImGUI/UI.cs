@@ -266,7 +266,6 @@ namespace Modine.ImGUI
                 if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff))
                 {
                     ppshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
-                    outlineShader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
                 }
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));

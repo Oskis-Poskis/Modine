@@ -2,6 +2,7 @@
 
 uniform sampler2D frameBufferTexture;
 uniform usampler2D stencilTexture;
+uniform sampler2D SSAOblur;
 uniform int numSteps = 12;
 uniform float radius = 3.0;
 uniform bool ssaoOnOff = true;
@@ -16,7 +17,7 @@ void main()
 {
     vec4 color = texture(frameBufferTexture, UV);
     float stencil = texture(stencilTexture, UV).r;
-    float alpha;
+    float ao = texture(SSAOblur, UV).r;
     
     vec2 aspect = 1.0 / vec2(textureSize(stencilTexture, 0));
     float outlinemask = 0.0;
@@ -30,25 +31,5 @@ void main()
     }
     outlinemask = mix(outlinemask, 0.0, stencil);
 
-    vec4 _color;
-    if (ssaoOnOff)
-    {
-        vec2 offset;
-        vec2 texelSize = 1.0 / vec2(textureSize(frameBufferTexture, 0));
-        float result = 0.0;
-        for (int x = -2; x < 2; ++x) 
-        {
-            for (int y = -2; y < 2; ++y) 
-            {
-                offset = vec2(float(x) * texelSize.x, float(y) * texelSize.y);
-                result += texture(frameBufferTexture, UV + offset).a;
-            }
-        }
-        float blur = result / (4.0 * 4.0);
-        
-        _color = vec4(color.rgb * vec3(blur), 1);
-    }
-
-    else _color = vec4(color.rgb, 1);
-    fragColor = mix(_color, vec4(0.75, 0.4, 0.0, 1.0), outlinemask);
+    fragColor = mix(color * ao, vec4(0.75, 0.4, 0.0, 1.0), clamp(outlinemask, 0.0, 1.0));
 }

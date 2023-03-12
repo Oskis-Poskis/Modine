@@ -114,7 +114,22 @@ namespace Modine.Common
             GL.Enable(EnableCap.DepthTest);
         }
 
-        public static void RenderOutlineRect(ref Shader outlineShader, int frameBufferTexture, int depthStencilTexture)
+        public static void RenderSSAOrect(ref Shader SSAOblurShader, int SSAOblur)
+        {
+            SSAOblurShader.Use();
+
+            // Bind framebuffer texture
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, SSAOblur);
+            SSAOblurShader.SetInt("frameBufferTexture", 0);
+
+            // Render quad with framebuffer and added outline
+            GL.Disable(EnableCap.DepthTest);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+            GL.Enable(EnableCap.DepthTest);
+        }
+
+        public static void RenderOutlineRect(ref Shader outlineShader, int frameBufferTexture, int depthStencilTexture, int SSAOblur)
         {
             outlineShader.Use();
 
@@ -124,10 +139,15 @@ namespace Modine.Common
             outlineShader.SetInt("frameBufferTexture", 0);
 
             // Bind stencil texture for outline in fragshader
-            GL.ActiveTexture(TextureUnit.Texture2);
+            GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
-            outlineShader.SetInt("stencilTexture", 2);
+            outlineShader.SetInt("stencilTexture", 1);
+
+            // Bind framebuffer texture
+            GL.ActiveTexture(TextureUnit.Texture2);
+            GL.BindTexture(TextureTarget.Texture2D, SSAOblur);
+            outlineShader.SetInt("SSAOblur", 2);
 
             // Render quad with framebuffer and added outline
             GL.Disable(EnableCap.DepthTest);

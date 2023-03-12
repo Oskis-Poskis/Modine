@@ -22,13 +22,17 @@ Raycasting
 
 PBR Shading
 
-Basic PCF shadow-mapping
+Point Lights
+
+Directional light PCF shadow-mapping
 
 Screen space ambient occlusion (SSAO)
 
 Fast Approximate Anti-Aliasing (FXAA)
 
 Object outlines using stencilbuffer and fragmentshader
+
+Modify object transform in viewport
 
 Viewport, outliner, settings, properties and material editor using ImGUI Docking
 

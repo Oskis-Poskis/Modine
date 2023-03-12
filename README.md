@@ -1,5 +1,5 @@
 # Modine
-## OpenTK Game Engine built to learn OpenGL
+## C# OpenGL Game Engine built to learn OpenGL
 **GUI** using [ImGUI.NET](https://www.nuget.org/packages/ImGui.NET)
 
 **3D Model Loading** using [AssimpNet](https://www.nuget.org/packages/AssimpNet)

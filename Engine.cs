@@ -13,7 +13,6 @@ using GameEngine.Rendering;
 using GameEngine.ImGUI;
 
 using static GameEngine.Rendering.SceneObject;
-using System.Runtime.InteropServices;
 
 namespace GameEngine
 {
@@ -30,7 +29,7 @@ namespace GameEngine
                 WindowState = WindowState.Normal,
                 API = ContextAPI.OpenGL,
                 Profile = ContextProfile.Core,
-                APIVersion = new Version(4, 3),
+                APIVersion = new Version(3, 3),
                 Flags = ContextFlags.Debug
             })
         {

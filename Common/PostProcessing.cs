@@ -75,6 +75,8 @@ namespace GameEngine.Common
 
         public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gPosition, int gNormal, Matrix4 projectionMatrix)
         {
+            postprocessShader.Use();
+
             // Bind framebuffer texture
             postprocessShader.SetInt("frameBufferTexture", 0);
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -96,7 +98,6 @@ namespace GameEngine.Common
             GL.ActiveTexture(TextureUnit.Texture3);
             GL.BindTexture(TextureTarget.Texture2D, gNormal);
             
-            postprocessShader.Use();
             int samplesLocation = GL.GetUniformLocation(postprocessShader.Handle, "samples");
             // Generate sample kernel
             
@@ -120,6 +121,8 @@ namespace GameEngine.Common
 
         public static void RenderOutlineRect(ref Shader outlineShader, int frameBufferTexture, int depthStencilTexture)
         {
+            outlineShader.Use();
+
             // Bind framebuffer texture
             outlineShader.SetInt("frameBufferTexture", 0);
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -132,7 +135,6 @@ namespace GameEngine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
 
             // Render quad with framebuffer and added outline
-            outlineShader.Use();
             GL.Disable(EnableCap.DepthTest);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
             GL.Enable(EnableCap.DepthTest);
@@ -140,13 +142,14 @@ namespace GameEngine.Common
 
         public static void RenderFXAARect(ref Shader fxaaShader, int frameBufferTexture)
         {
+            fxaaShader.Use();
+
             // Bind framebuffer texture
             fxaaShader.SetInt("frameBufferTexture", 0);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
 
             // Render quad with framebuffer and added outline
-            fxaaShader.Use();
             GL.Disable(EnableCap.DepthTest);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
             GL.Enable(EnableCap.DepthTest);

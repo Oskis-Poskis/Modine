@@ -50,6 +50,8 @@ namespace GameEngine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
             // Attach Depth to FBO
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment2, TextureTarget.Texture2D, gNormal, 0);
+            GL.DrawBuffer(DrawBufferMode.None);
+            GL.ReadBuffer(ReadBufferMode.None);
         }
 
         public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, Vector2i ClientSize, ref int frameBufferTexture, ref int depthStencilTexture, ref int gPosition, ref int gNormal)

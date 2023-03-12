@@ -4,18 +4,35 @@
 
 **3D Model Loading** using [AssimpNet](https://www.nuget.org/packages/AssimpNet)
 
-## Features
-PBR Shading
+## Editor Usage
+Fly navigation
+>WASD
 
+Up and down
+> Q and E
+
+Toggle Fullscreen
+> Ctrl + Space
+
+Open Quick Menu
+> Shift + Space
+
+## Features
 Raycasting
+
+PBR Shading
 
 Basic PCF shadow-mapping
 
 Screen space ambient occlusion (SSAO)
 
+Fast Approximate Anti-Aliasing (FXAA)
+
 Object outlines using stencilbuffer and fragmentshader
 
 Viewport, outliner, settings, properties and material editor using ImGUI Docking
+
+Framebuffer resizing to fit ImGUI window
 
 ## Useful Resources
 LearnOpenTK:

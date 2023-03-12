@@ -34,9 +34,10 @@ float LinearizeDepth(float depth)
 }
 
 uniform bool ssaoOnOff = true;
-uniform float radius = 0.5;
+uniform float SSAOpower = 0.3;
+uniform float radius = 0.3;
 int kernelSize = 64;
-float bias = 0.025;
+float bias = 0.015;
 
 void main()
 {
@@ -46,7 +47,7 @@ void main()
 
     if (ssaoOnOff)
     {
-        vec2 noiseScale = vec2(textureSize(gPosition, 0).x / 4, textureSize(gPosition, 0).y / 4);
+        vec2 noiseScale = vec2(textureSize(gNormal, 0).x / 4, textureSize(gNormal, 0).y / 4);
 
         vec3 fragPos = texture(gPosition, UV).xyz;
         vec3 norm = texture(gNormal, UV).rgb;
@@ -67,15 +68,15 @@ void main()
             offset.xyz /= offset.w;
             offset.xyz = offset.xyz * 0.5 + 0.5;
 
-            vec3 occluderPos = texture(gPosition, offset.xy).rgb;
+            float sampleDepth = texture(gPosition, offset.xy).z;
 
-            float rangeCheck = smoothstep(0.0, 1.0, radius / length(fragPos - occluderPos));
-            occlusion += (occluderPos.z >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+            float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
+            occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
         }
 
         occlusion = 1.0 - (occlusion / kernelSize);
-
-        fragColor = vec4(color * occlusion, 1);
+        occlusion = pow(occlusion, SSAOpower);
+        fragColor = vec4(color, occlusion);
     }
     else fragColor = vec4(color, 1);
 }

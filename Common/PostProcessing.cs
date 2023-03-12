@@ -32,8 +32,7 @@ namespace Modine.Common
             GL.EnableVertexAttribArray(postprocessShader.GetAttribLocation("aPosition"));
             GL.VertexAttribPointer(postprocessShader.GetAttribLocation("aPosition"), 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
         }
-
-        static Random random = new Random();
+ 
         static Vector3[] ssaoNoise = new Vector3[16];
         static Vector3[] sample = new Vector3[64];
         static int noiseTexture;
@@ -42,6 +41,7 @@ namespace Modine.Common
         {
             for (int i = 0; i < 64; i++)
             {
+                Random random = new Random();
                 sample[i] = new Vector3(
                     (float)random.NextDouble() * 2.0f - 1.0f, 
                     (float)random.NextDouble() * 2.0f - 1.0f, 
@@ -56,6 +56,7 @@ namespace Modine.Common
 
             for (int i = 0; i < 16; i++)
             {
+                Random random = new Random();
                 Vector3 noise = new Vector3(
                     (float)random.NextDouble() * 2.0f - 1.0f, 
                     (float)random.NextDouble() * 2.0f - 1.0f, 
@@ -88,28 +89,22 @@ namespace Modine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
             postprocessShader.SetInt("depth", 1);
 
-            // Bind depth texture
+            // Bind position texture
             GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, gPosition);
             postprocessShader.SetInt("gPosition", 2);
 
-            // Bind depth texture
+            // Bind normal texture
             GL.ActiveTexture(TextureUnit.Texture3);
             GL.BindTexture(TextureTarget.Texture2D, gNormal);
             postprocessShader.SetInt("gNormal", 3);
             
             int samplesLocation = GL.GetUniformLocation(postprocessShader.Handle, "samples");
-            // Generate sample kernel
-            
-            for (int i = 0; i < 64; i++)
-            {
-                GL.Uniform3(samplesLocation + i, sample[i]);
-            }
+            GL.Uniform3(samplesLocation, 64, ref sample[0].X);
 
             GL.ActiveTexture(TextureUnit.Texture4);
             GL.BindTexture(TextureTarget.Texture2D, noiseTexture);
             postprocessShader.SetInt("texNoise", 4);
-
             postprocessShader.SetMatrix4("projection", projectionMatrix);
 
             // Render quad with framebuffer and postprocessing

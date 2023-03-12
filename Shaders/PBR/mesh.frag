@@ -14,7 +14,7 @@ uniform vec3 ambient;
 
 uniform sampler2D shadowMap;
 uniform float shadowFactor;
-uniform int shadowPCFres = 5;
+uniform float shadowBias = 0.001;
 
 uniform bool smoothShading;
 uniform vec3 viewPos;
@@ -141,30 +141,28 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
     return (kD * alb / PI + specular) * radiance * NDotL;
 }
 
-float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir, int kernelSize)
+float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
     float closestDepth = texture(shadowMap, projCoords.xy).r; 
     float currentDepth = projCoords.z;
 
-    //float bias = max(0.0005 * (1.0 - dot(normal, lightDir)), 0.001);
-    float bias = 0.005 * tan(acos(clamp(dot(normal, lightDir), 0, 1))); // cosTheta is dot( n,l ), clamped between 0 and 1
-    bias = clamp(bias, 0,0.01);
+    float bias = max(shadowBias * (1.0 - abs(dot(normal, lightDir))), shadowBias);
 
     // PCF
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    for(int x = -kernelSize; x <= kernelSize; ++x)
+    for(float x = -1.5; x <= 1.5; ++x)
     {
-        for(int y = -kernelSize; y <= kernelSize; ++y)
+        for(float y = -1.5; y <= 1.5; ++y)
         {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth > pcfDepth  ? 1.0 : 0.0;        
+            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;    
         }    
     }
-    shadow /= (kernelSize * 2 + 1) * (kernelSize * 2 + 1);
-    
+    shadow /= 16;
+
     if(projCoords.z > 1.0)
         shadow = 0.0;
         
@@ -192,7 +190,7 @@ void main()
     pointLighting = pow(pointLighting, vec3(1 / 2.2));
 
     vec3 result = vec3(0);
-    float shadow = ShadowCalculation(fragPosLightSpace, N, direction, shadowPCFres); 
+    float shadow = ShadowCalculation(fragPosLightSpace, N, direction); 
     result = dirLighting * (1 - shadow * shadowFactor) + (material.albedo * ambient);
     result += pointLighting;
 

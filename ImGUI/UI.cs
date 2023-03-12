@@ -218,11 +218,12 @@ namespace Modine.ImGUI
         }
 
         static int selectedIndex = 3;
-        static int pcfres = 5;
+        static float shadowBias = 0.001f;
         static bool fxaaOnOff = true;
         static bool ACESonoff = true;
         static bool ssaoOnOff = true;
-        static float ssaoRadius = 0.5f;
+        static float ssaoRadius = 0.3f;
+        static float SSAOpower = 0.3f;
         static bool showImGUIdemo = false;
         static float strength = 1.75f;
         static float fontSize = 0.9f;
@@ -259,6 +260,8 @@ namespace Modine.ImGUI
             {
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.SliderFloat(" SSAO Radius", ref ssaoRadius, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("radius", ssaoRadius);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                if (ImGui.SliderFloat(" SSAO Power", ref SSAOpower, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("SSAOpower", SSAOpower);
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff)) ppshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -322,8 +325,11 @@ namespace Modine.ImGUI
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                ImGui.Text("Shadow PCF Resolution");
-                if (ImGui.SliderInt("##Shadow PCF", ref pcfres, 0, 10)) shader.SetInt("shadowPCFres", pcfres);
+                ImGui.Text("Shadow Bias");
+                if (ImGui.SliderFloat("##Shadow Bias", ref shadowBias, 0.0001f, 0.01f))
+                {
+                    shader.SetFloat("shadowBias", shadowBias);
+                }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 

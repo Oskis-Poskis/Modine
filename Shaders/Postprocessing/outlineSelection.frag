@@ -13,7 +13,7 @@ out vec4 fragColor;
 // Modification of: https://www.shadertoy.com/view/sltcRf
 void main()
 {
-    vec3 color = texture(frameBufferTexture, UV).rgb;
+    vec4 color = texture(frameBufferTexture, UV);
     float stencil = texture(stencilTexture, UV).r;
     float alpha;
     
@@ -27,7 +27,21 @@ void main()
 		
 		outlinemask = mix(outlinemask, 1.0, col);
 	}
-	
-	outlinemask = mix(outlinemask, 0.0, stencil);
-    fragColor = mix(vec4(color, 1.0), vec4(0.75, 0.4, 0.0, 1.0), outlinemask);
+    outlinemask = mix(outlinemask, 0.0, stencil);
+    
+    vec2 offset;
+    vec2 texelSize = 1.0 / vec2(textureSize(frameBufferTexture, 0));
+    float result = 0.0;
+    for (int x = -2; x < 2; ++x) 
+    {
+        for (int y = -2; y < 2; ++y) 
+        {
+            offset = vec2(float(x) * texelSize.x, float(y) * texelSize.y);
+            result += texture(frameBufferTexture, UV + offset).a;
+        }
+    }
+    float blur = result / (4.0 * 4.0);
+    
+    vec4 _color = vec4(color.rgb * vec3(blur), 1);
+    fragColor = mix(_color, vec4(0.75, 0.4, 0.0, 1.0), outlinemask);
 }

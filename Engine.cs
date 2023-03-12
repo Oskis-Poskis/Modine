@@ -453,15 +453,18 @@ namespace Modine
             // Use different shaders for engine and viewport effects
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix);
-            OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
-            if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());
+            GL.Finish();
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
+            GL.Finish();
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+            GL.Finish();
             
-
             // Resize depth and framebuffer texture if size has changed
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gPosition, ref gNormal);
             GL.Finish();
+
+            OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
+            if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());
 
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);

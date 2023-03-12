@@ -12,7 +12,6 @@
     <PackageReference Include="AssimpNet" Version="4.1.0" />
     <PackageReference Include="ImGUI.net" Version="1.89.4" />
     <PackageReference Include="opentk" Version="4.7.7" />
-    <PackageReference Include="system.drawing.common" Version="7.0.0" />
     <Content Include="Shaders\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -357,6 +357,7 @@ namespace GameEngine
                 if (sceneObject.Type == SceneObjectType.Light) sceneObject.Light.lightShader = lightShader;
             }
 
+            PBRShader.Use();
             PBRShader.SetVector3("viewPos", camera.position);
             PBRShader.SetInt("countPL", count_PointLights);
 
@@ -383,7 +384,6 @@ namespace GameEngine
                 
                 GL.BindTexture(TextureTarget.Texture2D, depthMap);
                 UpdateMatrices();
-                PBRShader.Use();
                 for (int i = 0; i < sceneObjects.Count; i++)
                 {
                     if (sceneObjects[i].Type == SceneObjectType.Mesh)
@@ -431,6 +431,7 @@ namespace GameEngine
 
             // Resize depth and framebuffer texture if size has changed
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gPosition, ref gNormal);
+            GL.Finish();
 
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);

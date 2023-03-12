@@ -78,25 +78,25 @@ namespace GameEngine.Common
             postprocessShader.Use();
 
             // Bind framebuffer texture
-            postprocessShader.SetInt("frameBufferTexture", 0);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
-
+            postprocessShader.SetInt("frameBufferTexture", 0);
+            
             // Bind depth texture
-            postprocessShader.SetInt("depth", 1);
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
+            postprocessShader.SetInt("depth", 1);
 
             // Bind depth texture
-            postprocessShader.SetInt("gPosition", 2);
             GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, gPosition);
+            postprocessShader.SetInt("gPosition", 2);
 
             // Bind depth texture
-            postprocessShader.SetInt("gNormal", 3);
             GL.ActiveTexture(TextureUnit.Texture3);
             GL.BindTexture(TextureTarget.Texture2D, gNormal);
+            postprocessShader.SetInt("gNormal", 3);
             
             int samplesLocation = GL.GetUniformLocation(postprocessShader.Handle, "samples");
             // Generate sample kernel
@@ -106,9 +106,9 @@ namespace GameEngine.Common
                 GL.Uniform3(samplesLocation + i, sample[i]);
             }
 
-            postprocessShader.SetInt("texNoise", 4);
             GL.ActiveTexture(TextureUnit.Texture4);
             GL.BindTexture(TextureTarget.Texture2D, noiseTexture);
+            postprocessShader.SetInt("texNoise", 4);
 
             postprocessShader.SetMatrix4("projection", projectionMatrix);
 
@@ -124,15 +124,15 @@ namespace GameEngine.Common
             outlineShader.Use();
 
             // Bind framebuffer texture
-            outlineShader.SetInt("frameBufferTexture", 0);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
+            outlineShader.SetInt("frameBufferTexture", 0);
 
             // Bind stencil texture for outline in fragshader
-            outlineShader.SetInt("stencilTexture", 2);
             GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
+            outlineShader.SetInt("stencilTexture", 2);
 
             // Render quad with framebuffer and added outline
             GL.Disable(EnableCap.DepthTest);
@@ -145,9 +145,9 @@ namespace GameEngine.Common
             fxaaShader.Use();
 
             // Bind framebuffer texture
-            fxaaShader.SetInt("frameBufferTexture", 0);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
+            fxaaShader.SetInt("frameBufferTexture", 0);
 
             // Render quad with framebuffer and added outline
             GL.Disable(EnableCap.DepthTest);

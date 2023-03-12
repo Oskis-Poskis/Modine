@@ -5,8 +5,11 @@
 **3D Model Loading** using [AssimpNet](https://www.nuget.org/packages/AssimpNet)
 
 ## Editor Usage
+First person camera rotation
+> Right click and move mouse
+
 Fly navigation
->WASD
+> WASD
 
 Up and down
 > Q and E

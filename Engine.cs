@@ -456,7 +456,7 @@ namespace Modine
             // Use different shaders for engine and viewport effects
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix);
-            Postprocessing.RenderSSAOrect(ref SSAOblurShader, SSAOblur);
+            Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture, SSAOblur);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
 

@@ -114,13 +114,13 @@ namespace Modine.Common
             GL.Enable(EnableCap.DepthTest);
         }
 
-        public static void RenderSSAOrect(ref Shader SSAOblurShader, int SSAOblur)
+        public static void RenderSSAOrect(ref Shader SSAOblurShader, int frameBufferTexture)
         {
             SSAOblurShader.Use();
 
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, SSAOblur);
+            GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
             SSAOblurShader.SetInt("frameBufferTexture", 0);
 
             // Render quad with framebuffer and added outline

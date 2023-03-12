@@ -3,7 +3,7 @@
 uniform sampler2D frameBufferTexture;
 
 in vec2 UV;
-layout(location = 3) out vec3 test;
+layout(location = 3) out vec4 test;
 
 void main()
 {
@@ -20,5 +20,5 @@ void main()
     }
     float blur = result / (4.0 * 4.0);
     
-    test = vec3(blur);
+    test = vec4(blur);
 }

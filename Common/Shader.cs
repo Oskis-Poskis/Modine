@@ -1,9 +1,9 @@
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-using GameEngine.Common;
+using Modine.Common;
 
-namespace GameEngine.Common
+namespace Modine.Common
 {
     // A simple class meant to help create shaders.
     public class Shader

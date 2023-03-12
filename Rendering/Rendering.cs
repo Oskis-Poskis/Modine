@@ -1,9 +1,9 @@
 using OpenTK.Graphics.OpenGL4;
-using static GameEngine.Rendering.SceneObject;
-using GameEngine.Common;
+using static Modine.Rendering.SceneObject;
+using Modine.Common;
 using System.Runtime.InteropServices;
 
-namespace GameEngine.Rendering
+namespace Modine.Rendering
 {
     public class Rendering
     {

@@ -10,7 +10,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Diagnostics;
 using ErrorCode = OpenTK.Graphics.OpenGL4.ErrorCode;
 
-namespace GameEngine.ImGUI
+namespace Modine.ImGUI
 {
     public class ImGuiController : IDisposable
     {

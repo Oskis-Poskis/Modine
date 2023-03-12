@@ -1,9 +1,9 @@
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-using GameEngine.Common;
+using Modine.Common;
 
-namespace GameEngine.Rendering
+namespace Modine.Rendering
 {
     public class Light : SceneObject
     {

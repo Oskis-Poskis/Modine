@@ -1,9 +1,9 @@
 using Assimp;
 using OpenTK.Mathematics;
 
-using GameEngine.Rendering;
+using Modine.Rendering;
 
-namespace GameEngine.Importer
+namespace Modine.Importer
 {
     public static class ModelImporter
     {

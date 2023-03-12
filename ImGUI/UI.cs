@@ -3,11 +3,11 @@ using ImGuiNET;
 
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using GameEngine.Rendering;
-using static GameEngine.Rendering.SceneObject;
-using GameEngine.Common;
+using Modine.Rendering;
+using static Modine.Rendering.SceneObject;
+using Modine.Common;
 
-namespace GameEngine.ImGUI
+namespace Modine.ImGUI
 {
     public static class ImGuiWindows
     {

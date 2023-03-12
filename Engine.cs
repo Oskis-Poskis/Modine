@@ -7,14 +7,14 @@ using ImGuiNET;
 
 using SN = System.Numerics;
 
-using GameEngine.Common;
-using GameEngine.Importer;
-using GameEngine.Rendering;
-using GameEngine.ImGUI;
+using Modine.Common;
+using Modine.Importer;
+using Modine.Rendering;
+using Modine.ImGUI;
 
-using static GameEngine.Rendering.SceneObject;
+using static Modine.Rendering.SceneObject;
 
-namespace GameEngine
+namespace Modine
 {
     class Game : GameWindow
     {
@@ -126,7 +126,7 @@ namespace GameEngine
             if (status != FramebufferErrorCode.FramebufferComplete) Console.WriteLine($"Framebuffer is incomplete: {status}");
 
             Framebuffers.SetupShadowFBO(ref depthMapFBO, ref depthMap, shadowRes);
-            DebugMessageDelegate = GameEngine.Rendering.Rendering.OnDebugMessage;
+            DebugMessageDelegate = Modine.Rendering.Rendering.OnDebugMessage;
 
             PBRShader = new Shader("Shaders/PBR/mesh.vert", "Shaders/PBR/mesh.frag");
             shadowShader = new Shader("Shaders/PBR/shadow.vert", "Shaders/PBR/shadow.frag");
@@ -340,7 +340,7 @@ namespace GameEngine
                 else if (sceneObject.Type == SceneObjectType.Light) count_PointLights += 1;
             }
 
-            GameEngine.Rendering.Rendering.RenderShadowScene(shadowRes, ref depthMapFBO, lightSpaceMatrix, ref sceneObjects, shadowShader);
+            Modine.Rendering.Rendering.RenderShadowScene(shadowRes, ref depthMapFBO, lightSpaceMatrix, ref sceneObjects, shadowShader);
 
             // Render normal scene
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);

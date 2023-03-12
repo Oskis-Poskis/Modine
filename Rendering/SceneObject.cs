@@ -1,6 +1,6 @@
 using OpenTK.Mathematics;
 
-namespace GameEngine.Rendering
+namespace Modine.Rendering
 {
     public class SceneObject : IDisposable
     {

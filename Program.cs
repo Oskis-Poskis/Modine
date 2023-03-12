@@ -1,4 +1,4 @@
-﻿namespace GameEngine
+﻿namespace Modine
 {
     class Program
     {

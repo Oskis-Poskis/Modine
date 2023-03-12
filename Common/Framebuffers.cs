@@ -1,7 +1,7 @@
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-namespace GameEngine.Common
+namespace Modine.Common
 {
     public class Framebuffers
     {

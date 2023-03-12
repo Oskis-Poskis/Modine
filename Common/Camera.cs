@@ -1,6 +1,6 @@
 using OpenTK.Mathematics;
 
-namespace GameEngine.Common
+namespace Modine.Common
 {
     public class Camera
     {

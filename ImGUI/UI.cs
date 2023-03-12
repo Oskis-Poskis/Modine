@@ -263,7 +263,11 @@ namespace Modine.ImGUI
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.SliderFloat(" SSAO Power", ref SSAOpower, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("SSAOpower", SSAOpower);
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff)) ppshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
+                if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff))
+                {
+                    ppshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
+                    outlineShader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
+                }
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));

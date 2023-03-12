@@ -218,7 +218,7 @@ namespace Modine.ImGUI
         }
 
         static int selectedIndex = 3;
-        static float shadowBias = 0.001f;
+        static float shadowBias = 0.002f;
         static bool fxaaOnOff = true;
         static bool ACESonoff = true;
         static bool ssaoOnOff = true;

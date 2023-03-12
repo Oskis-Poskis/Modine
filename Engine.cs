@@ -161,7 +161,7 @@ namespace Modine
             shadowShader = new Shader("Shaders/PBR/shadow.vert", "Shaders/PBR/shadow.frag");
             lightShader = new Shader("Shaders/Lights/light.vert", "Shaders/Lights/light.frag");
             postprocessShader = new Shader("Shaders/Postprocessing/postprocess.vert", "Shaders/Postprocessing/postprocess.frag");
-            outlineShader = new Shader("Shaders/Postprocessing/outlineSelection.vert", "Shaders/Postprocessing/outlineSelection.frag");
+            outlineShader = new Shader("Shaders/Postprocessing/Outline.vert", "Shaders/Postprocessing/Outline.frag");
             fxaaShader = new Shader("Shaders/Postprocessing/fxaa.vert", "Shaders/Postprocessing/fxaa.frag");
             SSAOblurShader = new Shader("Shaders/Postprocessing/SSAOblur.vert", "Shaders/Postprocessing/SSAOblur.frag");
 

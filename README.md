@@ -46,6 +46,8 @@ Shadow mapping not entirely accurate
 
 Famebuffer has glitched on some drivers/devices
 
+Framebuffer color attachments drains FPS
+
 ## Useful Resources
 LearnOpenTK:
 >https://opentk.net/learn/index.html

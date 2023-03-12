@@ -38,6 +38,11 @@ Viewport, outliner, settings, properties and material editor using ImGUI Docking
 
 Framebuffer resizing to fit ImGUI window
 
+## Problems
+Shadow mapping not entirely accurate
+
+Famebuffer has glitched on some drivers/devices
+
 ## Useful Resources
 LearnOpenTK:
 >https://opentk.net/learn/index.html

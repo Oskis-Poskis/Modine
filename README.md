@@ -5,8 +5,11 @@
 **3D Model Loading** using [AssimpNet](https://www.nuget.org/packages/AssimpNet)
 
 ## Editor Usage
+First person camera rotation
+> Right click and move mouse
+
 Fly navigation
->WASD
+> WASD
 
 Up and down
 > Q and E
@@ -22,7 +25,9 @@ Raycasting
 
 PBR Shading
 
-Basic PCF shadow-mapping
+Point Lights
+
+Directional light PCF shadow-mapping
 
 Screen space ambient occlusion (SSAO)
 
@@ -30,9 +35,18 @@ Fast Approximate Anti-Aliasing (FXAA)
 
 Object outlines using stencilbuffer and fragmentshader
 
+Modify object transform in viewport
+
 Viewport, outliner, settings, properties and material editor using ImGUI Docking
 
 Framebuffer resizing to fit ImGUI window
+
+## Problems
+Shadow mapping not entirely accurate
+
+Famebuffer has glitched on some drivers/devices
+
+Framebuffer color attachments drains FPS
 
 ## Useful Resources
 LearnOpenTK:

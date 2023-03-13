@@ -19,7 +19,7 @@ namespace Modine.Rendering
             foreach (SceneObject sceneObject in sceneObjects)
             {
                 if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = shadowShader;
-                if (sceneObject.Type == SceneObjectType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Mesh.Render();
+                if (sceneObject.Type == SceneObjectType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Render();
             }
         }
     }

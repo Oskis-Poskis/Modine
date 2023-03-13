@@ -11,8 +11,6 @@ namespace Modine.Rendering
         private int vboHandle;
         public Shader lightShader;
 
-        public Vector3 position = Vector3.Zero;
-        public Vector3 scale = Vector3.One * 0.15f;
         public Vector3 lightColor = new(1, 1, 0);
         public float strength = 1.0f;
         public string lightName;
@@ -56,16 +54,16 @@ namespace Modine.Rendering
 
         Matrix4 viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
 
-        public void Render(Vector3 cameraPosition, Vector3 direction, float pitch, float yaw)
+        public override void Render(float pitch, float yaw, Camera cam, Vector3 pos)
         {   
-            viewMatrix = Matrix4.LookAt(cameraPosition, cameraPosition + direction, Vector3.UnitY);
+            viewMatrix = Matrix4.LookAt(cam.position, cam.position + cam.direction, Vector3.UnitY);
 
             Matrix4 model = Matrix4.Identity;
-            model *= Matrix4.CreateScale(scale);
+            model *= Matrix4.CreateScale(0.15f);
             model *= Matrix4.CreateRotationX(Math.Clamp(pitch, -89, 89)) *
                      Matrix4.CreateRotationY(-yaw - MathHelper.PiOver2) * 
                      Matrix4.CreateRotationZ(0);
-            model *= Matrix4.CreateTranslation(position);
+            model *= Matrix4.CreateTranslation(pos);
 
             lightShader.SetMatrix4("model", model);
             lightShader.SetMatrix4("view", viewMatrix);

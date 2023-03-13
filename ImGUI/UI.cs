@@ -50,11 +50,11 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        public static void Properties(ref List<SceneObject> sceneObjects, int selectedMesh)
+        public static void Properties(ref List<SceneObject> sceneObjects, int selectedObject)
         {
             if (sceneObjects.Count > 0)
             {
-                SceneObject _sceneObject = sceneObjects[selectedMesh];
+                SceneObject _sceneObject = sceneObjects[selectedObject];
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 string newName = _sceneObject.Name;
@@ -77,39 +77,39 @@ namespace Modine.ImGUI
                     {
                         ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                        SN.Vector3 tempPos = new(_sceneObject.Mesh.position.X, _sceneObject.Mesh.position.Y, _sceneObject.Mesh.position.Z);
+                        SN.Vector3 tempPos = new(_sceneObject.Position.X, _sceneObject.Position.Y, _sceneObject.Position.Z);
                         ImGui.Text("Position");
                         if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
                         {
-                            _sceneObject.Mesh.position = new(tempPos.X, tempPos.Y, tempPos.Z);
+                            sceneObjects[selectedObject].Position = new(tempPos.X, tempPos.Y, tempPos.Z);
                         }
 
                         ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                        SN.Vector3 tempRot = new( _sceneObject.Mesh.rotation.X, _sceneObject.Mesh.rotation.Y, _sceneObject.Mesh.rotation.Z);
+                        SN.Vector3 tempRot = new( _sceneObject.Rotation.X, _sceneObject.Rotation.Y, _sceneObject.Rotation.Z);
                         ImGui.Text("Rotation");
                         if (ImGui.DragFloat3("##Rotation", ref tempRot, 1))
                         {
-                            _sceneObject.Mesh.rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
+                            sceneObjects[selectedObject].Rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
                         }
                         
                         ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                        SN.Vector3 tempScale = new(_sceneObject.Mesh.scale.X, _sceneObject.Mesh.scale.Y, _sceneObject.Mesh.scale.Z);
+                        SN.Vector3 tempScale = new(_sceneObject.Scale.X, _sceneObject.Scale.Y, _sceneObject.Scale.Z);
                         ImGui.Text("Scale");
                         if (ImGui.DragFloat3("##Scale", ref tempScale, 0.1f))
                         {
-                            _sceneObject.Mesh.scale = new(tempScale.X, tempScale.Y, tempScale.Z);
+                            sceneObjects[selectedObject].Scale = new(tempScale.X, tempScale.Y, tempScale.Z);
                         }
                     }
 
                     else if (_sceneObject.Type == SceneObjectType.Light)
                     {
-                        SN.Vector3 tempPos = new(_sceneObject.Light.position.X, _sceneObject.Light.position.Y, _sceneObject.Light.position.Z);
+                        SN.Vector3 tempPos = new(_sceneObject.Position.X, _sceneObject.Position.Y, _sceneObject.Position.Z);
                         ImGui.Text("Position");
                         if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
                         {
-                            _sceneObject.Light.position = new(tempPos.X, tempPos.Y, tempPos.Z);
+                            sceneObjects[selectedObject].Position = new(tempPos.X, tempPos.Y, tempPos.Z);
                         }
                     }
                 }
@@ -118,11 +118,11 @@ namespace Modine.ImGUI
                 {
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                    SN.Vector3 tempPos = new(_sceneObject.Light.position.X, _sceneObject.Light.position.Y, _sceneObject.Light.position.Z);
+                    SN.Vector3 tempPos = new(_sceneObject.Position.X, _sceneObject.Position.Y, _sceneObject.Position.Z);
                     ImGui.Text("Position");
                     if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
                     {
-                        _sceneObject.Light.position = new(tempPos.X, tempPos.Y, tempPos.Z);
+                        _sceneObject.Position = new(tempPos.X, tempPos.Y, tempPos.Z);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -166,19 +166,21 @@ namespace Modine.ImGUI
         public static void ShadowView(int depthMap)
         {
             ImGui.Begin("Shadow View");
-            float width = 400;
-            float height = 400;
-            if (width != height)
+            if (ImGui.TreeNode("Directional light"))
             {
-                // adjust the size if not square 
-                if (width > height) width = height;
-                else height = width;
-                ImGui.SetWindowSize(new(width, height));
+                float width = 400;
+                float height = 400;
+                if (width != height)
+                {
+                    // adjust the size if not square 
+                    if (width > height) width = height;
+                    else height = width;
+                    ImGui.SetWindowSize(new(width, height));
+                }
+
+                GL.BindTexture(TextureTarget.Texture2D, depthMap);
+                ImGui.Image((IntPtr)depthMap, new(width, height), new(0, 1), new(1, 0), SN.Vector4.One, SN.Vector4.Zero); ImGui.End();
             }
-
-            GL.BindTexture(TextureTarget.Texture2D, depthMap);
-            ImGui.Image((IntPtr)depthMap, new(width, height), new(0, 1), new(1, 0), SN.Vector4.One, SN.Vector4.Zero); ImGui.End();
-
             ImGui.End();
         }
 
@@ -241,7 +243,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref int numAOsamples, ref Shader shader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader SSAOshader)
+        public static void Settings(ref float camSpeed, ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref int numAOsamples, ref Shader shader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader SSAOshader)
         {
             ImGui.Begin("Settings");
 
@@ -398,6 +400,11 @@ namespace Modine.ImGUI
 
                 ImGui.Text("Font Size");
                 if (ImGui.SliderFloat("##Font Size", ref fontSize, 0.1f, 2)) ImGui.GetIO().FontGlobalScale = fontSize;
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Text("Camera Speed");
+                ImGui.SliderFloat("##Camera Speed", ref camSpeed, 1, 20, "%.1f");
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 

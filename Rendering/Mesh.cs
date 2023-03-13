@@ -10,12 +10,16 @@ namespace Modine.Rendering
         public Vector3 Position;
         public Vector3 Normals;
         public Vector2 UVs;
+        public Vector3 Tangents;
+        public Vector3 BiTangents;
 
-        public VertexData(Vector3 position, Vector3 normals, Vector2 uvs)
+        public VertexData(Vector3 position, Vector3 normals, Vector2 uvs, Vector3 tangents, Vector3 bitangents)
         {
             this.Position = position;
             this.Normals = normals;
             this.UVs = uvs;
+            this.Tangents = tangents;
+            this.BiTangents = bitangents;
         }
     }
 
@@ -30,11 +34,7 @@ namespace Modine.Rendering
         public string meshName;
         public Material Material;
         public Shader meshShader;
-
-        public Vector3 position = Vector3.Zero;
-        public Vector3 rotation = Vector3.Zero;
-        public Vector3 scale = Vector3.One;
-
+        
         public Mesh(VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading, bool CastShadow, Material material) : base()
         {
             vaoHandle = GL.GenVertexArray();
@@ -42,18 +42,22 @@ namespace Modine.Rendering
 
             vboHandle = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vboHandle);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertData.Length * 8 * sizeof(float), vertData, BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertData.Length * 14 * sizeof(float), vertData, BufferUsageHint.StaticDraw);
 
             eboHandle = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, eboHandle);
             GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
             GL.EnableVertexAttribArray(shader.GetAttribLocation("aPosition"));
-            GL.VertexAttribPointer(shader.GetAttribLocation("aPosition"), 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
+            GL.VertexAttribPointer(shader.GetAttribLocation("aPosition"), 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 0);
             GL.EnableVertexAttribArray(shader.GetAttribLocation("aNormals"));
-            GL.VertexAttribPointer(shader.GetAttribLocation("aNormals"), 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
+            GL.VertexAttribPointer(shader.GetAttribLocation("aNormals"), 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 3 * sizeof(float));
             GL.EnableVertexAttribArray(shader.GetAttribLocation("aUVs"));
-            GL.VertexAttribPointer(shader.GetAttribLocation("aUVs"), 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
+            GL.VertexAttribPointer(shader.GetAttribLocation("aUVs"), 2, VertexAttribPointerType.Float, false, 14 * sizeof(float), 6 * sizeof(float));
+            GL.EnableVertexAttribArray(shader.GetAttribLocation("aTangents"));
+            GL.VertexAttribPointer(shader.GetAttribLocation("aTangents"), 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 9 * sizeof(float));
+            GL.EnableVertexAttribArray(shader.GetAttribLocation("aBiTangents"));
+            GL.VertexAttribPointer(shader.GetAttribLocation("aBiTangents"), 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 11 * sizeof(float));
             
             meshName = Name;
             meshShader = shader;
@@ -69,14 +73,14 @@ namespace Modine.Rendering
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
         }
 
-        public void Render()
+        public override void Render(Vector3 pos, Vector3 rot, Vector3 scale)
         {   
             Matrix4 model = Matrix4.Identity;
             model *= Matrix4.CreateScale(scale);
-            model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(rotation.X)) *
-                     Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rotation.Y)) *
-                     Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(rotation.Z));
-            model *= Matrix4.CreateTranslation(position);
+            model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(rot.X)) *
+                     Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rot.Y)) *
+                     Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(rot.Z));
+            model *= Matrix4.CreateTranslation(pos);
 
             meshShader.SetMatrix4("model", model);
 

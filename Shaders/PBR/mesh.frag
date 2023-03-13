@@ -6,7 +6,9 @@ in vec3 normalsViewSpace;
 in vec2 UVs;
 in vec3 normals;
 in vec3 fragPos;
+in mat3 TBN;
 in vec4 fragPosLightSpace;
+
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec3 gPosition;
 layout(location = 2) out vec3 gNormal;
@@ -37,6 +39,7 @@ struct Material {
     sampler2D albedoTex;
     sampler2D roughnessTex;
     sampler2D metallicTex;
+    sampler2D normalTex;
 };
 
 struct PointLight {
@@ -183,19 +186,19 @@ void main()
         vec3 albedo = material.albedo * texture(material.albedoTex, UVs).rgb;
         float roughness = material.roughness * texture(material.roughnessTex, UVs).r;
         float metallic = material.metallic * texture(material.metallicTex, UVs).r;
+        vec3 normal = texture(material.normalTex, UVs).rgb * 2 - 1;
 
-        vec3 normal;
-        if (smoothShading) normal = normals;
-        else normal = cross(dFdx(fragPos), dFdy(fragPos));
+        if (smoothShading) normal = normalize(TBN * normal);
+        else normal = normalize(TBN * cross(dFdx(fragPos), dFdy(fragPos)));
 
-        vec3 N = normalize(normal);
+        vec3 N = normal;
         vec3 V = normalize(viewPos - fragPos);
 
         vec3 F0 = vec3(0.04);
         F0 = mix(F0, albedo, metallic);
 
         vec3 dirLighting = vec3(0.0);
-        dirLighting += CalcDirectionalLight(direction, V, N, F0, albedo, roughness,  metallic);
+        dirLighting += CalcDirectionalLight(direction, V, N, F0, albedo, roughness, metallic);
         dirLighting = pow(dirLighting, vec3(1 / 2.2));
 
         vec3 pointLighting = vec3(0);

@@ -13,12 +13,13 @@ namespace Modine.Rendering
         public Texture ColorTexture { get; set; }
         public Texture RoughnessTexture { get; set; }
         public Texture MetallicTexture { get; set; }
+        public Texture NormalTexture { get; set; }
         public float EmissionStrength { get; set; } = 0.0f;
 
         private Texture white1x1 = Texture.LoadFromFile("Resources/White1x1.png");
         private Texture normal1x1 = Texture.LoadFromFile("Resources/Normal1x1.png");
 
-        public Material(Vector3 color, float metallic, float roughness, float emissionStrength, Shader shader, Texture colorTexture = null, Texture roughnessTexture = null, Texture metallitexture = null)
+        public Material(Vector3 color, float metallic, float roughness, float emissionStrength, Shader shader, Texture colorTexture = null, Texture roughnessTexture = null, Texture metallitexture = null, Texture normaltexture = null)
         {
             Color = color;
             Metallic = metallic;
@@ -28,6 +29,7 @@ namespace Modine.Rendering
             ColorTexture = colorTexture ?? white1x1;
             RoughnessTexture = roughnessTexture ?? white1x1;
             MetallicTexture = metallitexture ?? white1x1;
+            NormalTexture = normaltexture ?? normal1x1;
 
             SetShaderUniforms(shader);
         }
@@ -45,12 +47,16 @@ namespace Modine.Rendering
             shader.SetInt("material.albedoTex", 0);
 
             GL.ActiveTexture(TextureUnit.Texture1);
-            ColorTexture.Use(TextureUnit.Texture1);
+            RoughnessTexture.Use(TextureUnit.Texture1);
             shader.SetInt("material.roughnessTex", 1);
 
             GL.ActiveTexture(TextureUnit.Texture2);
-            ColorTexture.Use(TextureUnit.Texture2);
+            MetallicTexture.Use(TextureUnit.Texture2);
             shader.SetInt("material.metallicTex", 2);
+            
+            GL.ActiveTexture(TextureUnit.Texture3);
+            NormalTexture.Use(TextureUnit.Texture3);
+            shader.SetInt("material.normalTex", 3);
         }
     }
 }

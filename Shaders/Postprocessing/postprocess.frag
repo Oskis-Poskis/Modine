@@ -15,13 +15,23 @@ uniform mat4 projection;
 in vec2 UV;
 out vec4 fragColor;
 
-vec3 ACESFilm( vec3 x) {
+vec3 ACESFilm(vec3 x) {
     float a = 2.51;
     float b = 0.03;
     float c = 2.43;
     float d = 0.59;
     float e = 0.14;
     return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
+}
+
+float gamma = 2.2;
+
+vec3 simpleReinhardToneMapping(vec3 color)
+{
+	float exposure = 1.0;
+	color *= exposure/(1. + color / exposure);
+	color = pow(color, vec3(1. / gamma));
+	return color;
 }
 
 float near = 0.1; 
@@ -34,10 +44,10 @@ float LinearizeDepth(float depth)
 }
 
 uniform bool ssaoOnOff = true;
-uniform float SSAOpower = 0.3;
-uniform float radius = 0.3;
+uniform float SSAOpower = 0.5;
+uniform float radius = 0.8;
 int kernelSize = 64;
-float bias = 0.015;
+float bias = 0.025;
 
 void main()
 {
@@ -50,7 +60,7 @@ void main()
         vec2 noiseScale = vec2(textureSize(gNormal, 0).x / 4, textureSize(gNormal, 0).y / 4);
 
         vec3 fragPos = texture(gPosition, UV).xyz;
-        vec3 norm = texture(gNormal, UV).rgb;
+        vec3 norm = normalize(texture(gNormal, UV).rgb);
         vec3 randomVec = normalize(texture(texNoise, UV * noiseScale).xyz);
 
         vec3 tangent = normalize(randomVec - norm * dot(randomVec, norm));
@@ -69,7 +79,6 @@ void main()
             offset.xyz = offset.xyz * 0.5 + 0.5;
 
             float sampleDepth = texture(gPosition, offset.xy).z;
-
             float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
             occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
         }

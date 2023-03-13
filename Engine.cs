@@ -56,6 +56,7 @@ namespace Modine
         float shadowFactor = 0.75f;
         
         Material defaultMat;
+        Material emissiveMaterial;
         public Shader PBRShader;
         public Shader lightShader;
         public Shader shadowShader;
@@ -161,7 +162,7 @@ namespace Modine
             shadowShader = new Shader("Shaders/PBR/shadow.vert", "Shaders/PBR/shadow.frag");
             lightShader = new Shader("Shaders/Lights/light.vert", "Shaders/Lights/light.frag");
             postprocessShader = new Shader("Shaders/Postprocessing/postprocess.vert", "Shaders/Postprocessing/postprocess.frag");
-            outlineShader = new Shader("Shaders/Postprocessing/Outline.vert", "Shaders/Postprocessing/Outline.frag");
+            outlineShader = new Shader("Shaders/Postprocessing/outline.vert", "Shaders/Postprocessing/outline.frag");
             fxaaShader = new Shader("Shaders/Postprocessing/fxaa.vert", "Shaders/Postprocessing/fxaa.frag");
             SSAOblurShader = new Shader("Shaders/Postprocessing/SSAOblur.vert", "Shaders/Postprocessing/SSAOblur.frag");
 
@@ -170,7 +171,8 @@ namespace Modine
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1, 0.1f, 100);
             viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, new(0, 1, 0));
             camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 10);
-            defaultMat = new(new(0.8f), 0, 0.3f);
+            defaultMat = new(new(0.8f), 0, 0.3f, 0.0f);
+            emissiveMaterial = new(new(0.25f, 0.15f, 1.0f), 0, 0.5f, 10);
             defaultMat.SetShaderUniforms(PBRShader);
 
             PBRShader.SetVector3("ambient", ambient);
@@ -188,7 +190,7 @@ namespace Modine
 
             Postprocessing.GenNoise();
 
-            SceneObject _monkey = new("Monkey", SceneObjectType.Mesh, suzanne);
+            SceneObject _monkey = new("Room", SceneObjectType.Mesh, suzanne);
             sceneObjects.Add(_monkey);
 
             count_Meshes = 0;
@@ -483,7 +485,7 @@ namespace Modine
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
-                ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref PBRShader, ref postprocessShader, ref outlineShader, ref fxaaShader);
+                ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref PBRShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref SSAOblurShader);
             }
             
             // Quick menu
@@ -511,7 +513,7 @@ namespace Modine
                 {
                     if (ImGui.MenuItem("Cube"))
                     {
-                        Mesh cube = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, true, defaultMat);
+                        Mesh cube = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, true, emissiveMaterial);
                         cube.rotation.X = -90;
                         //cube.position = Raycast(camera.position, 5);
                         SceneObject _cube = new("Cube" + randomNum, SceneObjectType.Mesh, cube);

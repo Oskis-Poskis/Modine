@@ -211,6 +211,13 @@ namespace Modine.ImGUI
                         _material.Metallic = tempMetallic;
                         _material.SetShaderUniforms(meshShader);
                     }
+
+                    float tempEmission = _material.EmissionStrength;
+                    if (ImGui.SliderFloat("Emission Strength", ref tempEmission, 0, 100))
+                    {
+                        _material.EmissionStrength = tempEmission;
+                        _material.SetShaderUniforms(meshShader);
+                    }
                 }
             }
             
@@ -218,12 +225,12 @@ namespace Modine.ImGUI
         }
 
         static int selectedIndex = 3;
-        static float shadowBias = 0.002f;
+        static float shadowBias = 0.0018f;
         static bool fxaaOnOff = true;
         static bool ACESonoff = true;
         static bool ssaoOnOff = true;
-        static float ssaoRadius = 0.3f;
-        static float SSAOpower = 0.3f;
+        static float ssaoRadius = 0.8f;
+        static float SSAOpower = 0.5f;
         static bool showImGUIdemo = false;
         static float strength = 1.75f;
         static float fontSize = 0.9f;
@@ -231,7 +238,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader)
+        public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader SSAOshader)
         {
             ImGui.Begin("Settings");
 
@@ -266,11 +273,12 @@ namespace Modine.ImGUI
                 if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff))
                 {
                     ppshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
+                    SSAOshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
                 }
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.Checkbox(" ACES Tonemap", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
+                if (ImGui.Checkbox(" Tonemapping", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
 
                 ImGui.TreePop();
             }

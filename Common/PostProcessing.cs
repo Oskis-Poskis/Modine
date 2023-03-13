@@ -33,13 +33,14 @@ namespace Modine.Common
             GL.VertexAttribPointer(postprocessShader.GetAttribLocation("aPosition"), 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
         }
  
+        static int numSamples = 64;
         static Vector3[] ssaoNoise = new Vector3[16];
-        static Vector3[] sample = new Vector3[64];
+        static Vector3[] sample = new Vector3[numSamples];
         static int noiseTexture;
 
         public static void GenNoise()
         {
-            for (int i = 0; i < 64; i++)
+            for (int i = 0; i < numSamples; i++)
             {
                 Random random = new Random();
                 sample[i] = new Vector3(
@@ -48,7 +49,7 @@ namespace Modine.Common
                     (float)random.NextDouble());
                 sample[i] = Vector3.Normalize(sample[i]);
                 sample[i] *= (float)random.NextDouble();
-                float scale = i / 64.0f;
+                float scale = i / numSamples;
 
                 scale = MathHelper.Lerp(0.1f, 1.0f, scale * scale);
                 sample[i] *= scale;
@@ -60,7 +61,7 @@ namespace Modine.Common
                 Vector3 noise = new Vector3(
                     (float)random.NextDouble() * 2.0f - 1.0f, 
                     (float)random.NextDouble() * 2.0f - 1.0f, 
-                    0.0f);
+                    (float)random.NextDouble());
                 ssaoNoise[i] = noise;
             }
 
@@ -100,7 +101,7 @@ namespace Modine.Common
             postprocessShader.SetInt("gNormal", 3);
             
             int samplesLocation = GL.GetUniformLocation(postprocessShader.Handle, "samples");
-            GL.Uniform3(samplesLocation, 64, ref sample[0].X);
+            GL.Uniform3(samplesLocation, numSamples, ref sample[0].X);
 
             GL.ActiveTexture(TextureUnit.Texture4);
             GL.BindTexture(TextureTarget.Texture2D, noiseTexture);

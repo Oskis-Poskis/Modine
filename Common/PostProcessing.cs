@@ -33,12 +33,11 @@ namespace Modine.Common
             GL.VertexAttribPointer(postprocessShader.GetAttribLocation("aPosition"), 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
         }
  
-        static int numSamples = 64;
         static Vector3[] ssaoNoise = new Vector3[16];
-        static Vector3[] sample = new Vector3[numSamples];
+        static Vector3[] sample = new Vector3[128];
         static int noiseTexture;
 
-        public static void GenNoise()
+        public static void GenNoise(int numSamples)
         {
             for (int i = 0; i < numSamples; i++)
             {
@@ -75,7 +74,7 @@ namespace Modine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
         }
 
-        public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gPosition, int gNormal, Matrix4 projectionMatrix)
+        public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gPosition, int gNormal, Matrix4 projectionMatrix, int numSamples)
         {
             postprocessShader.Use();
 

@@ -228,9 +228,12 @@ namespace Modine.ImGUI
         static float shadowBias = 0.0018f;
         static bool fxaaOnOff = true;
         static bool ACESonoff = true;
+
         static bool ssaoOnOff = true;
         static float ssaoRadius = 0.8f;
         static float SSAOpower = 0.5f;
+        static int gaussianRadius = 3;
+
         static bool showImGUIdemo = false;
         static float strength = 1.75f;
         static float fontSize = 0.9f;
@@ -238,7 +241,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader shader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader SSAOshader)
+        public static void Settings(ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref int numAOsamples, ref Shader shader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader SSAOshader)
         {
             ImGui.Begin("Settings");
 
@@ -266,15 +269,41 @@ namespace Modine.ImGUI
             if (ImGui.TreeNode("Post Processing"))
             {
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.SliderFloat(" SSAO Radius", ref ssaoRadius, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("radius", ssaoRadius);
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.SliderFloat(" SSAO Power", ref SSAOpower, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("SSAOpower", SSAOpower);
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff))
+                
+                if (ImGui.TreeNode("SSAO"))
                 {
-                    ppshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
-                    SSAOshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff))
+                    {
+                        ppshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
+                        SSAOshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
+                    }
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    
+                    ImGui.Text("SSAO Radius");
+                    if (ImGui.SliderFloat("##SSAO Radius", ref ssaoRadius, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("radius", ssaoRadius);
+                    
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Text("SSAO Strength");
+                    if (ImGui.SliderFloat("##SSAO Power", ref SSAOpower, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("SSAOpower", SSAOpower);
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Text("SSAO Samples");
+                    if (ImGui.SliderInt("##SSAO Samples", ref numAOsamples, 1, 128)) ppshader.SetInt("kernelSize", numAOsamples);
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Text("Gaussian Radius");
+                    if (ImGui.SliderInt("##Gaussian Radius", ref gaussianRadius, 1, 16)) SSAOshader.SetInt("gaussianRadius", gaussianRadius);
+
+                    ImGui.TreePop();
                 }
+
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -298,6 +327,8 @@ namespace Modine.ImGUI
                     direction = new(dir.X, dir.Y, dir.Z);
                     shader.SetVector3("direction", direction);
                 }
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 ImGui.Text("Sun Strength");
                 if (ImGui.SliderFloat("##Strength", ref strength, 0, 10, "%.1f"))

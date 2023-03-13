@@ -9,8 +9,14 @@ uniform sampler2D texNoise;
 uniform bool ACES = true;
 uniform bool showDepth = false;
 
-uniform vec3 samples[64];
+uniform vec3 samples[128];
 uniform mat4 projection;
+
+uniform bool ssaoOnOff = true;
+uniform float SSAOpower = 0.5;
+uniform float radius = 0.8;
+uniform int kernelSize = 16;
+float bias = 0.025;
 
 in vec2 UV;
 out vec4 fragColor;
@@ -42,12 +48,6 @@ float LinearizeDepth(float depth)
     float z = depth * 2.0 - 1.0; // back to NDC 
     return (2.0 * near * far) / (far + near - z * (far - near));	
 }
-
-uniform bool ssaoOnOff = true;
-uniform float SSAOpower = 0.5;
-uniform float radius = 0.8;
-int kernelSize = 64;
-float bias = 0.025;
 
 void main()
 {

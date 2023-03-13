@@ -95,6 +95,8 @@ namespace Modine
         int gPosition;
         int gNormal;
         int SSAOblur;
+        public static int numAOSamples = 16;
+        public static int previousAOSamples = numAOSamples;
 
         int depthMapFBO;
         int depthMap;
@@ -143,7 +145,7 @@ namespace Modine
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
             GL.PointSize(5);
 
-            VSync = VSyncMode.Adaptive;
+            VSync = VSyncMode.On;
 
             FBO = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
@@ -161,10 +163,10 @@ namespace Modine
             PBRShader = new Shader("Shaders/PBR/mesh.vert", "Shaders/PBR/mesh.frag");
             shadowShader = new Shader("Shaders/PBR/shadow.vert", "Shaders/PBR/shadow.frag");
             lightShader = new Shader("Shaders/Lights/light.vert", "Shaders/Lights/light.frag");
-            postprocessShader = new Shader("Shaders/Postprocessing/postprocess.vert", "Shaders/Postprocessing/postprocess.frag");
-            outlineShader = new Shader("Shaders/Postprocessing/outline.vert", "Shaders/Postprocessing/outline.frag");
-            fxaaShader = new Shader("Shaders/Postprocessing/fxaa.vert", "Shaders/Postprocessing/fxaa.frag");
-            SSAOblurShader = new Shader("Shaders/Postprocessing/SSAOblur.vert", "Shaders/Postprocessing/SSAOblur.frag");
+            postprocessShader = new Shader("Shaders/Postprocessing/1_rect.vert", "Shaders/Postprocessing/postprocess.frag");
+            outlineShader = new Shader("Shaders/Postprocessing/1_rect.vert", "Shaders/Postprocessing/outline.frag");
+            fxaaShader = new Shader("Shaders/Postprocessing/1_rect.vert", "Shaders/Postprocessing/fxaa.frag");
+            SSAOblurShader = new Shader("Shaders/Postprocessing/1_rect.vert", "Shaders/Postprocessing/SSAOblur.frag");
 
             Postprocessing.SetupPPRect(ref postprocessShader);
 
@@ -188,7 +190,7 @@ namespace Modine
             suzanne.position = new(0, 0, 0);
             suzanne.rotation = new(-90, 0, 0);
 
-            Postprocessing.GenNoise();
+            Postprocessing.GenNoise(numAOSamples);
 
             SceneObject _monkey = new("Room", SceneObjectType.Mesh, suzanne);
             sceneObjects.Add(_monkey);
@@ -339,7 +341,7 @@ namespace Modine
 
             frameCount++;
             elapsedTime += args.Time;
-            if (elapsedTime >= 0.25f)
+            if (elapsedTime >= 1f)
             {
                 fps = frameCount / elapsedTime;
                 ms = 1000 * elapsedTime / frameCount;
@@ -455,9 +457,15 @@ namespace Modine
                 GL.Disable(EnableCap.StencilTest);
             }
 
+            if (numAOSamples != previousAOSamples)
+            {
+                Postprocessing.GenNoise(numAOSamples);
+                previousAOSamples = numAOSamples;
+            }
+
             // Use different shaders for engine and viewport effects
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix);
+            Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix, numAOSamples);
             Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture, SSAOblur);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
@@ -485,7 +493,7 @@ namespace Modine
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
-                ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref PBRShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref SSAOblurShader);
+                ImGuiWindows.Settings(ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref direction, ref ambient, ref shadowFactor, ref numAOSamples, ref PBRShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref SSAOblurShader);
             }
             
             // Quick menu

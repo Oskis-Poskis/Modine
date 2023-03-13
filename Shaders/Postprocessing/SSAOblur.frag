@@ -3,6 +3,8 @@
 uniform sampler2D frameBufferTexture;
 uniform bool ssaoOnOff = true;
 
+uniform int gaussianRadius = 3;
+
 in vec2 UV;
 layout(location = 3) out vec4 blurao;
 
@@ -13,15 +15,15 @@ void main()
         vec2 offset;
         vec2 texelSize = 1.0 / vec2(textureSize(frameBufferTexture, 0));
         float result = 0.0;
-        for (int x = -3; x <= 3; ++x) 
+        for (int x = -gaussianRadius; x <= gaussianRadius; ++x) 
         {
-            for (int y = -3; y <= 3; ++y) 
+            for (int y = -gaussianRadius; y <= gaussianRadius; ++y) 
             {
                 offset = vec2(float(x) * texelSize.x, float(y) * texelSize.y);
                 result += texture(frameBufferTexture, UV + offset).a;
             }
         }
-        float blur = result / (7.0 * 7.0);
+        float blur = result / ((gaussianRadius * 2 + 1) * (gaussianRadius * 2 + 1));
         
         blurao = vec4(blur);
     }

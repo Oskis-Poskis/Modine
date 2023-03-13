@@ -23,6 +23,11 @@ namespace Modine.Importer
             {
                 vertdata[i].Position = FromVector(mesh.Vertices[i]);
                 vertdata[i].Normals = FromVector(mesh.Normals[i]);
+                if (mesh.HasTextureCoords(0))
+                {
+                    vertdata[i].UVs = FromVector2(new Vector2D(mesh.TextureCoordinateChannels[0][i].X, mesh.TextureCoordinateChannels[0][i].Y));
+                }
+                else vertdata[i].UVs = new(1, 1);
             }
 
             indices = new int[indexCount];
@@ -35,6 +40,8 @@ namespace Modine.Importer
                 }
             }
 
+
+
             //Console.WriteLine($"Imported mesh '{mesh.Name}'\nVertices: {vertexCount}\nIndices: {indexCount}\n");
         }
 
@@ -44,6 +51,14 @@ namespace Modine.Importer
             v.X = vec.X;
             v.Y = vec.Y;
             v.Z = vec.Z;
+            return v;
+        }
+
+        private static Vector2 FromVector2(Assimp.Vector2D vec)
+        {
+            Vector2 v;
+            v.X = vec.X;
+            v.Y = vec.Y;
             return v;
         }
     }

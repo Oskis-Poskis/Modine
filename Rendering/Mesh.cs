@@ -52,8 +52,8 @@ namespace Modine.Rendering
             GL.VertexAttribPointer(shader.GetAttribLocation("aPosition"), 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
             GL.EnableVertexAttribArray(shader.GetAttribLocation("aNormals"));
             GL.VertexAttribPointer(shader.GetAttribLocation("aNormals"), 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
-            GL.EnableVertexAttribArray(shader.GetAttribLocation("aUV"));
-            GL.VertexAttribPointer(shader.GetAttribLocation("aUV"), 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
+            GL.EnableVertexAttribArray(shader.GetAttribLocation("aUVs"));
+            GL.VertexAttribPointer(shader.GetAttribLocation("aUVs"), 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
             
             meshName = Name;
             meshShader = shader;

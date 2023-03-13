@@ -56,6 +56,7 @@ namespace Modine
         float shadowFactor = 0.75f;
         
         Material defaultMat;
+        Material krissVectorMat;
         Material emissiveMaterial;
         public Shader PBRShader;
         public Shader lightShader;
@@ -67,6 +68,10 @@ namespace Modine
         Matrix4 projectionMatrix;
         Matrix4 viewMatrix;
         Matrix4 lightSpaceMatrix;
+
+        Mesh krissVector;
+        int[] vectorIndicies;
+        VertexData[] vectorData;
 
         Mesh suzanne;
         int[] indices;
@@ -173,13 +178,19 @@ namespace Modine
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1, 0.1f, 100);
             viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, new(0, 1, 0));
             camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 10);
-            defaultMat = new(new(0.8f), 0, 0.3f, 0.0f);
-            emissiveMaterial = new(new(0.25f, 0.15f, 1.0f), 0, 0.5f, 10);
-            defaultMat.SetShaderUniforms(PBRShader);
+            defaultMat = new(new(0.8f), 0, 0.3f, 0.0f, PBRShader);
+            emissiveMaterial = new(new(0.25f, 0.15f, 1.0f), 0, 0.5f, 10, PBRShader);
 
             PBRShader.SetVector3("ambient", ambient);
             PBRShader.SetVector3("direction", direction);
             PBRShader.SetFloat("shadowFactor", shadowFactor);
+
+            krissVectorMat = new(new(1), 1, 1, 0, PBRShader, Texture.LoadFromFile("Resources/1_Albedo.png"), Texture.LoadFromFile("Resources/1_Roughness.png"), Texture.LoadFromFile("Resources/1_Metallic.png"));
+            ModelImporter.LoadModel("Resources/KrissVector.fbx", out vectorData, out vectorIndicies);
+            krissVector = new(vectorData, vectorIndicies, PBRShader, false, true, krissVectorMat);
+            krissVector.position = new(0, 2, 2);
+            krissVector.scale = new(0.25f);
+            krissVector.rotation = new(-90, 0, 0);
 
             ModelImporter.LoadModel("Importing/TestRoom.fbx", out vertexData, out indices);
             ModelImporter.LoadModel("Importing/Floor.fbx", out planeVertexData, out planeIndices);  
@@ -187,13 +198,14 @@ namespace Modine
             ModelImporter.LoadModel("Importing/Sphere.fbx", out sphereVertexData, out sphereIndices);
             suzanne = new Mesh(vertexData, indices, PBRShader, true, true, defaultMat);
             suzanne.scale = new(0.75f);
-            suzanne.position = new(0, 0, 0);
             suzanne.rotation = new(-90, 0, 0);
 
             Postprocessing.GenNoise(numAOSamples);
 
             SceneObject _monkey = new("Room", SceneObjectType.Mesh, suzanne);
+            SceneObject _vector = new("Vector", SceneObjectType.Mesh, krissVector);
             sceneObjects.Add(_monkey);
+            sceneObjects.Add(_vector);
 
             count_Meshes = 0;
             count_PointLights = 0;
@@ -416,7 +428,10 @@ namespace Modine
                     }
                 }
                 
+                GL.ActiveTexture(TextureUnit.Texture4);
                 GL.BindTexture(TextureTarget.Texture2D, depthMap);
+                PBRShader.SetInt("shadowMap", 4);
+
                 UpdateMatrices();
                 for (int i = 0; i < sceneObjects.Count; i++)
                 {

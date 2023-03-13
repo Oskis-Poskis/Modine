@@ -3,6 +3,7 @@
 in vec3 fragPosViewSpace;
 in vec3 normalsViewSpace;
 
+in vec2 UVs;
 in vec3 normals;
 in vec3 fragPos;
 in vec4 fragPosLightSpace;
@@ -32,6 +33,10 @@ struct Material {
     float metallic;
     float roughness;
     float emissionStrength;
+
+    sampler2D albedoTex;
+    sampler2D roughnessTex;
+    sampler2D metallicTex;
 };
 
 struct PointLight {
@@ -146,7 +151,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
-    float closestDepth = texture(shadowMap, projCoords.xy).r; 
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
     float currentDepth = projCoords.z;
 
     float bias = max(shadowBias * (1.0 - abs(dot(normal, lightDir))), shadowBias);
@@ -175,6 +180,10 @@ void main()
     vec3 result = vec3(0);
     if (material.emissionStrength == 0)
     {
+        vec3 albedo = material.albedo * texture(material.albedoTex, UVs).rgb;
+        float roughness = material.roughness * texture(material.roughnessTex, UVs).r;
+        float metallic = material.metallic * texture(material.metallicTex, UVs).r;
+
         vec3 normal;
         if (smoothShading) normal = normals;
         else normal = cross(dFdx(fragPos), dFdy(fragPos));
@@ -183,18 +192,18 @@ void main()
         vec3 V = normalize(viewPos - fragPos);
 
         vec3 F0 = vec3(0.04);
-        F0 = mix(F0, material.albedo, material.metallic);
+        F0 = mix(F0, albedo, metallic);
 
         vec3 dirLighting = vec3(0.0);
-        dirLighting += CalcDirectionalLight(direction, V, N, F0, material.albedo, material.roughness,  material.metallic);
+        dirLighting += CalcDirectionalLight(direction, V, N, F0, albedo, roughness,  metallic);
         dirLighting = pow(dirLighting, vec3(1 / 2.2));
 
         vec3 pointLighting = vec3(0);
-        for (int i = 0; i < countPL; i++) pointLighting += CalcPointLight(pointLights[i], V, N, F0, material.albedo, material.roughness, material.metallic);
+        for (int i = 0; i < countPL; i++) pointLighting += CalcPointLight(pointLights[i], V, N, F0, albedo, roughness, metallic);
         pointLighting = pow(pointLighting, vec3(1 / 2.2));
 
         float shadow = ShadowCalculation(fragPosLightSpace, N, direction); 
-        result = dirLighting * (1 - shadow * shadowFactor) + (material.albedo * ambient);
+        result = dirLighting * (1 - shadow * shadowFactor) + (albedo * ambient);
         result += pointLighting;
     }
 

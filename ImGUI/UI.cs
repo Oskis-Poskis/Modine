@@ -68,8 +68,6 @@ namespace Modine.ImGUI
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Checkbox(" Cast shadow", ref _sceneObject.Mesh.castShadow);
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Checkbox(" Smooth Shading", ref _sceneObject.Mesh.smoothShading);
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 

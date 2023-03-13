@@ -29,7 +29,7 @@ namespace Modine.Rendering
              1, -1, 0
         };
 
-        public Light(Shader shader, Vector3 _color, float _strength) : base()
+        public Light(Shader shader, Vector3 _color, float _strength) : base(shader)
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -52,21 +52,18 @@ namespace Modine.Rendering
             this.strength = _strength;
         }
 
-        Matrix4 viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, Vector3.UnitY);
-
-        public override void Render(float pitch, float yaw, Camera cam, Vector3 pos)
+        public override void Render(Camera cam, Vector3 pos)
         {   
-            viewMatrix = Matrix4.LookAt(cam.position, cam.position + cam.direction, Vector3.UnitY);
+            Matrix4 viewMatrix = Matrix4.LookAt(cam.position, cam.position + cam.direction, Vector3.UnitY);
 
             Matrix4 model = Matrix4.Identity;
             model *= Matrix4.CreateScale(0.15f);
-            model *= Matrix4.CreateRotationX(Math.Clamp(pitch, -89, 89)) *
-                     Matrix4.CreateRotationY(-yaw - MathHelper.PiOver2) * 
+            model *= Matrix4.CreateRotationX(Math.Clamp(cam.pitch, -89, 89)) *
+                     Matrix4.CreateRotationY(-cam.yaw - MathHelper.PiOver2) * 
                      Matrix4.CreateRotationZ(0);
             model *= Matrix4.CreateTranslation(pos);
 
             lightShader.SetMatrix4("model", model);
-            lightShader.SetMatrix4("view", viewMatrix);
             lightShader.SetVector3("lightColor", lightColor);
 
             GL.BindVertexArray(vaoHandle);

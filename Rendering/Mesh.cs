@@ -29,13 +29,11 @@ namespace Modine.Rendering
         private int vboHandle;
         private int eboHandle;
         public int vertexCount;
-        public bool smoothShading;
         public bool castShadow;
         public string meshName;
         public Material Material;
-        public Shader meshShader;
-        
-        public Mesh(VertexData[] vertData, int[] indices, Shader shader, bool SmoothShading, bool CastShadow, Material material) : base()
+
+        public Mesh(VertexData[] vertData, int[] indices, Shader shader, bool CastShadow, Material material) : base(shader)
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -60,20 +58,16 @@ namespace Modine.Rendering
             GL.VertexAttribPointer(shader.GetAttribLocation("aBiTangents"), 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 11 * sizeof(float));
             
             meshName = Name;
-            meshShader = shader;
             vertexCount = indices.Length;
-            smoothShading = SmoothShading;
             castShadow = CastShadow;
-
             Material = material;
-            meshShader.SetInt("smoothShading", Convert.ToInt32(SmoothShading));
 
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
         }
 
-        public override void Render(Vector3 pos, Vector3 rot, Vector3 scale)
+        public override void Render(Vector3 pos, Vector3 rot, Vector3 scale, Shader meshShader)
         {   
             Matrix4 model = Matrix4.Identity;
             model *= Matrix4.CreateScale(scale);

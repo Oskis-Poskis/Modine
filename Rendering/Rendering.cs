@@ -1,10 +1,11 @@
 using OpenTK.Graphics.OpenGL4;
 using static Modine.Rendering.SceneObject;
 using Modine.Common;
+using OpenTK.Windowing.Common;
 
 namespace Modine.Rendering
 {
-    public class Rendering
+    public class RenderClass
     {
         public static void RenderShadowScene(int shadowRes, ref int depthMapFBO, OpenTK.Mathematics.Matrix4 lightSpaceMatrix, ref List<SceneObject> sceneObjects, Shader shadowShader)
         {
@@ -18,8 +19,27 @@ namespace Modine.Rendering
             // Draw meshes to shadow map with different shaders
             foreach (SceneObject sceneObject in sceneObjects)
             {
-                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.meshShader = shadowShader;
+                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Shader = shadowShader;
                 if (sceneObject.Type == SceneObjectType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Render();
+            }
+        }
+    }
+
+    class FPScounter
+    {
+        public int frameCount = 0;
+        public double elapsedTime = 0.0, fps = 0.0, ms;
+
+        public void Count(FrameEventArgs args)
+        {
+            frameCount++;
+            elapsedTime += args.Time;
+            if (elapsedTime >= 1f)
+            {
+                fps = frameCount / elapsedTime;
+                ms = 1000 * elapsedTime / frameCount;
+                frameCount = 0;
+                elapsedTime = 0.0;
             }
         }
     }

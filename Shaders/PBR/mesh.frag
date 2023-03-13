@@ -19,9 +19,7 @@ uniform sampler2D shadowMap;
 uniform float shadowFactor;
 uniform float shadowBias = 0.0018;
 
-uniform bool smoothShading;
 uniform vec3 viewPos;
-
 uniform vec3 direction;
 uniform float dirStrength = 1;
 uniform int countPL = 0;
@@ -187,9 +185,7 @@ void main()
         float roughness = material.roughness * texture(material.roughnessTex, UVs).r;
         float metallic = material.metallic * texture(material.metallicTex, UVs).r;
         vec3 normal = texture(material.normalTex, UVs).rgb * 2 - 1;
-
-        if (smoothShading) normal = normalize(TBN * normal);
-        else normal = normalize(TBN * cross(dFdx(fragPos), dFdy(fragPos)));
+        normal = normalize(TBN * normal);
 
         vec3 N = normal;
         vec3 V = normalize(viewPos - fragPos);

@@ -14,7 +14,7 @@ namespace Modine.ImGUI
     {
         static float spacing = 5;
 
-        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, double fps, double ms, int meshCount, int plCount, int triangleCount, Vector3 direction, float yaw, float pitch)
+        public static void SmallStats(Vector2i viewportSize, Vector2i viewportPos, double fps, double ms, int meshCount, int plCount, int triangleCount)
         {
             ImGui.GetForegroundDrawList().AddRectFilled(
                 new(viewportPos.X + 10, viewportPos.Y + 30),
@@ -242,12 +242,15 @@ namespace Modine.ImGUI
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                     SN.Vector3 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z);
-                    ImGui.Text("Albedo");
-                    if (ImGui.ColorPicker3("##Albedo", ref color, ImGuiColorEditFlags.NoInputs))
+                    if (ImGui.TreeNode("Albedo"))
                     {
-                        _material.Color = new(color.X, color.Y, color.Z);
+                        if (ImGui.ColorPicker3("##Albedo", ref color, ImGuiColorEditFlags.NoInputs)) _material.Color = new(color.X, color.Y, color.Z);
+                        ImGui.TreePop();
                     }
-                    if (ImGui.Button("Load Image"))
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    
+                    if (ImGui.Button("Load Albedo Texture"))
                     {
                         OpenFileDialog selectFile = new OpenFileDialog()
                         {
@@ -275,7 +278,25 @@ namespace Modine.ImGUI
                         _material.Roughness = tempRoughness;
                         _material.SetShaderUniforms(meshShader);
                     }
+                    if (ImGui.Button("Load Roughness Texture"))
+                    {
+                        OpenFileDialog selectFile = new OpenFileDialog()
+                        {
+                            Title = "Select File",
+                            Filter = "Formats:|*.PNG;"
+                        };
+                        selectFile.ShowDialog();
 
+                        string path = selectFile.FileName;
+
+                        if (File.Exists(path))
+                        {
+                            materials[sceneObjects[selectedIndex].Mesh.MaterialIndex].RoughnessTexture = Texture.LoadFromFile(path);
+                        }
+                    }
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                     float tempMetallic = _material.Metallic;
@@ -285,7 +306,25 @@ namespace Modine.ImGUI
                         _material.Metallic = tempMetallic;
                         _material.SetShaderUniforms(meshShader);
                     }
+                    if (ImGui.Button("Load Metallic Texture"))
+                    {
+                        OpenFileDialog selectFile = new OpenFileDialog()
+                        {
+                            Title = "Select File",
+                            Filter = "Formats:|*.PNG;"
+                        };
+                        selectFile.ShowDialog();
 
+                        string path = selectFile.FileName;
+
+                        if (File.Exists(path))
+                        {
+                            materials[sceneObjects[selectedIndex].Mesh.MaterialIndex].MetallicTexture = Texture.LoadFromFile(path);
+                        }
+                    }
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                     float tempEmission = _material.EmissionStrength;
@@ -295,9 +334,37 @@ namespace Modine.ImGUI
                         _material.EmissionStrength = tempEmission;
                         _material.SetShaderUniforms(meshShader);
                     }
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    if (ImGui.Button("Load Normal Texture"))
+                    {
+                        OpenFileDialog selectFile = new OpenFileDialog()
+                        {
+                            Title = "Select File",
+                            Filter = "Formats:|*.PNG;"
+                        };
+                        selectFile.ShowDialog();
+
+                        string path = selectFile.FileName;
+
+                        if (File.Exists(path))
+                        {
+                            materials[sceneObjects[selectedIndex].Mesh.MaterialIndex].NormalTexture = Texture.LoadFromFile(path);
+                        }
+                    }
                 }
             }
             
+            ImGui.End();
+        }
+
+        public static void ContentBrowser()
+        {
+            ImGui.Begin("Content Browser");
+
             ImGui.End();
         }
 
@@ -318,7 +385,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref float camSpeed, ref bool vsyncOn, ref bool showDepth, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref int numAOsamples, ref Shader shader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader SSAOshader)
+        public static void Settings(ref float camSpeed, ref bool vsyncOn, ref bool showDepth, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref int numAOsamples, ref Shader shader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader SSAOshader)
         {
             ImGui.Begin("Settings");
 
@@ -483,6 +550,10 @@ namespace Modine.ImGUI
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
+                if (ImGui.Checkbox(" Show Stats Overlay", ref showStats))
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
                 if (ImGui.Checkbox(" Show ImGUI Demo", ref showImGUIdemo))
 
                 ImGui.TreePop();
@@ -493,7 +564,7 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        public static void Header()
+        public static void Header(double FPS, double MS, int meshCount)
         {
             ImGui.BeginMainMenuBar();
 
@@ -511,6 +582,11 @@ namespace Modine.ImGUI
             {
                 ImGui.EndMenu();
             }
+
+            float textWidth = ImGui.CalcTextSize("FPS: " + FPS.ToString("0") + "      " + GL.GetString(StringName.Renderer) + "      " + "ms: " + MS.ToString("0.00")).X;
+            ImGui.SetCursorPosX(ImGui.GetWindowWidth() - textWidth - 10);
+            ImGui.TextColored(new(0.5f), "FPS: " + FPS.ToString("0") + "      " + "ms: " + MS.ToString("0.00") + "      " + GL.GetString(StringName.Renderer));
+
 
             ImGui.EndMainMenuBar();
         }
@@ -607,6 +683,7 @@ namespace Modine.ImGUI
             ImGui.GetStyle().TabRounding = 2;
             ImGui.GetStyle().WindowRounding = 5;
             ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;
+            ImGui.GetStyle().SelectableTextAlign = new(0.02f, 0);
             
             ImGui.GetStyle().GrabMinSize = 15;
             
@@ -614,6 +691,7 @@ namespace Modine.ImGUI
             ImGui.PushStyleColor(ImGuiCol.Border, new System.Numerics.Vector4(25, 25, 25, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.MenuBarBg, new System.Numerics.Vector4(15, 15, 15, 200f) / 255);
             ImGui.PushStyleColor(ImGuiCol.CheckMark, new System.Numerics.Vector4(255, 140, 0, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.PopupBg, new System.Numerics.Vector4(12, 12, 12, 255) / 255);
 
             // Background color
             ImGui.PushStyleColor(ImGuiCol.WindowBg, new System.Numerics.Vector4(15f, 15f, 15f, 255f) / 255);
@@ -643,7 +721,7 @@ namespace Modine.ImGUI
             ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(0f, 153f, 76f, 255f) / 255);
 
             // Rezising bar
-            ImGui.PushStyleColor(ImGuiCol.Separator, new System.Numerics.Vector4(40f, 40f, 40f, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.Separator, new System.Numerics.Vector4(30f, 30f, 30f, 255) / 255);
             ImGui.PushStyleColor(ImGuiCol.SeparatorHovered, new System.Numerics.Vector4(60f, 60f, 60f, 255) / 255);
             ImGui.PushStyleColor(ImGuiCol.SeparatorActive, new System.Numerics.Vector4(80f, 80f, 80f, 255) / 255);
 

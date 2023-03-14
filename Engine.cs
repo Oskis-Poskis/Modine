@@ -138,19 +138,11 @@ namespace Modine
 
             SceneObject _room = new(PBRShader, "Room", SceneObjectType.Mesh, Room);
 
-            for (int x = 0; x < 10; x++)
-            {
-                for (int y = 0; y < 10; y++)
-                {
-                    Random random = new();
-                    krissVector = new(vectorData, vectorIndicies, PBRShader, true, 1);
-                    SceneObject _vector = new(PBRShader, NewName("Vector"), SceneObjectType.Mesh, krissVector);
-                    _vector.Scale = new(0.3f);
-                    _vector.Position.X = x * 3;
-                    _vector.Position.Y = y * 3;
-                    sceneObjects.Add(_vector);
-                }
-            }
+            krissVector = new(vectorData, vectorIndicies, PBRShader, true, 1);
+            SceneObject _vector = new(PBRShader, NewName("Vector"), SceneObjectType.Mesh, krissVector);
+            _vector.Scale = new(0.3f);
+
+            sceneObjects.Add(_vector);
 
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
@@ -176,6 +168,7 @@ namespace Modine
         float originalDistance = 0;
         Vector3 originalPosition = Vector3.Zero;
         Vector3 newPosition = Vector3.Zero, newPosition2 = Vector3.Zero;
+        public bool showStats;
 
         protected override void OnUpdateFrame(FrameEventArgs args)
         {
@@ -409,15 +402,16 @@ namespace Modine
             ImGui.DockSpaceOverViewport();
 
             ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
+            if (showStats) ImGuiWindows.SmallStats(viewportSize, viewportPos, FPScounter.fps, FPScounter.ms, count_Meshes, count_PointLights, triangleCount);
             if (!fullscreen)
             {
-                ImGuiWindows.Header();
-                ImGuiWindows.SmallStats(viewportSize, viewportPos, FPScounter.fps, FPScounter.ms, count_Meshes, count_PointLights, triangleCount, camera.direction, camera.yaw, camera.pitch);
+                ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes);
+                ImGuiWindows.ContentBrowser();
                 ImGuiWindows.ShadowView(depthMap);
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
-                ImGuiWindows.Settings(ref camera.speed, ref vsyncOn, ref ShowDepth_Stencil, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref numAOSamples, ref PBRShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref SSAOblurShader);
+                ImGuiWindows.Settings(ref camera.speed, ref vsyncOn, ref ShowDepth_Stencil, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref numAOSamples, ref PBRShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref SSAOblurShader);
             }
             
             // Quick menu
@@ -433,13 +427,23 @@ namespace Modine
 
             if (ImGui.BeginPopup("QuickMenu", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize))
             {
+                ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
+
+                // Center text
+                float availableWidth = ImGui.GetContentRegionAvail().X;
+                ImGui.SetCursorPosX((availableWidth - ImGui.CalcTextSize("Quick Menu").X) / 2);
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new SN.Vector2(10, 2));
                 ImGui.Text("Quick Menu");
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new SN.Vector2(4, 2));
+
                 ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
 
                 if (ImGui.BeginMenu("Mesh"))
                 {
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, 3));
+
                     if (ImGui.MenuItem("Cube"))
                     {
                         VertexData[] cubeVertexData;
@@ -455,7 +459,9 @@ namespace Modine
                         triangleCount = CalculateTriangles();
                     }
 
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, 3));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, 3));
 
                     if (ImGui.MenuItem("Sphere"))
                     {
@@ -472,7 +478,9 @@ namespace Modine
                         triangleCount = CalculateTriangles();
                     }
 
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, 3));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, 3));
 
                     if (ImGui.MenuItem("Plane"))
                     {
@@ -488,7 +496,38 @@ namespace Modine
 
                         triangleCount = CalculateTriangles();
                     }
-                    
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, 3));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, 3));
+
+                    if (ImGui.MenuItem("Import Mesh"))
+                    {
+                        OpenFileDialog selectFile = new OpenFileDialog()
+                        {
+                            Title = "Select File",
+                            Filter = "Formats:|*.FBX; *.OBJ;"
+                        };
+                        selectFile.ShowDialog();
+                        string path = selectFile.FileName;
+
+                        if (File.Exists(path))
+                        {
+                            VertexData[] cubeVertexData;
+                            int[] cubeIndices;
+                            string name;
+                            ModelImporter.LoadModel(path, out cubeVertexData, out cubeIndices, out name);
+
+                            Mesh import = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, 0);
+                            SceneObject _import = new(PBRShader, NewName(name), SceneObjectType.Mesh, import);
+                            sceneObjects.Add(_import);
+
+                            selectedSceneObject = sceneObjects.Count - 1;
+                        }
+                    }
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, 3));
+                        
                     ImGui.EndMenu();
                 }
 

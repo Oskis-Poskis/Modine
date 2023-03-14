@@ -7,7 +7,7 @@ namespace Modine.Common
 {
     public static class ModelImporter
     {
-        public static void LoadModel(string path, out VertexData[] vertdata, out int[] indices)
+        public static void LoadModel(string path, out VertexData[] vertdata, out int[] indices, out string name)
         {
             var importer = new AssimpContext();
             var scene = importer.ImportFile(path,
@@ -39,10 +39,16 @@ namespace Modine.Common
                     indices[j++] = face.Indices[k];
                 }
             }
-
-
+            
+            name = mesh.Name;
 
             //Console.WriteLine($"Imported mesh '{mesh.Name}'\nVertices: {vertexCount}\nIndices: {indexCount}\n");
+        }
+
+        public static void LoadModel(string path, out VertexData[] vertdata, out int[] indices)
+        {
+            string name;
+            LoadModel(path, out vertdata, out indices, out name);
         }
 
         private static Vector3 FromVector(Assimp.Vector3D vec)

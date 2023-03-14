@@ -31,9 +31,10 @@ namespace Modine.Rendering
         public int vertexCount;
         public bool castShadow;
         public string meshName;
-        public Material Material;
+        //public Material Material;
+        public int MaterialIndex;
 
-        public Mesh(VertexData[] vertData, int[] indices, Shader shader, bool CastShadow, Material material) : base(shader)
+        public Mesh(VertexData[] vertData, int[] indices, Shader shader, bool CastShadow, int matIndex) : base(shader)
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -60,7 +61,8 @@ namespace Modine.Rendering
             meshName = Name;
             vertexCount = indices.Length;
             castShadow = CastShadow;
-            Material = material;
+            //Material = material;
+            MaterialIndex = matIndex;
 
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);

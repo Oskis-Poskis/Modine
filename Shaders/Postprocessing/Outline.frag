@@ -5,7 +5,6 @@ uniform usampler2D stencilTexture;
 uniform sampler2D SSAOblur;
 uniform int numSteps = 12;
 uniform float radius = 3.0;
-uniform bool ssaoOnOff = true;
 
 const float TAU = 6.28318530;
 
@@ -30,8 +29,6 @@ void main()
         outlinemask = mix(outlinemask, 1.0, col);
     }
     outlinemask = mix(outlinemask, 0.0, stencil);
-
-
 
     fragColor = mix(color * ao, vec4(0.75, 0.4, 0.0, 1.0), clamp(outlinemask, 0.0, 1.0));
 }

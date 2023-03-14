@@ -181,7 +181,7 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        public static void MaterialEditor(ref List<SceneObject> sceneObjects, ref Shader meshShader, int selectedIndex)
+        public static void MaterialEditor(ref List<SceneObject> sceneObjects, ref Shader meshShader, int selectedIndex, ref List<Material> materials)
         {
             ImGui.Begin("Material Editor");
 
@@ -189,7 +189,31 @@ namespace Modine.ImGUI
             {
                 if (sceneObjects[selectedIndex].Type == SceneObjectType.Mesh)
                 {
-                    Material _material = sceneObjects[selectedIndex].Mesh.Material;
+                    string[] materialNames = new string[materials.Count];
+                    for (int i = 0; i < materials.Count; i++)
+                    {
+                        materialNames[i] = materials[i].Name;
+                    }
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    ImGui.ListBox("Materials", ref sceneObjects[selectedIndex].Mesh.MaterialIndex, materialNames, materialNames.Length);
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    if (ImGui.Button("Delete Material") && materials.Count > 0)
+                    {
+                        foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Mesh.MaterialIndex == sceneObjects[selectedIndex].Mesh.MaterialIndex) sceneObject.Mesh.MaterialIndex = 0;
+                        materials.RemoveAt(sceneObjects[selectedIndex].Mesh.MaterialIndex);
+                    }
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    Material _material = materials[sceneObjects[selectedIndex].Mesh.MaterialIndex];
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 

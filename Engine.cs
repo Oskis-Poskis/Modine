@@ -8,7 +8,7 @@ using ImGuiNET;
 using SN = System.Numerics;
 
 using Modine.Common;
-using Modine.Importer;
+using Modine.Common;
 using Modine.Rendering;
 using Modine.ImGUI;
 
@@ -118,13 +118,13 @@ namespace Modine
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1, 0.1f, 100);
             viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, new(0, 1, 0));
             camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 6);
-            defaultMat = new(new(0.8f), 0, 0.3f, 0.0f, PBRShader);
+            defaultMat = new("Default", new(0.8f), 0, 0.3f, 0.0f, PBRShader);
 
             PBRShader.SetVector3("ambient", ambient);
             PBRShader.SetVector3("direction", SunDirection);
             PBRShader.SetFloat("shadowFactor", shadowFactor);
 
-            krissVectorMat = new(new(1), 1, 1, 0, PBRShader,
+            krissVectorMat = new("VectorMat", new(1), 1, 1, 0, PBRShader,
                 Texture.LoadFromFile("Resources/1_Albedo.png"),
                 Texture.LoadFromFile("Resources/1_Roughness.png"),
                 Texture.LoadFromFile("Resources/1_Metallic.png"),

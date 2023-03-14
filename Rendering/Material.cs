@@ -7,6 +7,7 @@ namespace Modine.Rendering
 {
     public class Material
     {
+        public string Name { get; set; } = "";
         public Vector3 Color { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
         public float Metallic { get; set; } = 0.0f;
         public float Roughness { get; set; } = 0.5f;
@@ -19,8 +20,9 @@ namespace Modine.Rendering
         private Texture white1x1 = Texture.LoadFromFile("Resources/White1x1.png");
         private Texture normal1x1 = Texture.LoadFromFile("Resources/Normal1x1.png");
 
-        public Material(Vector3 color, float metallic, float roughness, float emissionStrength, Shader shader, Texture colorTexture = null, Texture roughnessTexture = null, Texture metallitexture = null, Texture normaltexture = null)
+        public Material(string name, Vector3 color, float metallic, float roughness, float emissionStrength, Shader shader, Texture colorTexture = null, Texture roughnessTexture = null, Texture metallitexture = null, Texture normaltexture = null)
         {
+            Name = name;
             Color = color;
             Metallic = metallic;
             Roughness = roughness;

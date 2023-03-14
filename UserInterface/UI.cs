@@ -43,7 +43,6 @@ namespace Modine.ImGUI
         public static void ObjectProperties(ref List<SceneObject> sceneObjects, int selectedMesh)
         {
             ImGui.Begin("Properties");
-            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
             Properties(ref sceneObjects, selectedMesh);
 
@@ -191,29 +190,51 @@ namespace Modine.ImGUI
                 if (sceneObjects[selectedIndex].Type == SceneObjectType.Mesh)
                 {
                     Material _material = sceneObjects[selectedIndex].Mesh.Material;
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    string newName = _material.Name;
+                    if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _material.Name = newName;
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
                     SN.Vector3 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z);
-                    if (ImGui.ColorPicker3("Albedo", ref color, ImGuiColorEditFlags.NoInputs))
+                    ImGui.Text("Albedo");
+                    if (ImGui.ColorPicker3("##Albedo", ref color, ImGuiColorEditFlags.NoInputs))
                     {
                         _material.Color = new(color.X, color.Y, color.Z);
                         _material.SetShaderUniforms(meshShader);
                     }
 
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
                     float tempRoughness = _material.Roughness;
-                    if (ImGui.SliderFloat("Roughness", ref tempRoughness, 0, 1))
+                    ImGui.Text("Roughness");
+                    if (ImGui.SliderFloat("##Roughness", ref tempRoughness, 0, 1))
                     {
                         _material.Roughness = tempRoughness;
                         _material.SetShaderUniforms(meshShader);
                     }
 
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
                     float tempMetallic = _material.Metallic;
-                    if (ImGui.SliderFloat("Metallic", ref tempMetallic, 0, 1))
+                    ImGui.Text("Metallic");
+                    if (ImGui.SliderFloat("##Metallic", ref tempMetallic, 0, 1))
                     {
                         _material.Metallic = tempMetallic;
                         _material.SetShaderUniforms(meshShader);
                     }
 
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
                     float tempEmission = _material.EmissionStrength;
-                    if (ImGui.SliderFloat("Emission Strength", ref tempEmission, 0, 100))
+                    ImGui.Text("Emission Strength");
+                    if (ImGui.SliderFloat("##Emission Strength", ref tempEmission, 0, 100))
                     {
                         _material.EmissionStrength = tempEmission;
                         _material.SetShaderUniforms(meshShader);

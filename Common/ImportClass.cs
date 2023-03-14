@@ -3,7 +3,7 @@ using OpenTK.Mathematics;
 
 using Modine.Rendering;
 
-namespace Modine.Importer
+namespace Modine.Common
 {
     public static class ModelImporter
     {

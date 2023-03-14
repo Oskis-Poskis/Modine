@@ -178,13 +178,14 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 
 void main()
 {
+    vec3 albedo = material.albedo * texture(material.albedoTex, UVs).rgb;
+    float roughness = material.roughness * texture(material.roughnessTex, UVs).r;
+    float metallic = material.metallic * texture(material.metallicTex, UVs).r;
+    vec3 normal = texture(material.normalTex, UVs).rgb * 2 - 1;
+
     vec3 result = vec3(0);
     if (material.emissionStrength == 0)
     {
-        vec3 albedo = material.albedo * texture(material.albedoTex, UVs).rgb;
-        float roughness = material.roughness * texture(material.roughnessTex, UVs).r;
-        float metallic = material.metallic * texture(material.metallicTex, UVs).r;
-        vec3 normal = texture(material.normalTex, UVs).rgb * 2 - 1;
         normal = normalize(TBN * normal);
 
         vec3 N = normal;
@@ -206,7 +207,7 @@ void main()
         result += pointLighting;
     }
 
-    else result += material.albedo * material.emissionStrength;
+    else result += albedo * material.emissionStrength;
 
     gPosition = fragPosViewSpace;
     gNormal = normalsViewSpace;

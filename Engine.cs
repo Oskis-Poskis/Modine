@@ -57,7 +57,7 @@ namespace Modine
         float shadowFactor = 0.75f;
         
         Material defaultMat, krissVectorMat;
-        List<Material> Materials = new List<Material>();
+        public static List<Material> Materials = new List<Material>();
         public Shader PBRShader, lightShader, shadowShader;
         public Shader postprocessShader, outlineShader, fxaaShader, SSAOblurShader;
         Matrix4 projectionMatrix, viewMatrix, lightSpaceMatrix;
@@ -69,7 +69,7 @@ namespace Modine
 
         Camera camera;
         static List<SceneObject> sceneObjects = new List<SceneObject>();
-        int selectedSceneObject = 0;
+        public static int selectedSceneObject = 0;
         int count_PointLights, count_Meshes = 0;
 
         PolygonMode _polygonMode = PolygonMode.Fill;
@@ -145,7 +145,7 @@ namespace Modine
                 {
                     Random random = new();
                     krissVector = new(vectorData, vectorIndicies, PBRShader, true, 1);
-                    SceneObject _vector = new(PBRShader, "Vector" + random.Next(101), SceneObjectType.Mesh, krissVector);
+                    SceneObject _vector = new(PBRShader, NewName("Vector"), SceneObjectType.Mesh, krissVector);
                     _vector.Scale = new(0.3f);
                     _vector.Position.X = x * 3;
                     _vector.Position.Y = y * 3;
@@ -154,7 +154,7 @@ namespace Modine
             }
 
             Materials.Add(defaultMat);
-            Materials.Add(krissVectorMat);
+            Materials.Insert(1, krissVectorMat);
 
             count_Meshes = 0;
             count_PointLights = 0;
@@ -439,9 +439,6 @@ namespace Modine
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, 5));
 
-                Random rnd = new Random();
-                int randomNum = rnd.Next(1, 101);
-
                 if (ImGui.BeginMenu("Mesh"))
                 {
                     if (ImGui.MenuItem("Cube"))
@@ -451,7 +448,7 @@ namespace Modine
                         ModelImporter.LoadModel("Importing/Cube.fbx", out cubeVertexData, out cubeIndices);
 
                         Mesh cube = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, 0);
-                        SceneObject _cube = new(PBRShader, "Cube" + randomNum, SceneObjectType.Mesh, cube);
+                        SceneObject _cube = new(PBRShader, NewName("Cube"), SceneObjectType.Mesh, cube);
                         sceneObjects.Add(_cube);
 
                         selectedSceneObject = sceneObjects.Count - 1;
@@ -468,7 +465,7 @@ namespace Modine
                         ModelImporter.LoadModel("Importing/Sphere.fbx", out sphereVertexData, out sphereIndices);
 
                         Mesh sphere = new Mesh(sphereVertexData, sphereIndices, PBRShader, true, 0);
-                        SceneObject _sphere = new(PBRShader, "Sphere" + randomNum, SceneObjectType.Mesh, sphere);
+                        SceneObject _sphere = new(PBRShader, NewName("Sphere"), SceneObjectType.Mesh, sphere);
                         sceneObjects.Add(_sphere);
 
                         selectedSceneObject = sceneObjects.Count - 1;
@@ -485,7 +482,7 @@ namespace Modine
                         ModelImporter.LoadModel("Importing/Floor.fbx", out planeVertexData, out planeIndices);
 
                         Mesh plane = new Mesh(planeVertexData, planeIndices, PBRShader, true, 0);
-                        SceneObject _plane = new(PBRShader, "Plane" + randomNum, SceneObjectType.Mesh, plane);
+                        SceneObject _plane = new(PBRShader, NewName("Plane"), SceneObjectType.Mesh, plane);
                         sceneObjects.Add(_plane);
 
                         selectedSceneObject = sceneObjects.Count - 1;
@@ -501,7 +498,7 @@ namespace Modine
                     if (ImGui.MenuItem("Point Light"))
                     {
                         Light light = new Light(lightShader, new(1, 1, 1), 5);
-                        SceneObject _light = new(PBRShader, "Light" + randomNum, SceneObjectType.Light, null, light);
+                        SceneObject _light = new(PBRShader, NewName("Light"), SceneObjectType.Light, null, light);
                         sceneObjects.Add(_light);
 
                         selectedSceneObject = sceneObjects.Count - 1;
@@ -538,6 +535,21 @@ namespace Modine
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
 
             SwapBuffers();
+        }
+
+        string NewName(string baseName)
+        {
+            int index = 0;
+            string nName = baseName;
+
+            // Loop through the existing material names to find a unique name
+            while (sceneObjects.Any(m => m.Name == nName))
+            {
+                index++;
+                nName = $"{baseName}.{index.ToString("D3")}";
+            }
+
+            return nName;
         }
 
         public bool ToggleBool(bool toggleBool)

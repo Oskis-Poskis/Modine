@@ -197,28 +197,44 @@ namespace Modine.ImGUI
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                    ImGui.ListBox("Materials", ref sceneObjects[selectedIndex].Mesh.MaterialIndex, materialNames, materialNames.Length);
+                    ImGui.ListBox("##Materials", ref sceneObjects[selectedIndex].Mesh.MaterialIndex, materialNames, materialNames.Length);
 
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Separator();
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-                    if (ImGui.Button("Delete Material") && materials.Count > 0)
-                    {
-                        foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Mesh.MaterialIndex == sceneObjects[selectedIndex].Mesh.MaterialIndex) sceneObject.Mesh.MaterialIndex = 0;
-                        materials.RemoveAt(sceneObjects[selectedIndex].Mesh.MaterialIndex);
-                    }
-
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                     Material _material = materials[sceneObjects[selectedIndex].Mesh.MaterialIndex];
-
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
                     string newName = _material.Name;
                     if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _material.Name = newName;
+
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    if (ImGui.Button("Add Material"))
+                    {
+                        string baseName = "New Material";
+                        int index = 0;
+                        string nName = baseName;
+
+                        // Loop through the existing material names to find a unique name
+                        while (materials.Any(m => m.Name == nName))
+                        {
+                            index++;
+                            nName = $"{baseName}.{index.ToString("D3")}";
+                        }
+
+                        Material newMat = new(nName, Vector3.One, 0, 0.5f, 0, meshShader);
+                        materials.Add(newMat);
+
+                        sceneObjects[selectedIndex].Mesh.MaterialIndex = materials.Count - 1;
+                    }
+
+                    ImGui.SameLine();
+
+                    if (ImGui.Button("Delete Material") && sceneObjects[selectedIndex].Mesh.MaterialIndex != 0)
+                    {
+                        foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Mesh.MaterialIndex == sceneObjects[selectedIndex].Mesh.MaterialIndex) sceneObject.Mesh.MaterialIndex -= 1;
+                        materials.RemoveAt(sceneObjects[selectedIndex].Mesh.MaterialIndex + 1);
+                    }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Separator();

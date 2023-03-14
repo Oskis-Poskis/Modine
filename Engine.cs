@@ -280,7 +280,6 @@ namespace Modine
             // Render normal scene
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
-            GL.DrawBuffers(4, new DrawBuffersEnum[] {DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3});
             GL.ClearColor(new Color4(ambient.X, ambient.Y, ambient.Z, 1));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
@@ -315,6 +314,7 @@ namespace Modine
 
                 GL.ActiveTexture(TextureUnit.Texture4);
                 GL.BindTexture(TextureTarget.Texture2D, depthMap);
+                GL.DrawBuffers(4, new DrawBuffersEnum[] {DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3});
                 PBRShader.Use();
                 PBRShader.SetInt("shadowMap", 4);
                 PBRShader.SetInt("countPL", count_PointLights);
@@ -380,6 +380,7 @@ namespace Modine
             Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture, SSAOblur);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+            GL.Finish();
 
             // Draw lights after postprocessing to avoid overlaps
             lightShader.Use();
@@ -389,7 +390,6 @@ namespace Modine
 
             // Resize depth and framebuffer texture if size has changed
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gPosition, ref gNormal, ref SSAOblur);
-            GL.Finish();
 
             OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
             if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());

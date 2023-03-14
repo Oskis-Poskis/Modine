@@ -9,6 +9,7 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Diagnostics;
 using ErrorCode = OpenTK.Graphics.OpenGL4.ErrorCode;
+using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
 namespace Modine.ImGUI
 {

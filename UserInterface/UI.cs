@@ -4,8 +4,9 @@ using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using Modine.Rendering;
-using static Modine.Rendering.SceneObject;
 using Modine.Common;
+
+using static Modine.Rendering.SceneObject;
 
 namespace Modine.ImGUI
 {
@@ -244,8 +245,23 @@ namespace Modine.ImGUI
                     ImGui.Text("Albedo");
                     if (ImGui.ColorPicker3("##Albedo", ref color, ImGuiColorEditFlags.NoInputs))
                     {
-                        _material.Color = new(color.X, color.Y, color.Z);
-                        _material.SetShaderUniforms(meshShader);
+                        
+                    }
+                    if (ImGui.Button("Load Image"))
+                    {
+                        OpenFileDialog selectFile = new OpenFileDialog()
+                        {
+                            Title = "Select File",
+                            Filter = "Formats:|*.PNG;"
+                        };
+                        selectFile.ShowDialog();
+
+                        string path = selectFile.FileName;
+
+                        if (File.Exists(path))
+                        {
+                            materials[sceneObjects[selectedIndex].Mesh.MaterialIndex].ColorTexture = Texture.LoadFromFile(path);
+                        }
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));

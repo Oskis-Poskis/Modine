@@ -2,16 +2,19 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net7.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AssimpNet" Version="4.1.0" />
     <PackageReference Include="ImGUI.net" Version="1.89.4" />
     <PackageReference Include="opentk" Version="4.7.7" />
+    <PackageReference Include="STBImageSharp" Version="2.27.13" />
+    <Reference Include="System.Windows.Forms" Version="6.0.2.0" />
     <Content Include="Shaders\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -27,7 +30,9 @@
     <Content Include="Fonts\*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <PackageReference Include="STBImageSharp" Version="2.27.13" />
+    <Content Include="icon.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

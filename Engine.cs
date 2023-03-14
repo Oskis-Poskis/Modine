@@ -3,17 +3,16 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using ImGuiNET;
 
 using SN = System.Numerics;
+using ImGuiNET;
 
-using Modine.Common;
 using Modine.Common;
 using Modine.Rendering;
 using Modine.ImGUI;
 
 using static Modine.Rendering.SceneObject;
-using System.Runtime.InteropServices;
+using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
 namespace Modine
 {

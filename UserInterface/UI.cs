@@ -245,7 +245,7 @@ namespace Modine.ImGUI
                     ImGui.Text("Albedo");
                     if (ImGui.ColorPicker3("##Albedo", ref color, ImGuiColorEditFlags.NoInputs))
                     {
-                        
+                        _material.Color = new(color.X, color.Y, color.Z);
                     }
                     if (ImGui.Button("Load Image"))
                     {

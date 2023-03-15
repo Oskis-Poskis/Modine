@@ -30,6 +30,8 @@ namespace Modine.Common
                 vertdata[i].BiTangents = FromVector(mesh.BiTangents[i]);
             }
 
+            Console.WriteLine(mesh.HasTangentBasis);
+
             indices = new int[indexCount];
             for (int i = 0, j = 0; i < mesh.FaceCount; i++)
             {
@@ -41,7 +43,7 @@ namespace Modine.Common
             }
             
             name = mesh.Name;
-
+            //Console.WriteLine(mesh.HasTangentBasis);
             //Console.WriteLine($"Imported mesh '{mesh.Name}'\nVertices: {vertexCount}\nIndices: {indexCount}\n");
         }
 

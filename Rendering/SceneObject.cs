@@ -5,8 +5,8 @@ namespace Modine.Rendering
 {
     public class SceneObject : IDisposable
     {
-        public SceneObjectType Type { get; set; }
-        public string Name { get; set;}
+        public SceneObjectType Type;
+        public string Name;
         public Vector3 Position = Vector3.Zero;
         public Vector3 Rotation = new(-90, 0, 0);
         public Vector3 Scale = Vector3.One;
@@ -20,13 +20,20 @@ namespace Modine.Rendering
             Light
         }
 
-        public SceneObject(Shader shader, string? _name = null, SceneObjectType _type = SceneObjectType.Mesh, Mesh? _mesh = null, Light? _light = null)
+        public SceneObject(Shader meshShader, string _name = "Mesh", Mesh _mesh = null)
         {
             this.Name = _name;
-            this.Type = _type;
+            this.Type = SceneObjectType.Mesh;
             this.Mesh = _mesh;
+            this.Shader = meshShader;
+        }
+
+        public SceneObject(Shader lightShader, string _name = "Light", Light _light = null)
+        {
+            this.Name = _name;
+            this.Type = SceneObjectType.Light;
             this.Light = _light;
-            this.Shader = shader;
+            this.Shader = lightShader;
         }
 
         public virtual void Render(Vector3 position = default(Vector3), Vector3 rotation = default(Vector3), Vector3 scale = default(Vector3), Shader shader = default(Shader))
@@ -41,7 +48,16 @@ namespace Modine.Rendering
 
         public virtual void Dispose()
         {
-
+            switch (this.Type)
+            {
+                case SceneObjectType.Mesh:
+                    Mesh.Dispose();
+                    break;
+                    
+                case SceneObjectType.Light:
+                    Light.Dispose();
+                    break;
+            }
         }
     }
 }

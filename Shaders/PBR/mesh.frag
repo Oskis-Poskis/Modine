@@ -186,7 +186,7 @@ void main()
     vec3 result = vec3(0);
     if (material.emissionStrength == 0)
     {
-        normal = normalize(TBN * normal);
+        normal = normal = normalize(TBN * normal);
 
         vec3 N = normal;
         vec3 V = normalize(viewPos - fragPos);

@@ -136,10 +136,10 @@ namespace Modine
 
             Postprocessing.GenNoise(numAOSamples);
 
-            SceneObject _room = new(PBRShader, "Room", SceneObjectType.Mesh, Room);
+            SceneObject _room = new(PBRShader, "Room", Room);
 
             krissVector = new(vectorData, vectorIndicies, PBRShader, true, 1);
-            SceneObject _vector = new(PBRShader, NewName("Vector"), SceneObjectType.Mesh, krissVector);
+            SceneObject _vector = new(PBRShader, NewName("Vector"), krissVector);
             _vector.Scale = new(0.3f);
 
             sceneObjects.Add(_vector);
@@ -302,6 +302,7 @@ namespace Modine
                     }
                 }
 
+                // Before drawing all objects
                 GL.Enable(EnableCap.StencilTest);
                 GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
                 GL.StencilOp(StencilOp.Replace, StencilOp.Replace, StencilOp.Replace);
@@ -446,12 +447,12 @@ namespace Modine
 
                     if (ImGui.MenuItem("Cube"))
                     {
-                        VertexData[] cubeVertexData;
                         int[] cubeIndices;
+                        VertexData[] cubeVertexData;
                         ModelImporter.LoadModel("Importing/Cube.fbx", out cubeVertexData, out cubeIndices);
 
                         Mesh cube = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, 0);
-                        SceneObject _cube = new(PBRShader, NewName("Cube"), SceneObjectType.Mesh, cube);
+                        SceneObject _cube = new(PBRShader, NewName("Cube"), cube);
                         sceneObjects.Add(_cube);
 
                         selectedSceneObject = sceneObjects.Count - 1;
@@ -470,7 +471,7 @@ namespace Modine
                         ModelImporter.LoadModel("Importing/Sphere.fbx", out sphereVertexData, out sphereIndices);
 
                         Mesh sphere = new Mesh(sphereVertexData, sphereIndices, PBRShader, true, 0);
-                        SceneObject _sphere = new(PBRShader, NewName("Sphere"), SceneObjectType.Mesh, sphere);
+                        SceneObject _sphere = new(PBRShader, NewName("Sphere"), sphere);
                         sceneObjects.Add(_sphere);
 
                         selectedSceneObject = sceneObjects.Count - 1;
@@ -489,7 +490,7 @@ namespace Modine
                         ModelImporter.LoadModel("Importing/Floor.fbx", out planeVertexData, out planeIndices);
 
                         Mesh plane = new Mesh(planeVertexData, planeIndices, PBRShader, true, 0);
-                        SceneObject _plane = new(PBRShader, NewName("Plane"), SceneObjectType.Mesh, plane);
+                        SceneObject _plane = new(PBRShader, NewName("Plane"), plane);
                         sceneObjects.Add(_plane);
 
                         selectedSceneObject = sceneObjects.Count - 1;
@@ -519,7 +520,7 @@ namespace Modine
                             ModelImporter.LoadModel(path, out cubeVertexData, out cubeIndices, out name);
 
                             Mesh import = new Mesh(cubeVertexData, cubeIndices, PBRShader, true, 0);
-                            SceneObject _import = new(PBRShader, NewName(name), SceneObjectType.Mesh, import);
+                            SceneObject _import = new(PBRShader, NewName(name), import);
                             sceneObjects.Add(_import);
 
                             selectedSceneObject = sceneObjects.Count - 1;
@@ -536,7 +537,7 @@ namespace Modine
                     if (ImGui.MenuItem("Point Light"))
                     {
                         Light light = new Light(lightShader, new(1, 1, 1), 5);
-                        SceneObject _light = new(PBRShader, NewName("Light"), SceneObjectType.Light, null, light);
+                        SceneObject _light = new(PBRShader, NewName("Light"), light);
                         sceneObjects.Add(_light);
 
                         selectedSceneObject = sceneObjects.Count - 1;

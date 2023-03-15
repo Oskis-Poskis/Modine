@@ -361,11 +361,84 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
+        private static string selectedFolderPath = "";
+
         public static void ContentBrowser()
         {
             ImGui.Begin("Content Browser");
 
+            // Split the window vertically
+            ImGui.BeginChild("LeftPane", new(ImGui.GetWindowWidth() * 0.15f, 0), true);
+            
+            string enginePath = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
+            DirectoryInfo directoryInfo = new DirectoryInfo(enginePath);
+
+            foreach (var directory in directoryInfo.GetDirectories())
+            {
+                string folderName = directory.Name;         
+                bool hasSubdirectories = directory.GetDirectories().Length > 0;
+                bool isNodeOpen = false;
+
+                if (hasSubdirectories)
+                {
+                    isNodeOpen = ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.SpanAvailWidth);
+                    if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) selectedFolderPath = directory.FullName;
+                }
+                else
+                {
+                    ImGui.Indent(20);
+                    if (ImGui.Selectable(folderName, false, ImGuiSelectableFlags.SpanAllColumns)) selectedFolderPath = directory.FullName;
+                    ImGui.Unindent();
+                }
+
+                if (isNodeOpen)
+                {
+                    foreach (var subdirectory in directory.GetDirectories()) ShowSubdirectory(subdirectory);
+                    ImGui.TreePop();
+                }
+            }
+            ImGui.EndChild();
+
+            ImGui.SameLine();
+
+            ImGui.BeginChild("RightPane", new(ImGui.GetContentRegionAvail().X, 0), true);
+            ImGui.Text(selectedFolderPath);
+            ImGui.EndChild();
+
             ImGui.End();
+        }
+
+        private static void ShowSubdirectory(DirectoryInfo directory)
+        {
+            string folderName = directory.Name;
+            bool hasSubdirectories = directory.GetDirectories().Length > 0;
+            bool isSelected = selectedFolderPath == directory.FullName;
+
+            if (hasSubdirectories)
+            {
+                bool isNodeOpen = ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.SpanAvailWidth);
+                if (isNodeOpen)
+                {
+                    foreach (var subdirectory in directory.GetDirectories())
+                    {
+                        ShowSubdirectory(subdirectory);
+                    }
+
+                    ImGui.TreePop();
+                }
+
+                if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
+                {
+                    selectedFolderPath = directory.FullName;
+                }
+            }
+            else
+            {
+                ImGui.Indent(20);
+                ImGui.Selectable(folderName, isSelected);
+                if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) selectedFolderPath = directory.FullName;
+                ImGui.Unindent();
+            }
         }
 
         static int selectedIndex = 3;

@@ -14,7 +14,7 @@
     <PackageReference Include="ImGUI.net" Version="1.89.4" />
     <PackageReference Include="opentk" Version="4.7.7" />
     <PackageReference Include="STBImageSharp" Version="2.27.13" />
-    <Reference Include="System.Windows.Forms" Version="6.0.2.0" />
+    <Reference Include="System.Windows.Forms" Version="7.0.0.0" />
     <Content Include="Shaders\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

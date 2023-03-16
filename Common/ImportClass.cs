@@ -14,7 +14,7 @@ namespace Modine.Common
                 PostProcessPreset.TargetRealTimeMaximumQuality |
                 PostProcessSteps.GenerateSmoothNormals |
                 PostProcessSteps.CalculateTangentSpace);
-
+            
             var mesh = scene.Meshes[0];
             var vertexCount = mesh.VertexCount;
             var indexCount = mesh.FaceCount * 3;
@@ -24,8 +24,7 @@ namespace Modine.Common
             {
                 vertdata[i].Position = FromVector(mesh.Vertices[i]);
                 vertdata[i].Normals = FromVector(mesh.Normals[i]);
-                if (mesh.HasTextureCoords(0)) vertdata[i].UVs = FromVector2(new Vector2D(mesh.TextureCoordinateChannels[0][i].X, mesh.TextureCoordinateChannels[0][i].Y));
-                else vertdata[i].UVs = new(1, 1);
+                vertdata[i].UVs = FromVector2(new Vector2D(mesh.TextureCoordinateChannels[0][i].X, mesh.TextureCoordinateChannels[0][i].Y));
                 vertdata[i].Tangents = FromVector(mesh.Tangents[i]);
                 vertdata[i].BiTangents = FromVector(mesh.BiTangents[i]);
             }

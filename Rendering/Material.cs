@@ -42,7 +42,7 @@ namespace Modine.Rendering
             shader.SetVector3("material.albedo", Color);
             shader.SetFloat("material.metallic", Metallic);
             shader.SetFloat("material.roughness", Roughness);
-            shader.SetFloat("material.emissionStrength", EmissionStrength);
+            //shader.SetFloat("material.emissionStrength", EmissionStrength);
 
             GL.ActiveTexture(TextureUnit.Texture0);
             ColorTexture.Use(TextureUnit.Texture0);

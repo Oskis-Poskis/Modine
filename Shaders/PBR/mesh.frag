@@ -1,4 +1,4 @@
-#version 330 core
+#version 330
 
 layout(location = 1) out vec3 gAlbedo;
 layout(location = 2) out vec3 gPosition;
@@ -26,7 +26,6 @@ struct Material {
 
 uniform Material material;
 
-uniform float shadowFactor;
 uniform float shadowBias = 0.0018;
 uniform sampler2D shadowMap;
 
@@ -70,5 +69,7 @@ void main()
     gAlbedo = albedo;
     gPosition = fragPos;
     gNormal = normal;
-    gMetallicRough = vec3(metallic, roughness, ShadowCalculation(fragPosLightSpace, normal, vec3(1)));
+
+    float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, vec3(1));
+    gMetallicRough = vec3(metallic, roughness, shadowCalc);
 }

@@ -28,7 +28,6 @@ namespace Modine
                 StartFocused = true,
                 WindowState = WindowState.Normal,
                 API = ContextAPI.OpenGL,
-                Profile = ContextProfile.Core,
                 APIVersion = new  Version(3, 3),
                 Flags = ContextFlags.Debug
             })
@@ -36,7 +35,7 @@ namespace Modine
             CenterWindow();
             viewportSize = this.Size;
             previousViewportSize = viewportSize;
-            
+
             PBRShader = new  Shader("Shaders/PBR/mesh.vert", "Shaders/PBR/mesh.frag");
             shadowShader = new  Shader("Shaders/PBR/shadow.vert", "Shaders/PBR/shadow.frag");
             lightShader = new  Shader("Shaders/Lights/light.vert", "Shaders/Lights/light.frag");
@@ -103,6 +102,8 @@ namespace Modine
 
             VSync = VSyncMode.On;
 
+            
+
             FBO = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
 
@@ -123,7 +124,7 @@ namespace Modine
 
             defferedShader.SetVector3("ambient", ambient);
             defferedShader.SetVector3("direction", SunDirection);
-            PBRShader.SetFloat("shadowFactor", shadowFactor);
+            defferedShader.SetFloat("shadowFactor", shadowFactor);
 
             krissVectorMat = new ("VectorMat", new (1), 1, 1, 0, PBRShader,
                 Texture.LoadFromFile("Resources/1_Albedo.png"),

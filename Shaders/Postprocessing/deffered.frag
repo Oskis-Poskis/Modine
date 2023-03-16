@@ -1,5 +1,7 @@
 #version 330 core
 
+in vec2 UV;
+
 uniform sampler2D gAlbedo;
 uniform sampler2D depth;
 uniform sampler2D gPosition;
@@ -7,11 +9,11 @@ uniform sampler2D gNormal;
 uniform sampler2D gMetallicRough;
 
 uniform vec3 ambient;
-
 uniform vec3 viewPos;
 uniform vec3 direction;
 uniform float dirStrength = 1;
 uniform int countPL = 0;
+uniform float shadowFactor = 0.75;
 
 const float constant = 1;
 const float linear = 0.09;
@@ -119,33 +121,37 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
     return (kD * alb / PI + specular) * radiance * NDotL;
 }
 
+out vec4 fragColor;
+
 void main()
 {
-    vec4 color = texture(gAlbedo, UV);
+    vec3 albedo = texture(gAlbedo, UV).rgb;
     float _depth = texture(depth, UV).r;
     vec4 fragPos = texture(gPosition, UV);
     vec3 N = texture(gNormal, UV).rgb;
     vec3 MetRoughShadow = texture(gMetallicRough, UV).rgb;
 
-    {
-        vec3 result = vec3(0);
-        vec3 V = normalize(viewPos - fragPos);
+    float metallic = MetRoughShadow.r;
+    float roughness = MetRoughShadow.g;
+    float shadow = MetRoughShadow.b;
 
-        vec3 F0 = vec3(0.04);
-        F0 = mix(F0, albedo, metallic);
+    vec3 result = vec3(0);
+    vec3 V = normalize(viewPos - fragPos.rgb);
 
-        vec3 dirLighting = vec3(0.0);
-        dirLighting += CalcDirectionalLight(direction, V, N, F0, albedo, roughness, metallic);
-        dirLighting = pow(dirLighting, vec3(1 / 2.2));
+    vec3 F0 = vec3(0.04);
+    F0 = mix(F0, albedo, metallic);
 
-        vec3 pointLighting = vec3(0);
-        for (int i = 0; i < countPL; i++) pointLighting += CalcPointLight(pointLights[i], V, N, F0, albedo, roughness, metallic);
-        pointLighting = pow(pointLighting, vec3(1 / 2.2));
+    vec3 dirLighting = vec3(0.0);
+    dirLighting += CalcDirectionalLight(direction, V, N, F0, albedo, roughness, metallic);
+    dirLighting = pow(dirLighting, vec3(1 / 2.2));
 
-        float shadow = MetRoughShadow.g;
-        result = dirLighting * (1 - shadow * shadowFactor) + (albedo * ambient);
-        result += pointLighting;
-    }
+    vec3 pointLighting = vec3(0);
+    for (int i = 0; i < countPL; i++) pointLighting +=
+    CalcPointLight(pointLights[i], V, N, F0, albedo, roughness, metallic, fragPos.xyz);
+    pointLighting = pow(pointLighting, vec3(1 / 2.2));
+
+    result = dirLighting * (1 - shadow * shadowFactor) + (albedo * ambient);
+    result += pointLighting;
 
     fragColor = vec4(result, 1);
 }

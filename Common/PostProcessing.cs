@@ -76,8 +76,6 @@ namespace Modine.Common
 
         public static void RenderDefferedRect(ref Shader defferedShader, int depthStencilTexture, int gAlbedo, int gPosition, int gNormal, int gMetallicRough)
         {
-            
-
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, gAlbedo);

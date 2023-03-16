@@ -576,7 +576,7 @@ namespace Modine.ImGUI
                 if (ImGui.SliderFloat("##Shadow Factor", ref shadowFac, 0, 1))
                 {
                     ShadowFactor = shadowFac;
-                    defshader.SetFloat("shadowFactor", ShadowFactor);
+                    PBRshader.SetFloat("shadowFactor", ShadowFactor);
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));

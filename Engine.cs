@@ -313,8 +313,6 @@ namespace Modine
 
         public void RenderScene(double time)
         {
-            count_Meshes = 0;
-            count_PointLights = 0;
             RenderClass.RenderShadowScene(shadowRes, ref depthMapFBO, lightSpaceMatrix, ref sceneObjects, shadowShader);
 
             // Render normal scene
@@ -324,6 +322,7 @@ namespace Modine
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
 
+            count_Meshes = 0; count_PointLights = 0;
             if (sceneObjects.Count > 0)
             {
                 foreach (SceneObject sceneObject in sceneObjects)

@@ -46,16 +46,16 @@ namespace Modine.Rendering
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, eboHandle);
             GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
-            GL.EnableVertexAttribArray(shader.GetAttribLocation("aPosition"));
-            GL.VertexAttribPointer(shader.GetAttribLocation("aPosition"), 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(shader.GetAttribLocation("aNormals"));
-            GL.VertexAttribPointer(shader.GetAttribLocation("aNormals"), 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 3 * sizeof(float));
-            GL.EnableVertexAttribArray(shader.GetAttribLocation("aUVs"));
-            GL.VertexAttribPointer(shader.GetAttribLocation("aUVs"), 2, VertexAttribPointerType.Float, false, 14 * sizeof(float), 6 * sizeof(float));
-            GL.EnableVertexAttribArray(shader.GetAttribLocation("aTangents"));
-            GL.VertexAttribPointer(shader.GetAttribLocation("aTangents"), 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 9 * sizeof(float));
-            GL.EnableVertexAttribArray(shader.GetAttribLocation("aBiTangents"));
-            GL.VertexAttribPointer(shader.GetAttribLocation("aBiTangents"), 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 11 * sizeof(float));
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(1);
+            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 3 * sizeof(float));
+            GL.EnableVertexAttribArray(2);
+            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, 14 * sizeof(float), 6 * sizeof(float));
+            GL.EnableVertexAttribArray(3);
+            GL.VertexAttribPointer(3, 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 9 * sizeof(float));
+            GL.EnableVertexAttribArray(4);
+            GL.VertexAttribPointer(4, 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 11 * sizeof(float));
             
             meshName = Name;
             vertexCount = indices.Length;

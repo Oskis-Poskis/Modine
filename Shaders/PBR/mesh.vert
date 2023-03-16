@@ -1,10 +1,10 @@
 #version 330 core
 
-in vec3 aPosition;
-in vec3 aNormals;
-in vec2 aUVs;
-in vec3 aTangents;
-in vec3 aBiTangents;
+layout(location = 0) in vec3 aPosition;
+layout(location = 1) in vec3 aNormals;
+layout(location = 2) in vec2 aUVs;
+layout(location = 3) in vec3 aTangents;
+layout(location = 4) in vec3 aBiTangents;
 
 out vec2 UVs;
 out vec3 normals;

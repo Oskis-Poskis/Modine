@@ -28,6 +28,7 @@ namespace Modine
                 StartFocused = true,
                 WindowState = WindowState.Normal,
                 API = ContextAPI.OpenGL,
+                Profile = ContextProfile.Core,
                 APIVersion = new  Version(3, 3),
                 Flags = ContextFlags.Debug
             })
@@ -147,8 +148,8 @@ namespace Modine
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
 
-            int numRows = 10;
-            int numCols = 10;
+            int numRows = 3;
+            int numCols = 3;
             int spacing = 5;
             int startX = -((numCols - 1) * spacing) / 2;
             int startY = -((numRows - 1) * spacing) / 2;
@@ -423,7 +424,7 @@ namespace Modine
             Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix, numAOSamples);
             //Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture, SSAOblur);
-            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+            //Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
 
             GL.Finish();
 
@@ -435,6 +436,7 @@ namespace Modine
 
             // Resize depth and framebuffer texture if size has changed
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gPosition, ref gNormal, ref gMetallicRough, ref SSAOblur);
+            GL.Finish();
 
             OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
             if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());

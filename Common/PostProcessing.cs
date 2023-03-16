@@ -179,10 +179,12 @@ namespace Modine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
             outlineShader.SetInt("stencilTexture", 1);
 
+            /*
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, SSAOblur);
             outlineShader.SetInt("SSAOblur", 2);
+            */
 
             // Render quad with framebuffer and added outline
             GL.Disable(EnableCap.DepthTest);

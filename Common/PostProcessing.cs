@@ -74,6 +74,43 @@ namespace Modine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
         }
 
+        public static void RenderDefferedRect(ref Shader defferedShader, int depthStencilTexture, int gAlbedo, int gPosition, int gNormal, int gMetallicRough)
+        {
+            
+
+            // Bind framebuffer texture
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, gAlbedo);
+            defferedShader.SetInt("gAlbedo", 0);
+            
+            // Bind depth texture
+            GL.ActiveTexture(TextureUnit.Texture1);
+            GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
+            defferedShader.SetInt("depth", 1);
+
+            // Bind position texture
+            GL.ActiveTexture(TextureUnit.Texture2);
+            GL.BindTexture(TextureTarget.Texture2D, gPosition);
+            defferedShader.SetInt("gPosition", 2);
+
+            // Bind normal texture
+            GL.ActiveTexture(TextureUnit.Texture3);
+            GL.BindTexture(TextureTarget.Texture2D, gNormal);
+            defferedShader.SetInt("gNormal", 3);
+        
+            // Bind Metallic and Roughness texture
+            GL.ActiveTexture(TextureUnit.Texture4);
+            GL.BindTexture(TextureTarget.Texture2D, gMetallicRough);
+            defferedShader.SetInt("gMetallicRough", 4);
+
+            // Render quad with framebuffer and postprocessing
+            GL.BindVertexArray(VAO);
+            GL.Disable(EnableCap.DepthTest);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+            GL.Enable(EnableCap.DepthTest);
+        }
+
         public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gPosition, int gNormal, Matrix4 projectionMatrix, int numSamples)
         {
             postprocessShader.Use();

@@ -9,11 +9,9 @@ in vec3 aBiTangents;
 out vec2 UVs;
 out vec3 normals;
 out vec3 fragPos;
-out mat3 TBN;
-
 out vec3 fragPosViewSpace;
-out vec3 normalsViewSpace;
 out vec4 fragPosLightSpace;
+out mat3 TBN;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -30,7 +28,6 @@ void main(void)
 
     fragPosLightSpace = vec4(fragPos, 1.0) * lightSpaceMatrix;
     fragPosViewSpace = (vec4(aPosition, 1.0) * model * view).xyz;
-    normalsViewSpace = aNormals * mat3(transpose(inverse(model * view)));
 
     vec3 T = normalize(vec3(aTangents * mat3(transpose(inverse(model)))));
     vec3 B = normalize(vec3(aBiTangents * mat3(transpose(inverse(model)))));

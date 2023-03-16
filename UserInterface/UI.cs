@@ -455,7 +455,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref float camSpeed, ref bool vsyncOn, ref bool showDepth, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref int numAOsamples, ref Shader shader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader SSAOshader)
+        public static void Settings(ref float camSpeed, ref bool vsyncOn, ref bool showDepth, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref int numAOsamples, ref Shader defshader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader SSAOshader, ref Shader PBRshader)
         {
             ImGui.Begin("Settings");
 
@@ -539,7 +539,7 @@ namespace Modine.ImGUI
                 if (ImGui.SliderFloat3("##Sun Direction", ref dir, -1, 1))
                 {
                     direction = new(dir.X, dir.Y, dir.Z);
-                    shader.SetVector3("direction", direction);
+                    defshader.SetVector3("direction", direction);
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -547,7 +547,7 @@ namespace Modine.ImGUI
                 ImGui.Text("Sun Strength");
                 if (ImGui.SliderFloat("##Strength", ref strength, 0, 10, "%.1f"))
                 {
-                    shader.SetFloat("dirStrength", strength);
+                    defshader.SetFloat("dirStrength", strength);
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -557,7 +557,7 @@ namespace Modine.ImGUI
                 if (ImGui.ColorPicker3("##Ambient Color", ref color, ImGuiColorEditFlags.NoInputs))
                 {
                     ambient = new(color.X, color.Y, color.Z);
-                    shader.SetVector3("ambient", ambient);
+                    defshader.SetVector3("ambient", ambient);
                 }
 
                 ImGui.TreePop();
@@ -576,7 +576,7 @@ namespace Modine.ImGUI
                 if (ImGui.SliderFloat("##Shadow Factor", ref shadowFac, 0, 1))
                 {
                     ShadowFactor = shadowFac;
-                    shader.SetFloat("shadowFactor", ShadowFactor);
+                    PBRshader.SetFloat("shadowFactor", ShadowFactor);
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -584,7 +584,7 @@ namespace Modine.ImGUI
                 ImGui.Text("Shadow Bias");
                 if (ImGui.SliderFloat("##Shadow Bias", ref shadowBias, 0.0001f, 0.01f))
                 {
-                    shader.SetFloat("shadowBias", shadowBias);
+                    PBRshader.SetFloat("shadowBias", shadowBias);
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -757,7 +757,7 @@ namespace Modine.ImGUI
             ImGui.GetStyle().WindowBorderSize = 0;
             ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;
             ImGui.GetStyle().SelectableTextAlign = new(0.02f, 0);
-            
+            ImGui.GetStyle().PopupBorderSize = 0;
             ImGui.GetStyle().GrabMinSize = 15;
             ImGui.GetStyle().GrabRounding = 2;
             

@@ -25,7 +25,6 @@ struct Material {
 };
 
 uniform Material material;
-
 uniform float shadowBias = 0.0018;
 uniform sampler2D shadowMap;
 
@@ -70,6 +69,6 @@ void main()
     gPosition = fragPos;
     gNormal = normal;
 
-    float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, vec3(1));
+    float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, vec3(1, 1, 1));
     gMetallicRough = vec3(metallic, roughness, shadowCalc);
 }

@@ -27,17 +27,7 @@ vec3 ACESFilm(vec3 x) {
     float c = 2.43;
     float d = 0.59;
     float e = 0.14;
-    return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
-}
-
-float gamma = 2.2;
-
-vec3 simpleReinhardToneMapping(vec3 color)
-{
-	float exposure = 1.0;
-	color *= exposure/(1. + color / exposure);
-	color = pow(color, vec3(1. / gamma));
-	return color;
+    return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 5.0);
 }
 
 float near = 0.1; 
@@ -55,7 +45,7 @@ void main()
     if (ACES && !showDepth) color = ACESFilm(color);
     if (showDepth) color = vec3(LinearizeDepth(texture(depth, UV).r) / far);
 
-    if (ssaoOnOff)
+    if (!ssaoOnOff)
     {
         vec2 noiseScale = vec2(textureSize(gNormal, 0).x / 4, textureSize(gNormal, 0).y / 4);
 

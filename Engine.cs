@@ -102,8 +102,6 @@ namespace Modine
 
             VSync = VSyncMode.On;
 
-            
-
             FBO = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
 
@@ -149,6 +147,28 @@ namespace Modine
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
 
+            int numRows = 10;
+            int numCols = 10;
+            int spacing = 5;
+            int startX = -((numCols - 1) * spacing) / 2;
+            int startY = -((numRows - 1) * spacing) / 2;
+
+            for (int row = 0; row < numRows; row++)
+            {
+                for (int col = 0; col < numCols; col++)
+                {
+                    int x = startX + col * spacing;
+                    int z = startY + row * spacing;
+                    Light light = new(lightShader, GetRandomBrightColor(), 1);
+                    SceneObject _light = new(lightShader, NewName("Light"), light);
+                    _light.Position.X = x;
+                    _light.Position.Z = z;
+                    _light.Position.Y = 2;
+
+                    sceneObjects.Add(_light);
+                }
+            }
+
             count_Meshes = 0;
             count_PointLights = 0;
             foreach (SceneObject sceneObject in sceneObjects)
@@ -163,6 +183,24 @@ namespace Modine
             ImGuiWindows.LoadTheme();
 
             GLFW.MaximizeWindow(WindowPtr);
+        }
+
+        public static Vector3 GetRandomBrightColor()
+        {
+            Random rand = new Random();
+            float r = (float)rand.NextDouble(); // random value between 0 and 1
+            float g = (float)rand.NextDouble();
+            float b = (float)rand.NextDouble();
+            // Make sure at least two of the three color components are greater than 0.5
+            int numComponentsOverHalf = (r > 0.5f ? 1 : 0) + (g > 0.5f ? 1 : 0) + (b > 0.5f ? 1 : 0);
+            while (numComponentsOverHalf < 2)
+            {
+                r = (float)rand.NextDouble();
+                g = (float)rand.NextDouble();
+                b = (float)rand.NextDouble();
+                numComponentsOverHalf = (r > 0.5f ? 1 : 0) + (g > 0.5f ? 1 : 0) + (b > 0.5f ? 1 : 0);
+            }
+            return new Vector3(r, g, b);
         }
 
         bool isObjectPickedUp = false;
@@ -377,14 +415,17 @@ namespace Modine
 
             // Use different shaders for engine and viewport effects
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            
             defferedShader.Use();
             defferedShader.SetInt("countPL", count_PointLights);
-            defferedShader.SetVector3("viewPos", camera.position);  
+            defferedShader.SetVector3("viewPos", camera.position); 
+
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gPosition, gNormal, gMetallicRough);
-            //Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix, numAOSamples);
+            Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix, numAOSamples);
             //Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
-            //Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture, SSAOblur);
-            //Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+            Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture, SSAOblur);
+            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+
             GL.Finish();
 
             // Draw lights after postprocessing to avoid overlaps

@@ -241,12 +241,9 @@ namespace Modine.ImGUI
                     ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                    SN.Vector3 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z);
-                    if (ImGui.TreeNode("Albedo"))
-                    {
-                        if (ImGui.ColorPicker3("##Albedo", ref color, ImGuiColorEditFlags.NoInputs)) _material.Color = new(color.X, color.Y, color.Z);
-                        ImGui.TreePop();
-                    }
+                    SN.Vector4 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z, 1);
+                    ImGui.Text("Albedo");
+                    if (ImGui.ColorEdit4("##colbutton", ref color)) _material.Color = new(color.X, color.Y, color.Z);
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     
@@ -641,7 +638,7 @@ namespace Modine.ImGUI
         {
             ImGui.BeginMainMenuBar();
 
-             if (ImGui.BeginMenu("File"))
+            if (ImGui.BeginMenu("File"))
             {
                 ImGui.EndMenu();
             }
@@ -749,26 +746,30 @@ namespace Modine.ImGUI
             ImGui.GetStyle().FrameRounding = 2;
             ImGui.GetStyle().FrameBorderSize = 2;
             ImGui.GetStyle().FramePadding = new System.Numerics.Vector2(4);
+            ImGui.GetStyle().ChildBorderSize = 0;
             ImGui.GetStyle().CellPadding = new SN.Vector2(3, 3);
             ImGui.GetStyle().ItemSpacing = new System.Numerics.Vector2(4, 2);
             ImGui.GetStyle().ItemInnerSpacing = new System.Numerics.Vector2(0, 4);
-            ImGui.GetStyle().WindowPadding = new System.Numerics.Vector2(4, 2);
-            ImGui.GetStyle().TabRounding = 2;
-            ImGui.GetStyle().WindowRounding = 5;
+            ImGui.GetStyle().WindowPadding = new System.Numerics.Vector2(2, 2);
+            ImGui.GetStyle().TabRounding = 4;
+            ImGui.GetStyle().ColorButtonPosition = ImGuiDir.Left;
+            ImGui.GetStyle().WindowRounding = 3;
+            ImGui.GetStyle().WindowBorderSize = 0;
             ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;
             ImGui.GetStyle().SelectableTextAlign = new(0.02f, 0);
             
             ImGui.GetStyle().GrabMinSize = 15;
+            ImGui.GetStyle().GrabRounding = 2;
             
             ImGui.PushStyleColor(ImGuiCol.Text, new System.Numerics.Vector4(230, 230, 230, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.Border, new System.Numerics.Vector4(25, 25, 25, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.MenuBarBg, new System.Numerics.Vector4(15, 15, 15, 200f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.Border, new System.Numerics.Vector4(65, 65, 65, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.MenuBarBg, new System.Numerics.Vector4(30, 30, 30, 200f) / 255);
             ImGui.PushStyleColor(ImGuiCol.CheckMark, new System.Numerics.Vector4(255, 140, 0, 255) / 255);
             ImGui.PushStyleColor(ImGuiCol.PopupBg, new System.Numerics.Vector4(12, 12, 12, 255) / 255);
 
             // Background color
-            ImGui.PushStyleColor(ImGuiCol.WindowBg, new System.Numerics.Vector4(15f, 15f, 15f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.FrameBg, new System.Numerics.Vector4(15f, 15f, 15f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.WindowBg, new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.FrameBg, new System.Numerics.Vector4(45f, 45f, 45f, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new System.Numerics.Vector4(40f, 40f, 40f, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new System.Numerics.Vector4(80f, 80f, 80f, 255f) / 255);
 
@@ -777,9 +778,9 @@ namespace Modine.ImGUI
             ImGui.PushStyleColor(ImGuiCol.TextDisabled, new System.Numerics.Vector4(150f, 150f, 150f, 255f) / 255);
 
             // Titles
-            ImGui.PushStyleColor(ImGuiCol.TitleBgActive, new System.Numerics.Vector4(15f, 15f, 15f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.TitleBg, new System.Numerics.Vector4(15f, 15f, 15f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.TitleBgCollapsed, new System.Numerics.Vector4(15f, 15f, 15f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.TitleBgActive, new System.Numerics.Vector4(14f, 14f, 15f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.TitleBg, new System.Numerics.Vector4(14f, 14f, 14f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.TitleBgCollapsed, new System.Numerics.Vector4(14f, 14f, 14f, 255f) / 255);
 
             // Tabs
             ImGui.PushStyleColor(ImGuiCol.Tab, new System.Numerics.Vector4(15f, 15f, 15f, 255f) / 255);

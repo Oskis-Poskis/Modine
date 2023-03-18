@@ -14,7 +14,7 @@ out vec4 fragColor;
 // Modification of: https://www.shadertoy.com/view/sltcRf
 void main()
 {
-    vec4 color = texture(frameBufferTexture, UV);
+    vec4 color = vec4(texture(frameBufferTexture, UV).rgb, 1);
     float stencil = texture(stencilTexture, UV).r;
     // float ao = texture(SSAOblur, UV).r;
     

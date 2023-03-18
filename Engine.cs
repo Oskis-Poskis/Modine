@@ -312,6 +312,8 @@ namespace Modine
             ImGuiController.WindowResized(e.Width, e.Height);
         }
 
+        int selection = 0;
+
         public void RenderScene(double time)
         {
             RenderClass.RenderShadowScene(shadowRes, ref depthMapFBO, lightSpaceMatrix, ref sceneObjects, shadowShader);
@@ -420,13 +422,12 @@ namespace Modine
             defferedShader.SetInt("countPL", count_PointLights);
             defferedShader.SetVector3("viewPos", camera.position); 
 
+            GL.Finish();
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gPosition, gNormal, gMetallicRough);
             Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix, numAOSamples);
             //Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture, SSAOblur);
             //Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
-
-            GL.Finish();
 
             // Draw lights after postprocessing to avoid overlaps
             lightShader.Use();
@@ -436,7 +437,6 @@ namespace Modine
 
             // Resize depth and framebuffer texture if size has changed
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gPosition, ref gNormal, ref gMetallicRough, ref SSAOblur);
-            GL.Finish();
 
             OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
             if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());
@@ -689,6 +689,11 @@ namespace Modine
 
             if (viewportHovered)
             {
+                if (e.Key == Keys.D5) selection = 0;
+                if (e.Key == Keys.D6) selection = 1;
+                if (e.Key == Keys.D7) selection = 2;
+                if (e.Key == Keys.D8) selection = 3;
+
                 //if (e.Key == Keys.Escape) Close();
                 if (e.Key == Keys.D1)
                 {

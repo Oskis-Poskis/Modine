@@ -155,7 +155,9 @@ namespace Modine.ImGUI
                 Convert.ToInt32(ImGui.GetWindowPos().Y));
 
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
-            ImGui.Image((IntPtr)framebufferTexture, new(windowSize.X, windowSize.Y), new(0, 1), new(1, 0), SN.Vector4.One, new(0));
+            
+            
+            ImGui.Image((IntPtr)framebufferTexture, new(windowSize.X, windowSize.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
 
             viewportHovered = ImGui.IsWindowHovered() ? true : false;
             ImGui.End();

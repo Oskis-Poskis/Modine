@@ -148,8 +148,8 @@ namespace Modine
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
 
-            int numRows = 3;
-            int numCols = 3;
+            int numRows = 5;
+            int numCols = 5;
             int spacing = 5;
             int startX = -((numCols - 1) * spacing) / 2;
             int startY = -((numRows - 1) * spacing) / 2;
@@ -357,7 +357,7 @@ namespace Modine
 
                 GL.ActiveTexture(TextureUnit.Texture4);
                 GL.BindTexture(TextureTarget.Texture2D, depthMap);
-                GL.DrawBuffers(5, new  DrawBuffersEnum[] { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3, DrawBuffersEnum.ColorAttachment4 });
+                GL.DrawBuffers(6, new  DrawBuffersEnum[] { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3, DrawBuffersEnum.ColorAttachment4, DrawBuffersEnum.ColorAttachment5 });
                 PBRShader.Use();
                 PBRShader.SetMatrix4("projection", projectionMatrix);
                 PBRShader.SetMatrix4("view", viewMatrix);
@@ -424,10 +424,13 @@ namespace Modine
 
             GL.Finish();
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gPosition, gNormal, gMetallicRough);
+            
+            postprocessShader.Use();
             Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix, numAOSamples);
+            
             //Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture, SSAOblur);
-            //Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
 
             // Draw lights after postprocessing to avoid overlaps
             lightShader.Use();
@@ -453,8 +456,7 @@ namespace Modine
             if (!fullscreen)
             {
                 ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes);
-                ImGuiWindows.ContentBrowser();
-                ImGuiWindows.ShadowView(depthMap);
+                ImGuiWindows.AssetBrowser();
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);

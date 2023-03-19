@@ -146,8 +146,7 @@ void main()
     dirLighting = pow(dirLighting, vec3(1 / 2.2));
 
     vec3 pointLighting = vec3(0);
-    for (int i = 0; i < countPL; i++) pointLighting +=
-    CalcPointLight(pointLights[i], V, N, F0, albedo, roughness, metallic, fragPos.xyz);
+    for (int i = 0; i < countPL; i++) pointLighting += CalcPointLight(pointLights[i], V, N, F0, albedo, roughness, metallic, fragPos.xyz);
     pointLighting = pow(pointLighting, vec3(1 / 2.2));
 
     result = dirLighting * (1 - shadow * shadowFactor) + (albedo * ambient);

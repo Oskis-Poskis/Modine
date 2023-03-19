@@ -6,7 +6,7 @@ uniform bool ssaoOnOff = true;
 uniform int gaussianRadius = 3;
 
 in vec2 UV;
-layout(location = 3) out vec4 blurao;
+layout(location = 5) out vec4 blurao;
 
 void main()
 {

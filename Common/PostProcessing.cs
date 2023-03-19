@@ -111,7 +111,7 @@ namespace Modine.Common
 
         public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gPosition, int gNormal, Matrix4 projectionMatrix, int numSamples)
         {
-            postprocessShader.Use();
+            
 
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -179,12 +179,10 @@ namespace Modine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
             outlineShader.SetInt("stencilTexture", 1);
 
-            /*
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, SSAOblur);
             outlineShader.SetInt("SSAOblur", 2);
-            */
 
             // Render quad with framebuffer and added outline
             GL.Disable(EnableCap.DepthTest);

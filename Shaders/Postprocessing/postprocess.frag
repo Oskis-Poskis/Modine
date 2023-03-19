@@ -45,7 +45,7 @@ void main()
     if (ACES && !showDepth) color = ACESFilm(color);
     if (showDepth) color = vec3(LinearizeDepth(texture(depth, UV).r) / far);
 
-    if (!ssaoOnOff)
+    if (ssaoOnOff)
     {
         vec2 noiseScale = vec2(textureSize(gNormal, 0).x / 4, textureSize(gNormal, 0).y / 4);
 
@@ -75,7 +75,7 @@ void main()
 
         occlusion = 1.0 - (occlusion / kernelSize);
         occlusion = pow(occlusion, SSAOpower);
-        fragColor = vec4(color, occlusion);
+        fragColor = vec4(color, 1);
     }
     else fragColor = vec4(color, 1);
 }

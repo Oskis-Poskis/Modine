@@ -71,8 +71,10 @@ namespace Modine.ImGUI
                     ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                    if (ImGui.TreeNode("Transform"))
+                    if (ImGui.CollapsingHeader("Transform"))
                     {
+                        ImGui.Indent();
+
                         ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                         SN.Vector3 tempPos = new(_sceneObject.Position.X, _sceneObject.Position.Y, _sceneObject.Position.Z);
@@ -99,6 +101,8 @@ namespace Modine.ImGUI
                         {
                             sceneObjects[selectedObject].Scale = new(tempScale.X, tempScale.Y, tempScale.Z);
                         }
+
+                        ImGui.Unindent();
                     }
 
                     else if (_sceneObject.Type == SceneObjectType.Light)
@@ -136,7 +140,7 @@ namespace Modine.ImGUI
 
                     SN.Vector3 color = new(_sceneObject.Light.lightColor.X, _sceneObject.Light.lightColor.Y, _sceneObject.Light.lightColor.Z);
                     ImGui.Text("Albedo");
-                    if (ImGui.ColorPicker3("##Albedo", ref color, ImGuiColorEditFlags.NoInputs))
+                    if (ImGui.ColorPicker3("##Albedo", ref color))
                     {
                         _sceneObject.Light.lightColor = new(color.X, color.Y, color.Z);
                     }
@@ -200,7 +204,11 @@ namespace Modine.ImGUI
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
+                    ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
+                    ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(20, 20, 20, 255f) / 255));
                     ImGui.ListBox("##Materials", ref sceneObjects[selectedIndex].Mesh.MaterialIndex, materialNames, materialNames.Length);
+                    ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(45f, 45f, 45f, 255f) / 255));
+                    ImGui.PopItemWidth();
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -360,49 +368,76 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        private static string selectedFolderPath = "";
+        private static string selectedFolderPath = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
+        private static Texture folderIcon = Texture.LoadFromFile("Resources/FolderIcon.png");
+        private static Texture idk = Texture.LoadFromFile("Resources/failedtoload.png");
 
-        public static void ContentBrowser()
+        public static void AssetBrowser()
         {
-            ImGui.Begin("Content Browser");
-
-            // Split the window vertically
-            ImGui.BeginChild("LeftPane", new(ImGui.GetWindowWidth() * 0.15f, 0), true);
+            ImGui.Begin("Folder View");
             
             string enginePath = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
             DirectoryInfo directoryInfo = new DirectoryInfo(enginePath);
 
-            foreach (var directory in directoryInfo.GetDirectories())
+            if (ImGui.CollapsingHeader("Folders"))
             {
-                string folderName = directory.Name;         
-                bool hasSubdirectories = directory.GetDirectories().Length > 0;
-                bool isNodeOpen = false;
+                foreach (var directory in directoryInfo.GetDirectories())
+                {
+                    string folderName = directory.Name;         
+                    bool hasSubdirectories = directory.GetDirectories().Length > 0;
+                    bool isNodeOpen = false;
 
-                if (hasSubdirectories)
-                {
-                    isNodeOpen = ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.SpanAvailWidth);
-                    if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) selectedFolderPath = directory.FullName;
-                }
-                else
-                {
-                    ImGui.Indent(20);
-                    if (ImGui.Selectable(folderName, false, ImGuiSelectableFlags.SpanAllColumns)) selectedFolderPath = directory.FullName;
-                    ImGui.Unindent();
-                }
+                    if (hasSubdirectories)
+                    {
+                        isNodeOpen = ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.SpanAvailWidth);
+                        if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) selectedFolderPath = directory.FullName;
+                    }
+                    else
+                    {
+                        ImGui.Indent(20);
+                        if (ImGui.Selectable(folderName, false, ImGuiSelectableFlags.SpanAllColumns)) selectedFolderPath = directory.FullName;
+                        ImGui.Unindent();
+                    }
 
-                if (isNodeOpen)
-                {
-                    foreach (var subdirectory in directory.GetDirectories()) ShowSubdirectory(subdirectory);
-                    ImGui.TreePop();
+                    if (isNodeOpen)
+                    {
+                        foreach (var subdirectory in directory.GetDirectories()) ShowSubdirectory(subdirectory);
+                        ImGui.TreePop();
+                    }
                 }
             }
-            ImGui.EndChild();
 
-            ImGui.SameLine();
-
-            ImGui.BeginChild("RightPane", new(ImGui.GetContentRegionAvail().X, 0), true);
+            ImGui.End();
+        
+            ImGui.Begin("Asset Browser");
+            
             ImGui.Text(selectedFolderPath);
-            ImGui.EndChild();
+            ImGui.Separator();
+
+            string[] files = System.IO.Directory.GetFileSystemEntries(selectedFolderPath);
+
+            float thumbnailSize = 100f;
+            float spacing = 10f;
+            float contentWidth = ImGui.GetContentRegionAvail().X;
+            int numColumns = Convert.ToInt32(Math.Floor((contentWidth + spacing) / (thumbnailSize + spacing)));
+            numColumns = Math.Max(numColumns, 1);
+
+            ImGui.Columns(numColumns, "AssetGrid", false);
+            foreach (string file in files)
+            {
+                string fileName = System.IO.Path.GetFileName(file);
+
+                int crntHandle = idk.Handle;
+                if (Directory.Exists(file)) crntHandle = folderIcon.Handle;
+
+                ImGui.Image((IntPtr)crntHandle, new(thumbnailSize), new(0, 1), new(1, 0));
+                ImGui.TextWrapped(fileName);
+
+                ImGui.NextColumn();
+            }
+
+            // End the grid layout
+            ImGui.Columns(1);
 
             ImGui.End();
         }
@@ -415,7 +450,7 @@ namespace Modine.ImGUI
 
             if (hasSubdirectories)
             {
-                bool isNodeOpen = ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.SpanAvailWidth);
+                bool isNodeOpen = ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.SpanFullWidth);
                 if (isNodeOpen)
                 {
                     foreach (var subdirectory in directory.GetDirectories())
@@ -434,7 +469,7 @@ namespace Modine.ImGUI
             else
             {
                 ImGui.Indent(20);
-                ImGui.Selectable(folderName, isSelected);
+                ImGui.Selectable(folderName, isSelected, ImGuiSelectableFlags.SpanAllColumns);
                 if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) selectedFolderPath = directory.FullName;
                 ImGui.Unindent();
             }
@@ -461,10 +496,10 @@ namespace Modine.ImGUI
         {
             ImGui.Begin("Settings");
 
-            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-            if (ImGui.TreeNode("Rendering"))
+            if (ImGui.CollapsingHeader("Rendering"))
             {
+                ImGui.Indent(20);
+
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 ImGui.Checkbox(" VSync", ref vsyncOn);
@@ -475,21 +510,18 @@ namespace Modine.ImGUI
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 if (ImGui.SliderInt(" Outline Steps", ref outlineSteps, 1, 32)) outlineShader.SetInt("numSteps", outlineSteps);
 
-                ImGui.TreePop();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Unindent();
             }
 
-            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-            ImGui.Separator();
-            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-            if (ImGui.TreeNode("Post Processing"))
+            if (ImGui.CollapsingHeader("Post Processing"))
             {
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 
-                if (ImGui.TreeNode("SSAO"))
+                ImGui.Indent(20);
+                if (ImGui.CollapsingHeader("SSAO"))
                 {
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                     if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff))
@@ -498,8 +530,6 @@ namespace Modine.ImGUI
                         SSAOshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
                     }
 
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     
                     ImGui.Text("SSAO Radius");
@@ -516,24 +546,29 @@ namespace Modine.ImGUI
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Text("Gaussian Radius");
                     if (ImGui.SliderInt("##Gaussian Radius", ref gaussianRadius, 1, 16)) SSAOshader.SetInt("gaussianRadius", gaussianRadius);
-
-                    ImGui.TreePop();
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
+                ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.Checkbox(" Tonemapping", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
+                
+                if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
+                
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Separator();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                ImGui.TreePop();
+                if (ImGui.Checkbox(" Tonemapping", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
+                
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Unindent();
             }
 
-            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-            ImGui.Separator();
-            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-            if (ImGui.TreeNode("Environment"))
+            if (ImGui.CollapsingHeader("Environment"))
             {
+                ImGui.Indent(20);
+
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 SN.Vector3 dir = new(direction.X, direction.Y, direction.Z);
@@ -556,20 +591,18 @@ namespace Modine.ImGUI
 
                 SN.Vector3 color = new(ambient.X, ambient.Y, ambient.Z);            
                 ImGui.Text("Ambient Color");
-                if (ImGui.ColorPicker3("##Ambient Color", ref color, ImGuiColorEditFlags.NoInputs))
+                if (ImGui.ColorEdit3("##Ambient Color", ref color))
                 {
                     ambient = new(color.X, color.Y, color.Z);
                     defshader.SetVector3("ambient", ambient);
                 }
 
-                ImGui.TreePop();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Unindent();
             }
 
-            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-            ImGui.Separator();
-            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-            if (ImGui.TreeNode("Shadows"))
+            if (ImGui.CollapsingHeader("Shadows"))
             {
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -600,15 +633,9 @@ namespace Modine.ImGUI
                     GL.BindTexture(TextureTarget.Texture2D, depthMap);
                     GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, shadowRes, shadowRes, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
                 }
-
-                ImGui.TreePop();
             }
 
-            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-            ImGui.Separator();
-            ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-            if (ImGui.TreeNode("Editor"))
+            if (ImGui.CollapsingHeader("Editor"))
             {
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -626,9 +653,7 @@ namespace Modine.ImGUI
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                if (ImGui.Checkbox(" Show ImGUI Demo", ref showImGUIdemo))
-
-                ImGui.TreePop();
+                ImGui.Checkbox(" Show ImGUI Demo", ref showImGUIdemo);
             }
 
             if (showImGUIdemo) ImGui.ShowDemoWindow();
@@ -658,7 +683,6 @@ namespace Modine.ImGUI
             float textWidth = ImGui.CalcTextSize("FPS: " + FPS.ToString("0") + "      " + GL.GetString(StringName.Renderer) + "      " + "ms: " + MS.ToString("0.00")).X;
             ImGui.SetCursorPosX(ImGui.GetWindowWidth() - textWidth - 10);
             ImGui.TextColored(new(0.5f), "FPS: " + FPS.ToString("0") + "      " + "ms: " + MS.ToString("0.00") + "      " + GL.GetString(StringName.Renderer));
-
 
             ImGui.EndMainMenuBar();
         }
@@ -792,9 +816,9 @@ namespace Modine.ImGUI
             ImGui.PushStyleColor(ImGuiCol.TabHovered, new System.Numerics.Vector4(80f, 80f, 80f, 255f) / 255);
             
             // Header
-            ImGui.PushStyleColor(ImGuiCol.Header, new System.Numerics.Vector4(0f, 153f, 76f, 255f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new System.Numerics.Vector4(0f, 153f, 76f, 180f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(0f, 153f, 76f, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.Header, new System.Numerics.Vector4(40, 40, 40, 255f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new System.Numerics.Vector4(100, 100, 100, 180f) / 255);
+            ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(70, 70, 70, 255f) / 255);
 
             // Rezising bar
             ImGui.PushStyleColor(ImGuiCol.Separator, new System.Numerics.Vector4(30f, 30f, 30f, 255) / 255);

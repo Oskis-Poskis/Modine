@@ -164,7 +164,7 @@ namespace Modine.Common
             GL.Enable(EnableCap.DepthTest);
         }
 
-        public static void RenderOutlineRect(ref Shader outlineShader, int frameBufferTexture, int depthStencilTexture, int SSAOblur)
+        public static void RenderOutlineRect(ref Shader outlineShader, int frameBufferTexture, int depthStencilTexture)
         {
             outlineShader.Use();
 

@@ -429,8 +429,8 @@ namespace Modine
             Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix, numAOSamples);
             
             //Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
-            Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture, SSAOblur);
-            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+            Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
+            //Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
 
             // Draw lights after postprocessing to avoid overlaps
             lightShader.Use();

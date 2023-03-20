@@ -427,7 +427,6 @@ namespace Modine
             
             postprocessShader.Use();
             Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix, numAOSamples);
-            
             //Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
             //Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);

@@ -385,13 +385,12 @@ namespace Modine.ImGUI
                 {
                     string folderName = directory.Name;         
                     bool hasSubdirectories = directory.GetDirectories().Length > 0;
-                    bool isNodeOpen = false;
 
                     if (hasSubdirectories)
                     {
                         if (ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.SpanAvailWidth))
                         {
-                            if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) selectedFolderPath = directory.FullName;
+                            selectedFolderPath = directory.FullName;
 
                             foreach (var subdirectory in directory.GetDirectories()) ShowSubdirectory(subdirectory);
                             ImGui.TreePop();
@@ -402,11 +401,6 @@ namespace Modine.ImGUI
                         ImGui.Indent(20);
                         if (ImGui.Selectable(folderName, false, ImGuiSelectableFlags.SpanAllColumns)) selectedFolderPath = directory.FullName;
                         ImGui.Unindent(20);
-                    }
-
-                    if (isNodeOpen)
-                    {
-
                     }
                 }
             }
@@ -455,8 +449,8 @@ namespace Modine.ImGUI
             {
                 if (ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.SpanFullWidth))
                 {
-                    foreach (var subdirectory in directory.GetDirectories()) ShowSubdirectory(subdirectory);
                     selectedFolderPath = directory.FullName;
+                    foreach (var subdirectory in directory.GetDirectories()) ShowSubdirectory(subdirectory);
 
                     ImGui.TreePop();
                 }
@@ -553,7 +547,7 @@ namespace Modine.ImGUI
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                if (ImGui.Checkbox(" Tonemapping", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
+                if (ImGui.Checkbox(" Tonemapping", ref ACESonoff)) defshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
                 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -572,6 +566,7 @@ namespace Modine.ImGUI
                 {
                     direction = new(dir.X, dir.Y, dir.Z);
                     defshader.SetVector3("direction", direction);
+                    PBRshader.SetVector3("direction", direction);
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));

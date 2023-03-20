@@ -15,6 +15,8 @@ uniform float dirStrength = 1;
 uniform int countPL = 0;
 uniform float shadowFactor = 0.75;
 
+uniform bool ACES = true;
+
 const float constant = 1;
 const float linear = 0.09;
 const float quadratic = 0.032;
@@ -121,6 +123,15 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
     return (kD * alb / PI + specular) * radiance * NDotL;
 }
 
+vec3 ACESFilm(vec3 x) {
+    float a = 2.51;
+    float b = 0.03;
+    float c = 2.43;
+    float d = 0.59;
+    float e = 0.14;
+    return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 5.0);
+}
+
 out vec4 fragColor;
 
 void main()
@@ -151,6 +162,8 @@ void main()
 
     result = dirLighting * (1 - shadow * shadowFactor) + (albedo * ambient);
     result += pointLighting;
+
+    if (ACES) result.rgb = ACESFilm(result.rgb);
 
     fragColor = vec4(result, 1);
 }

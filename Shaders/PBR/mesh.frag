@@ -12,6 +12,8 @@ in vec3 fragPosViewSpace;
 in vec4 fragPosLightSpace;
 in mat3 TBN;
 
+uniform vec3 direction;
+
 struct Material {
     vec3 albedo;
     float metallic;
@@ -69,6 +71,6 @@ void main()
     gPosition = fragPos;
     gNormal = normal;
 
-    float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, vec3(1, 1, 1));
+    float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, direction);
     gMetallicRough = vec3(metallic, roughness, shadowCalc);
 }

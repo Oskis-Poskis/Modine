@@ -6,7 +6,6 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D texNoise;
 
-uniform bool ACES = true;
 uniform bool showDepth = false;
 
 uniform vec3 samples[128];
@@ -21,15 +20,6 @@ float bias = 0.025;
 in vec2 UV;
 out vec4 fragColor;
 
-vec3 ACESFilm(vec3 x) {
-    float a = 2.51;
-    float b = 0.03;
-    float c = 2.43;
-    float d = 0.59;
-    float e = 0.14;
-    return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 5.0);
-}
-
 float near = 0.1; 
 float far  = 100.0; 
 
@@ -42,9 +32,7 @@ float LinearizeDepth(float depth)
 void main()
 {
     vec3 color = texture(frameBufferTexture, UV).rgb;
-    if (ACES && !showDepth) color = ACESFilm(color);
     if (showDepth) color = vec3(LinearizeDepth(texture(depth, UV).r) / far);
-
     if (ssaoOnOff)
     {
         vec2 noiseScale = vec2(textureSize(gNormal, 0).x / 4, textureSize(gNormal, 0).y / 4);
@@ -77,5 +65,6 @@ void main()
         occlusion = pow(occlusion, SSAOpower);
         fragColor = vec4(color, 1);
     }
+
     else fragColor = vec4(color, 1);
 }

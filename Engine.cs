@@ -52,8 +52,8 @@ namespace Modine
 
         private Vector2i viewportPos, viewportSize, previousViewportSize;
 
-        Vector3 ambient = new (0.1f);
-        Vector3 SunDirection = new (1);
+        Vector3 ambient = new (0.04f);
+        Vector3 SunDirection = new(1);
         float shadowFactor = 0.75f;
         
         Material defaultMat, krissVectorMat;
@@ -123,6 +123,7 @@ namespace Modine
 
             defferedShader.SetVector3("ambient", ambient);
             defferedShader.SetVector3("direction", SunDirection);
+            PBRShader.SetVector3("direction", SunDirection);
             defferedShader.SetFloat("shadowFactor", shadowFactor);
 
             krissVectorMat = new ("VectorMat", new (1), 1, 1, 0, PBRShader,

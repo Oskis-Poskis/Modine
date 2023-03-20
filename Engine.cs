@@ -312,8 +312,6 @@ namespace Modine
             ImGuiController.WindowResized(e.Width, e.Height);
         }
 
-        int selection = 0;
-
         public void RenderScene(double time)
         {
             RenderClass.RenderShadowScene(shadowRes, ref depthMapFBO, lightSpaceMatrix, ref sceneObjects, shadowShader);
@@ -424,12 +422,10 @@ namespace Modine
 
             GL.Finish();
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gPosition, gNormal, gMetallicRough);
-            
-            postprocessShader.Use();
+            Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
             Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix, numAOSamples);
             //Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
-            Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
-            //Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
 
             // Draw lights after postprocessing to avoid overlaps
             lightShader.Use();
@@ -690,12 +686,6 @@ namespace Modine
 
             if (viewportHovered)
             {
-                if (e.Key == Keys.D5) selection = 0;
-                if (e.Key == Keys.D6) selection = 1;
-                if (e.Key == Keys.D7) selection = 2;
-                if (e.Key == Keys.D8) selection = 3;
-
-                //if (e.Key == Keys.Escape) Close();
                 if (e.Key == Keys.D1)
                 {
                     GL.Enable(EnableCap.CullFace);

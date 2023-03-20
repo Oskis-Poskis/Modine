@@ -2,7 +2,7 @@
 
 uniform sampler2D frameBufferTexture;
 uniform usampler2D stencilTexture;
-uniform sampler2D SSAOblur;
+//uniform sampler2D SSAOblur;
 uniform int numSteps = 12;
 uniform float radius = 3.0;
 
@@ -15,8 +15,8 @@ out vec4 fragColor;
 void main()
 {
     vec4 color = vec4(texture(frameBufferTexture, UV).rgb, 1);
-    float stencil = texture(stencilTexture, UV).r;
-    float ao = texture(SSAOblur, UV).r;
+    uint stencil = texture(stencilTexture, UV).r;
+    //float ao = texture(SSAOblur, UV).r;
     
     vec2 aspect = 1.0 / vec2(textureSize(stencilTexture, 0));
     float outlinemask = 0.0;

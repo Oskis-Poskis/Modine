@@ -111,7 +111,7 @@ namespace Modine.Common
 
         public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gPosition, int gNormal, Matrix4 projectionMatrix, int numSamples)
         {
-            
+            postprocessShader.Use();
 
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture0);

@@ -450,31 +450,22 @@ namespace Modine.ImGUI
         {
             string folderName = directory.Name;
             bool hasSubdirectories = directory.GetDirectories().Length > 0;
-            bool isSelected = selectedFolderPath == directory.FullName;
 
             if (hasSubdirectories)
             {
-                bool isNodeOpen = ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.SpanFullWidth);
-                if (isNodeOpen)
+                if (ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.SpanFullWidth))
                 {
-                    foreach (var subdirectory in directory.GetDirectories())
-                    {
-                        ShowSubdirectory(subdirectory);
-                    }
+                    foreach (var subdirectory in directory.GetDirectories()) ShowSubdirectory(subdirectory);
+                    selectedFolderPath = directory.FullName;
 
                     ImGui.TreePop();
                 }
-
-                if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
-                {
-                    selectedFolderPath = directory.FullName;
-                }
             }
+
             else
             {
                 ImGui.Indent(20);
-                ImGui.Selectable(folderName, isSelected, ImGuiSelectableFlags.SpanAllColumns);
-                if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) selectedFolderPath = directory.FullName;
+                if (ImGui.Selectable(folderName, false, ImGuiSelectableFlags.SpanAllColumns)) selectedFolderPath = directory.FullName;
                 ImGui.Unindent(20);
             }
         }

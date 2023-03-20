@@ -108,7 +108,6 @@ namespace Modine.Common
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
                 */
 
-                //UpdateMatrices();
                 previousViewportSize = viewportSize;
             }
         }

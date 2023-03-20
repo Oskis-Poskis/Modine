@@ -58,7 +58,9 @@ namespace Modine.ImGUI
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 string newName = _sceneObject.Name;
-                if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _sceneObject.Name = newName;
+                ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
+                if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _sceneObject.Name = Modine.Game.NewName(newName);
+                ImGui.PopItemWidth();
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();
@@ -85,6 +87,8 @@ namespace Modine.ImGUI
                         }
 
                         ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                        ImGui.Separator();
+                        ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                         SN.Vector3 tempRot = new( _sceneObject.Rotation.X, _sceneObject.Rotation.Y, _sceneObject.Rotation.Z);
                         ImGui.Text("Rotation");
@@ -93,6 +97,8 @@ namespace Modine.ImGUI
                             sceneObjects[selectedObject].Rotation = new(tempRot.X, tempRot.Y, tempRot.Z);
                         }
                         
+                        ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                        ImGui.Separator(); 
                         ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                         SN.Vector3 tempScale = new(_sceneObject.Scale.X, _sceneObject.Scale.Y, _sceneObject.Scale.Z);
@@ -388,7 +394,7 @@ namespace Modine.ImGUI
 
                     if (hasSubdirectories)
                     {
-                        if (ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.SpanAvailWidth))
+                        if (ImGui.TreeNodeEx(folderName, ImGuiTreeNodeFlags.SpanAvailWidth))
                         {
                             selectedFolderPath = directory.FullName;
 
@@ -492,12 +498,12 @@ namespace Modine.ImGUI
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 ImGui.Checkbox(" VSync", ref vsyncOn);
+                
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Separator();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
                 if (ImGui.Checkbox(" Show Depth", ref showDepth)) ppshader.SetInt("showDepth", Convert.ToInt32(showDepth));
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.SliderFloat(" Outline Width", ref outlineWidth, 0.5f, 20, "%.1f")) outlineShader.SetFloat("radius", outlineWidth);
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                if (ImGui.SliderInt(" Outline Steps", ref outlineSteps, 1, 32)) outlineShader.SetInt("numSteps", outlineSteps);
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -578,6 +584,8 @@ namespace Modine.ImGUI
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Separator();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 SN.Vector3 color = new(ambient.X, ambient.Y, ambient.Z);            
                 ImGui.Text("Ambient Color");
@@ -594,6 +602,8 @@ namespace Modine.ImGUI
 
             if (ImGui.CollapsingHeader("Shadows"))
             {
+                ImGui.Indent(20);
+
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 float shadowFac = ShadowFactor;
@@ -618,19 +628,19 @@ namespace Modine.ImGUI
                 ImGui.Text("Shadow Resolution");
                 if (ImGui.SliderInt("##Resolution", ref selectedIndex, 0, 5, options[selectedIndex].ToString()))
                 {
-                    // Use the selected resolution in your application logic
                     shadowRes = options[selectedIndex];
                     GL.BindTexture(TextureTarget.Texture2D, depthMap);
                     GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, shadowRes, shadowRes, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
                 }
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Unindent();
             }
 
             if (ImGui.CollapsingHeader("Editor"))
             {
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-                ImGui.Text("Font Size");
-                if (ImGui.SliderFloat("##Font Size", ref fontSize, 0.1f, 2)) ImGui.GetIO().FontGlobalScale = fontSize;
+                ImGui.Indent(20);
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -639,11 +649,28 @@ namespace Modine.ImGUI
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                if (ImGui.Checkbox(" Show Stats Overlay", ref showStats))
+                ImGui.Text("Font Size");
+                if (ImGui.SliderFloat("##Font Size", ref fontSize, 0.1f, 2)) ImGui.GetIO().FontGlobalScale = fontSize;
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                
+                ImGui.Text("Outline Width");
+                if (ImGui.SliderFloat("##Outline Width", ref outlineWidth, 0.5f, 20, "%.1f")) outlineShader.SetFloat("radius", outlineWidth);
+                
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                
+                ImGui.Text("Outline Steps");
+                if (ImGui.SliderInt("##Outline Steps", ref outlineSteps, 1, 32)) outlineShader.SetInt("numSteps", outlineSteps);
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 ImGui.Checkbox(" Show ImGUI Demo", ref showImGUIdemo);
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Checkbox(" Show Stats Overlay", ref showStats);
+
+                ImGui.Unindent();
             }
 
             if (showImGUIdemo) ImGui.ShowDemoWindow();

@@ -603,12 +603,6 @@ namespace Modine
                 }
 
                 ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
-                ImGui.Separator();
-                ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
-
-                if (ImGui.TreeNode("Properties")) ImGuiWindows.Properties(ref sceneObjects, selectedSceneObject);
-
-                ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
 
                 ImGui.EndPopup();
             }
@@ -620,7 +614,7 @@ namespace Modine
             SwapBuffers();
         }
 
-        string NewName(string baseName)
+        public static string NewName(string baseName)
         {
             int index = 0;
             string nName = baseName;

@@ -33,7 +33,7 @@ void main()
     vec3 color = texture(frameBufferTexture, UV).rgb;
     if (ssaoOnOff)
     {
-        vec2 noiseScale = vec2(textureSize(gNormal, 0).x / 4, textureSize(gNormal, 0).y / 4);
+        vec2 noiseScale = vec2(textureSize(gPosition, 0).x / 4, textureSize(gPosition, 0).y / 4);
 
         vec3 fragPos = texture(gPosition, UV).xyz;
         vec3 norm = normalize(texture(gNormal, UV).rgb);
@@ -61,7 +61,7 @@ void main()
 
         occlusion = 1.0 - (occlusion / kernelSize);
         occlusion = pow(occlusion, SSAOpower);
-        fragColor = vec4(color, 1);
+        fragColor = vec4(color, occlusion);
     }
 
     else fragColor = vec4(color, 1);

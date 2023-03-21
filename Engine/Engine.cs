@@ -77,7 +77,7 @@ namespace Modine
         private bool fullscreen = false;
 
         private ImGuiController ImGuiController;
-        int framebufferTexture, depthStencilTexture, gAlbedo, gPosition, gNormal, gMetallicRough, SSAOblur;
+        int framebufferTexture, depthStencilTexture, gAlbedo, gNormal, gMetallicRough, SSAOblur;
         int FBO;
 
         public static int numAOSamples = 16;
@@ -106,7 +106,7 @@ namespace Modine
             FBO = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
 
-            Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gPosition, ref gNormal, ref gMetallicRough, ref SSAOblur, viewportSize);
+            Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref SSAOblur, viewportSize);
             FramebufferErrorCode status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
 
             OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
@@ -116,7 +116,7 @@ namespace Modine
             Framebuffers.SetupShadowFBO(ref depthMapFBO, ref depthMap, shadowRes);
             Postprocessing.SetupPPRect(ref postprocessShader);
 
-            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1, 0.1f, 100);
+            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1, 0.5f, 100);
             viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, new (0, 1, 0));
             camera = new  Camera(new (0, 0, 2), -Vector3.UnitZ, 6);
             defaultMat = new ("Default", new (0.8f), 0, 0.3f, 0.0f, PBRShader);
@@ -313,6 +313,8 @@ namespace Modine
             ImGuiController.WindowResized(e.Width, e.Height);
         }
 
+        bool showQuickMenu = false;
+
         public void RenderScene(double time)
         {
             RenderClass.RenderShadowScene(shadowRes, ref depthMapFBO, lightSpaceMatrix, ref sceneObjects, shadowShader);
@@ -356,7 +358,7 @@ namespace Modine
 
                 GL.ActiveTexture(TextureUnit.Texture4);
                 GL.BindTexture(TextureTarget.Texture2D, depthMap);
-                GL.DrawBuffers(6, new  DrawBuffersEnum[] { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3, DrawBuffersEnum.ColorAttachment4, DrawBuffersEnum.ColorAttachment5 });
+                GL.DrawBuffers(4, new  DrawBuffersEnum[] { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3 });
                 PBRShader.Use();
                 PBRShader.SetMatrix4("projection", projectionMatrix);
                 PBRShader.SetMatrix4("view", viewMatrix);
@@ -420,12 +422,14 @@ namespace Modine
             defferedShader.Use();
             defferedShader.SetInt("countPL", count_PointLights);
             defferedShader.SetVector3("viewPos", camera.position); 
+            defferedShader.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
+            defferedShader.SetMatrix4("viewMatrixInv", Matrix4.Invert(viewMatrix));
 
             GL.Finish();
-            Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gPosition, gNormal, gMetallicRough);
+            Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gNormal, gMetallicRough);
             Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
-            Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gPosition, gNormal, projectionMatrix, numAOSamples);
-            //Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
+            Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gNormal, projectionMatrix, numAOSamples);
+            // Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
 
             // Draw lights after postprocessing to avoid overlaps
@@ -435,7 +439,7 @@ namespace Modine
             for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Render(camera);
 
             // Resize depth and framebuffer texture if size has changed
-            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gPosition, ref gNormal, ref gMetallicRough, ref SSAOblur);
+            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref SSAOblur);
 
             OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
             if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());
@@ -459,27 +463,33 @@ namespace Modine
                 ImGuiWindows.Settings(ref camera.speed, ref vsyncOn, ref ShowDepth_Stencil, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref numAOSamples, ref defferedShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref SSAOblurShader, ref PBRShader);
             }
             
-            // Quick menu
-            if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
-            {
-                SN.Vector2 mousePos = new  SN.Vector2(MouseState.Position.X, MouseState.Position.Y);
-                ImGui.SetNextWindowPos(mousePos);
-                ImGui.OpenPopup("QuickMenu");
-            }
-
             // Toggle fullscreen
             if (IsKeyDown(Keys.LeftControl) && IsKeyPressed(Keys.Space)) fullscreen = ToggleBool(fullscreen);
 
-            if (ImGui.BeginPopup("QuickMenu", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize))
+            // Quick menu
+            if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
             {
+                showQuickMenu = ToggleBool(showQuickMenu);
+                if (showQuickMenu)
+                {
+                    SN.Vector2 mousePos = new  SN.Vector2(MouseState.Position.X, MouseState.Position.Y);
+                    ImGui.SetNextWindowPos(mousePos);
+                }
+            }
+
+            if (showQuickMenu)
+            {
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 2);
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new SN.Vector2(7, 5));
+                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new SN.Vector2(4));
+                ImGui.Begin("QuickMenu", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoSavedSettings);
+                
                 ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
 
                 // Center text
                 float availableWidth = ImGui.GetContentRegionAvail().X;
                 ImGui.SetCursorPosX((availableWidth - ImGui.CalcTextSize("Quick Menu").X) / 2);
-                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new  SN.Vector2(10, 2));
                 ImGui.Text("Quick Menu");
-                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new  SN.Vector2(4, 2));
 
                 ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
                 ImGui.Separator();
@@ -502,6 +512,8 @@ namespace Modine
                         selectedSceneObject = sceneObjects.Count - 1;
 
                         triangleCount = CalculateTriangles();
+
+                        showQuickMenu = false;
                     }
 
                     ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
@@ -521,6 +533,8 @@ namespace Modine
                         selectedSceneObject = sceneObjects.Count - 1;
 
                         triangleCount = CalculateTriangles();
+
+                        showQuickMenu = false;
                     }
 
                     ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
@@ -540,6 +554,8 @@ namespace Modine
                         selectedSceneObject = sceneObjects.Count - 1;
 
                         triangleCount = CalculateTriangles();
+
+                        showQuickMenu = false;
                     }
 
                     ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
@@ -569,6 +585,8 @@ namespace Modine
 
                             selectedSceneObject = sceneObjects.Count - 1;
                         }
+
+                        showQuickMenu = false;
                     }
 
                     ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
@@ -585,6 +603,8 @@ namespace Modine
                         sceneObjects.Add(_light);
 
                         selectedSceneObject = sceneObjects.Count - 1;
+
+                        showQuickMenu = false;
                     }
 
                     ImGui.EndMenu();
@@ -594,6 +614,8 @@ namespace Modine
                 ImGui.Separator();
                 ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
 
+                ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0);
+                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new SN.Vector2(6));
                 if (ImGui.Button("Delete selection") && sceneObjects.Count != 0)
                 {
                     sceneObjects[selectedSceneObject].Dispose();
@@ -601,10 +623,12 @@ namespace Modine
                     triangleCount = Game.CalculateTriangles();
                     if (selectedSceneObject != 0) selectedSceneObject -= 1;
                 }
+                ImGui.PopStyleVar(5);
 
                 ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
 
-                ImGui.EndPopup();
+                ImGui.End();
+                ImGui.PopStyleVar();
             }
 
             ImGuiController.Render();

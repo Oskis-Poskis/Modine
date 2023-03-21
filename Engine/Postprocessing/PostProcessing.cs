@@ -74,7 +74,7 @@ namespace Modine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
         }
 
-        public static void RenderDefferedRect(ref Shader defferedShader, int depthStencilTexture, int gAlbedo, int gPosition, int gNormal, int gMetallicRough)
+        public static void RenderDefferedRect(ref Shader defferedShader, int depthStencilTexture, int gAlbedo, int gNormal, int gMetallicRough)
         {
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -87,20 +87,15 @@ namespace Modine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
             defferedShader.SetInt("depth", 1);
 
-            // Bind position texture
-            GL.ActiveTexture(TextureUnit.Texture2);
-            GL.BindTexture(TextureTarget.Texture2D, gPosition);
-            defferedShader.SetInt("gPosition", 2);
-
             // Bind normal texture
-            GL.ActiveTexture(TextureUnit.Texture3);
+            GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, gNormal);
-            defferedShader.SetInt("gNormal", 3);
+            defferedShader.SetInt("gNormal", 2);
         
             // Bind Metallic and Roughness texture
-            GL.ActiveTexture(TextureUnit.Texture4);
+            GL.ActiveTexture(TextureUnit.Texture3);
             GL.BindTexture(TextureTarget.Texture2D, gMetallicRough);
-            defferedShader.SetInt("gMetallicRough", 4);
+            defferedShader.SetInt("gMetallicRough", 3);
 
             // Render quad with framebuffer and postprocessing
             GL.BindVertexArray(VAO);
@@ -109,7 +104,7 @@ namespace Modine.Common
             GL.Enable(EnableCap.DepthTest);
         }
 
-        public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gPosition, int gNormal, Matrix4 projectionMatrix, int numSamples)
+        public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gNormal, Matrix4 projectionMatrix, int numSamples)
         {
             postprocessShader.Use();
 
@@ -117,31 +112,18 @@ namespace Modine.Common
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
             postprocessShader.SetInt("frameBufferTexture", 0);
-            
-            /*
-            // Bind depth texture
-            GL.ActiveTexture(TextureUnit.Texture1);
-            GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
-            postprocessShader.SetInt("depth", 1);
-            */
-
-            // Bind position texture
-            GL.ActiveTexture(TextureUnit.Texture2);
-            GL.BindTexture(TextureTarget.Texture2D, gPosition);
-            postprocessShader.SetInt("gPosition", 2);
 
             // Bind normal texture
-            GL.ActiveTexture(TextureUnit.Texture3);
+            GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, gNormal);
-            postprocessShader.SetInt("gNormal", 3);
+            postprocessShader.SetInt("gNormal", 1);
             
             int samplesLocation = GL.GetUniformLocation(postprocessShader.Handle, "samples");
             GL.Uniform3(samplesLocation, numSamples, ref sample[0].X);
 
-            GL.ActiveTexture(TextureUnit.Texture4);
+            GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, noiseTexture);
-            postprocessShader.SetInt("texNoise", 4);
+            postprocessShader.SetInt("texNoise", 2);
             postprocessShader.SetMatrix4("projection", projectionMatrix);
 
             // Render quad with framebuffer and postprocessing
@@ -180,13 +162,6 @@ namespace Modine.Common
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
             outlineShader.SetInt("stencilTexture", 1);
-
-            /*
-            // Bind framebuffer texture
-            GL.ActiveTexture(TextureUnit.Texture2);
-            GL.BindTexture(TextureTarget.Texture2D, SSAOblur);
-            outlineShader.SetInt("SSAOblur", 2);
-            */
 
             // Render quad with framebuffer and added outline
             GL.Disable(EnableCap.DepthTest);

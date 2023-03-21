@@ -4,9 +4,11 @@ in vec2 UV;
 
 uniform sampler2D gAlbedo;
 uniform sampler2D depth;
-uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gMetallicRough;
+
+uniform mat4 projMatrixInv;
+uniform mat4 viewMatrixInv;
 
 uniform vec3 ambient;
 uniform vec3 viewPos;
@@ -123,7 +125,23 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
     return (kD * alb / PI + specular) * radiance * NDotL;
 }
 
-vec3 ACESFilm(vec3 x) {
+vec3 WorldPosFromDepth(float depth)
+{
+    float z = depth * 2.0 - 1.0;
+
+    vec4 clipSpacePosition = vec4(UV * 2.0 - 1.0, z, 1.0);
+    vec4 viewSpacePosition = clipSpacePosition * projMatrixInv;
+
+    // Perspective division
+    viewSpacePosition /= viewSpacePosition.w;
+
+    vec4 worldSpacePosition = viewSpacePosition * viewMatrixInv;
+
+    return worldSpacePosition.xyz;
+}
+
+vec3 ACESFilm(vec3 x)
+{
     float a = 2.51;
     float b = 0.03;
     float c = 2.43;
@@ -138,7 +156,7 @@ void main()
 {
     vec3 albedo = texture(gAlbedo, UV).rgb;
     float _depth = texture(depth, UV).r;
-    vec4 fragPos = texture(gPosition, UV);
+    vec3 fragPos = WorldPosFromDepth(_depth);
     vec3 N = texture(gNormal, UV).rgb;
     vec3 MetRoughShadow = texture(gMetallicRough, UV).rgb;
 
@@ -147,7 +165,7 @@ void main()
     float shadow = MetRoughShadow.b;
 
     vec3 result = vec3(0);
-    vec3 V = normalize(viewPos - fragPos.rgb);
+    vec3 V = normalize(viewPos - fragPos);
 
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
@@ -157,7 +175,7 @@ void main()
     dirLighting = pow(dirLighting, vec3(1 / 2.2));
 
     vec3 pointLighting = vec3(0);
-    for (int i = 0; i < countPL; i++) pointLighting += CalcPointLight(pointLights[i], V, N, F0, albedo, roughness, metallic, fragPos.xyz);
+    for (int i = 0; i < countPL; i++) pointLighting += CalcPointLight(pointLights[i], V, N, F0, albedo, roughness, metallic, fragPos);
     pointLighting = pow(pointLighting, vec3(1 / 2.2));
 
     result = dirLighting * (1 - shadow * shadowFactor) + (albedo * ambient);

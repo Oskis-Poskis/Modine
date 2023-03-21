@@ -795,6 +795,7 @@ namespace Modine.ImGUI
             ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;
             ImGui.GetStyle().SelectableTextAlign = new(0.02f, 0);
             ImGui.GetStyle().PopupBorderSize = 0;
+            ImGui.GetStyle().PopupRounding = 6;
             ImGui.GetStyle().GrabMinSize = 15;
             ImGui.GetStyle().GrabRounding = 2;
             
@@ -802,7 +803,7 @@ namespace Modine.ImGUI
             ImGui.PushStyleColor(ImGuiCol.Border, new System.Numerics.Vector4(65, 65, 65, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.MenuBarBg, new System.Numerics.Vector4(30, 30, 30, 200f) / 255);
             ImGui.PushStyleColor(ImGuiCol.CheckMark, new System.Numerics.Vector4(255, 140, 0, 255) / 255);
-            ImGui.PushStyleColor(ImGuiCol.PopupBg, new System.Numerics.Vector4(12, 12, 12, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.PopupBg, new System.Numerics.Vector4(20, 20, 20, 255) / 255);
 
             // Background color
             ImGui.PushStyleColor(ImGuiCol.WindowBg, new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255);

@@ -2,14 +2,17 @@
 
 uniform sampler2D frameBufferTexture;
 uniform bool ssaoOnOff = true;
-
 uniform int gaussianRadius = 3;
 
 in vec2 UV;
-layout(location = 5) out vec4 blurao;
+// layout(location = 5) out vec4 blurao;
+out vec4 fragColor;
 
 void main()
 {
+    vec4 fbCol = texture(frameBufferTexture, UV);
+    float ao = fbCol.a;
+
     if (ssaoOnOff)
     {
         vec2 offset;
@@ -20,13 +23,13 @@ void main()
             for (int y = -gaussianRadius; y <= gaussianRadius; ++y) 
             {
                 offset = vec2(float(x) * texelSize.x, float(y) * texelSize.y);
-                result += texture(frameBufferTexture, UV + offset).a;
+                result += ao;
             }
         }
         float blur = result / ((gaussianRadius * 2 + 1) * (gaussianRadius * 2 + 1));
         
-        blurao = vec4(blur);
+        fragColor = vec4(fbCol.rgb, 1);
     }
 
-    else blurao = vec4(1);
+    else fragColor = fbCol;
 }

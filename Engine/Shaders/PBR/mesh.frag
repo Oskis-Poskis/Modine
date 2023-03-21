@@ -1,14 +1,12 @@
 #version 330
 
 layout(location = 1) out vec3 gAlbedo;
-layout(location = 2) out vec3 gPosition;
-layout(location = 3) out vec3 gNormal;
-layout(location = 4) out vec3 gMetallicRough;
+layout(location = 2) out vec3 gNormal;
+layout(location = 3) out vec3 gMetallicRough;
 
 in vec2 UVs;
 in vec3 normals;
 in vec3 fragPos;
-in vec3 fragPosViewSpace;
 in vec4 fragPosLightSpace;
 in mat3 TBN;
 
@@ -68,7 +66,6 @@ void main()
     normal = normalize(TBN * normal);
 
     gAlbedo = albedo;
-    gPosition = fragPos;
     gNormal = normal;
 
     float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, direction);

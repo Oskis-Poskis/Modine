@@ -8,8 +8,6 @@ layout(location = 4) in vec3 aBiTangents;
 
 out vec2 UVs;
 out vec3 normals;
-out vec3 fragPos;
-out vec3 fragPosViewSpace;
 out vec4 fragPosLightSpace;
 out mat3 TBN;
 
@@ -24,10 +22,7 @@ void main(void)
 
     UVs = aUVs;
     normals = aNormals * mat3(transpose(inverse(model)));
-    fragPos = vec3(vec4(aPosition, 1.0) * model);
-
-    fragPosLightSpace = vec4(fragPos, 1.0) * lightSpaceMatrix;
-    fragPosViewSpace = (vec4(aPosition, 1.0) * model * view).xyz;
+    fragPosLightSpace = vec4(vec3(vec4(aPosition, 1.0) * model), 1.0) * lightSpaceMatrix;
 
     vec3 T = normalize(vec3(aTangents * mat3(transpose(inverse(model)))));
     vec3 B = normalize(vec3(aBiTangents * mat3(transpose(inverse(model)))));

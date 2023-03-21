@@ -34,3 +34,4 @@ void main(void)
     vec3 N = normalize(normals);
     TBN = mat3(T, B, N);
 }
+

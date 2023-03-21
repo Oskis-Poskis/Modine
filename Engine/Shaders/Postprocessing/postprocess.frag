@@ -1,7 +1,6 @@
 #version 330 core
 
 uniform sampler2D frameBufferTexture;
-uniform sampler2D depth;
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D texNoise;
@@ -32,7 +31,6 @@ float LinearizeDepth(float depth)
 void main()
 {
     vec3 color = texture(frameBufferTexture, UV).rgb;
-    if (showDepth) color = vec3(LinearizeDepth(texture(depth, UV).r) / far);
     if (ssaoOnOff)
     {
         vec2 noiseScale = vec2(textureSize(gNormal, 0).x / 4, textureSize(gNormal, 0).y / 4);

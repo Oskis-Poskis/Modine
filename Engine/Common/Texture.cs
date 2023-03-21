@@ -14,7 +14,7 @@ namespace Modine.Common
             if (!File.Exists(path))
             {
                 Console.WriteLine("Path doesn't exist: " + path);
-                path = "Resources/failedtoload.png";
+                path = "Assets/Resources/failedtoload.png";
             }
 
             int handle = GL.GenTexture();

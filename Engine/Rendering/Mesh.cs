@@ -79,7 +79,7 @@ namespace Modine.Rendering
             meshShader.SetMatrix4("model", model);
 
             GL.BindVertexArray(vaoHandle);
-            if (vertexCount > 0) GL.DrawElements(PrimitiveType.Triangles, vertexCount, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(PrimitiveType.Triangles, vertexCount, DrawElementsType.UnsignedInt, 0);
 
             GL.BindVertexArray(0);
         }

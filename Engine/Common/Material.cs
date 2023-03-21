@@ -17,8 +17,8 @@ namespace Modine.Rendering
         public Texture NormalTexture { get; set; }
         public float EmissionStrength { get; set; } = 0.0f;
 
-        private Texture white1x1 = Texture.LoadFromFile("Resources/White1x1.png");
-        private Texture normal1x1 = Texture.LoadFromFile("Resources/Normal1x1.png");
+        private Texture white1x1 = Texture.LoadFromFile("Assets/Resources/White1x1.png");
+        private Texture normal1x1 = Texture.LoadFromFile("Assets/Resources/Normal1x1.png");
 
         public Material(string name, Vector3 color, float metallic, float roughness, float emissionStrength, Shader shader, Texture colorTexture = null, Texture roughnessTexture = null, Texture metallitexture = null, Texture normaltexture = null)
         {

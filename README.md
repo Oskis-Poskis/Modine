@@ -42,11 +42,13 @@ Viewport, outliner, settings, properties and material editor using ImGUI Docking
 Framebuffer resizing to fit ImGUI window
 
 ## Problems
+Normals/TBN matrix is glitched on Intel iGPU
+
 Shadow mapping not entirely accurate
 
-Famebuffer has glitched on some drivers/devices
+Famebuffer glitching on some drivers/devices
 
-Framebuffer color attachments drains FPS
+Deffered renderer color attachments BAAAD performance
 
 ## Useful Resources
 LearnOpenTK:

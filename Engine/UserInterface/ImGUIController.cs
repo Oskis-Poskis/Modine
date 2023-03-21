@@ -55,7 +55,7 @@ namespace Modine.ImGUI
             ImGui.SetCurrentContext(context);
             var io = ImGui.GetIO();
             //io.Fonts.AddFontDefault();
-            io.Fonts.AddFontFromFileTTF("Fonts/Rubik-Medium.ttf", 16);
+            io.Fonts.AddFontFromFileTTF("Assets/Fonts/Rubik-Medium.ttf", 16);
 
             io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
             io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;

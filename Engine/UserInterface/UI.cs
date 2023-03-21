@@ -498,12 +498,6 @@ namespace Modine.ImGUI
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 ImGui.Checkbox(" VSync", ref vsyncOn);
-                
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                ImGui.Separator();
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-                if (ImGui.Checkbox(" Show Depth", ref showDepth)) ppshader.SetInt("showDepth", Convert.ToInt32(showDepth));
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 

@@ -118,11 +118,13 @@ namespace Modine.Common
             GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
             postprocessShader.SetInt("frameBufferTexture", 0);
             
+            /*
             // Bind depth texture
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
             postprocessShader.SetInt("depth", 1);
+            */
 
             // Bind position texture
             GL.ActiveTexture(TextureUnit.Texture2);

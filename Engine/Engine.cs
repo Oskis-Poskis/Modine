@@ -37,14 +37,14 @@ namespace Modine
             viewportSize = this.Size;
             previousViewportSize = viewportSize;
 
-            PBRShader = new  Shader("Shaders/PBR/mesh.vert", "Shaders/PBR/mesh.frag");
-            shadowShader = new  Shader("Shaders/PBR/shadow.vert", "Shaders/PBR/shadow.frag");
-            lightShader = new  Shader("Shaders/Lights/light.vert", "Shaders/Lights/light.frag");
-            postprocessShader = new  Shader("Shaders/Postprocessing/1_rect.vert", "Shaders/Postprocessing/postprocess.frag");
-            defferedShader = new Shader("Shaders/Postprocessing/1_rect.vert", "Shaders/Postprocessing/deffered.frag");
-            outlineShader = new  Shader("Shaders/Postprocessing/1_rect.vert", "Shaders/Postprocessing/outline.frag");
-            fxaaShader = new  Shader("Shaders/Postprocessing/1_rect.vert", "Shaders/Postprocessing/fxaa.frag");
-            SSAOblurShader = new  Shader("Shaders/Postprocessing/1_rect.vert", "Shaders/Postprocessing/SSAOblur.frag");
+            PBRShader = new Shader("Engine/Shaders/PBR/mesh.vert", "Engine/Shaders/PBR/mesh.frag");
+            shadowShader = new Shader("Engine/Shaders/PBR/shadow.vert", "Engine/Shaders/PBR/shadow.frag");
+            lightShader = new Shader("Engine/Shaders/Lights/light.vert", "Engine/Shaders/Lights/light.frag");
+            postprocessShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/postprocess.frag");
+            defferedShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/deffered.frag");
+            outlineShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/outline.frag");
+            fxaaShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/fxaa.frag");
+            SSAOblurShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/SSAOblur.frag");
         }
 
         private bool viewportHovered;
@@ -127,13 +127,13 @@ namespace Modine
             defferedShader.SetFloat("shadowFactor", shadowFactor);
 
             krissVectorMat = new ("VectorMat", new (1), 1, 1, 0, PBRShader,
-                Texture.LoadFromFile("Resources/1_Albedo.png"),
-                Texture.LoadFromFile("Resources/1_Roughness.png"),
-                Texture.LoadFromFile("Resources/1_Metallic.png"),
-                Texture.LoadFromFile("Resources/1_Normal.png"));
-            ModelImporter.LoadModel("Resources/KrissVector.fbx", out vectorData, out vectorIndicies);
+                Texture.LoadFromFile("Assets/Resources/1_Albedo.png"),
+                Texture.LoadFromFile("Assets/Resources/1_Roughness.png"),
+                Texture.LoadFromFile("Assets/Resources/1_Metallic.png"),
+                Texture.LoadFromFile("Assets/Resources/1_Normal.png"));
+            ModelImporter.LoadModel("Assets/Resources/KrissVector.fbx", out vectorData, out vectorIndicies);
 
-            ModelImporter.LoadModel("Importing/TestRoom.fbx", out vertexData, out indices);
+            ModelImporter.LoadModel("Assets/Models/TestRoom.fbx", out vertexData, out indices);
             Room = new  Mesh(vertexData, indices, PBRShader, true, 0);
 
             Postprocessing.GenNoise(numAOSamples);
@@ -184,7 +184,7 @@ namespace Modine
             ImGuiController = new  ImGuiController(viewportSize.X, viewportSize.Y);
             ImGuiWindows.LoadTheme();
 
-            GLFW.MaximizeWindow(WindowPtr);
+            //GLFW.MaximizeWindow(WindowPtr);
         }
 
         public static Vector3 GetRandomBrightColor()
@@ -493,7 +493,7 @@ namespace Modine
                     {
                         int[] cubeIndices;
                         VertexData[] cubeVertexData;
-                        ModelImporter.LoadModel("Importing/Cube.fbx", out cubeVertexData, out cubeIndices);
+                        ModelImporter.LoadModel("Assets/Models/Cube.fbx", out cubeVertexData, out cubeIndices);
 
                         Mesh cube = new  Mesh(cubeVertexData, cubeIndices, PBRShader, true, 0);
                         SceneObject _cube = new (PBRShader, NewName("Cube"), cube);
@@ -512,7 +512,7 @@ namespace Modine
                     {
                         VertexData[] sphereVertexData;
                         int[] sphereIndices;
-                        ModelImporter.LoadModel("Importing/Sphere.fbx", out sphereVertexData, out sphereIndices);
+                        ModelImporter.LoadModel("Assets/Models/Sphere.fbx", out sphereVertexData, out sphereIndices);
 
                         Mesh sphere = new  Mesh(sphereVertexData, sphereIndices, PBRShader, true, 0);
                         SceneObject _sphere = new (PBRShader, NewName("Sphere"), sphere);
@@ -531,7 +531,7 @@ namespace Modine
                     {
                         VertexData[] planeVertexData;
                         int[] planeIndices;
-                        ModelImporter.LoadModel("Importing/Floor.fbx", out planeVertexData, out planeIndices);
+                        ModelImporter.LoadModel("Assets/Models/Floor.fbx", out planeVertexData, out planeIndices);
 
                         Mesh plane = new  Mesh(planeVertexData, planeIndices, PBRShader, true, 0);
                         SceneObject _plane = new (PBRShader, NewName("Plane"), plane);

@@ -48,7 +48,7 @@ namespace Modine
         }
 
         private bool viewportHovered;
-        public bool ShowDepth_Stencil = false;
+        public bool showOutlines = true;
 
         private Vector2i viewportPos, viewportSize, previousViewportSize;
 
@@ -427,8 +427,8 @@ namespace Modine
 
             GL.Finish();
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gNormal, gMetallicRough);
-            Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
-            Postprocessing.RenderDefaultRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gNormal, projectionMatrix, numAOSamples);
+            if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
+            // Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gNormal, projectionMatrix, numAOSamples);
             // Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
 
@@ -460,7 +460,7 @@ namespace Modine
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
-                ImGuiWindows.Settings(ref camera.speed, ref vsyncOn, ref ShowDepth_Stencil, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref numAOSamples, ref defferedShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref SSAOblurShader, ref PBRShader);
+                ImGuiWindows.Settings(ref camera.speed, ref vsyncOn, ref showOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref numAOSamples, ref defferedShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref SSAOblurShader, ref PBRShader);
             }
             
             // Toggle fullscreen

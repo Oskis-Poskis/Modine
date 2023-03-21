@@ -1,7 +1,6 @@
 #version 330 core
 
 uniform sampler2D frameBufferTexture;
-uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D texNoise;
 
@@ -19,18 +18,10 @@ float bias = 0.025;
 in vec2 UV;
 out vec4 fragColor;
 
-float near = 0.1; 
-float far  = 100.0; 
-
-float LinearizeDepth(float depth) 
-{
-    float z = depth * 2.0 - 1.0; // back to NDC 
-    return (2.0 * near * far) / (far + near - z * (far - near));	
-}
-
 void main()
 {
     vec3 color = texture(frameBufferTexture, UV).rgb;
+    /*
     if (ssaoOnOff)
     {
         vec2 noiseScale = vec2(textureSize(gPosition, 0).x / 4, textureSize(gPosition, 0).y / 4);
@@ -65,4 +56,7 @@ void main()
     }
 
     else fragColor = vec4(color, 1);
+    */
+
+    fragColor = vec4(color, 1);
 }

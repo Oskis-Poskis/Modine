@@ -125,16 +125,21 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
     return (kD * alb / PI + specular) * radiance * NDotL;
 }
 
-vec3 WorldPosFromDepth(float depth)
+vec4 ViewPosFromDepth(float depth)
 {
     float z = depth * 2.0 - 1.0;
-
     vec4 clipSpacePosition = vec4(UV * 2.0 - 1.0, z, 1.0);
     vec4 viewSpacePosition = clipSpacePosition * projMatrixInv;
 
+    return viewSpacePosition;
+}
+
+vec3 WorldPos(float depth)
+{
+    vec4 viewSpacePosition = ViewPosFromDepth(depth);
+
     // Perspective division
     viewSpacePosition /= viewSpacePosition.w;
-
     vec4 worldSpacePosition = viewSpacePosition * viewMatrixInv;
 
     return worldSpacePosition.xyz;
@@ -156,7 +161,7 @@ void main()
 {
     vec3 albedo = texture(gAlbedo, UV).rgb;
     float _depth = texture(depth, UV).r;
-    vec3 fragPos = WorldPosFromDepth(_depth);
+    vec3 fragPos = WorldPos(_depth);
     vec3 N = texture(gNormal, UV).rgb;
     vec3 MetRoughShadow = texture(gMetallicRough, UV).rgb;
 

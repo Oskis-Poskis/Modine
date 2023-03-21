@@ -487,7 +487,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref float camSpeed, ref bool vsyncOn, ref bool showDepth, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref int numAOsamples, ref Shader defshader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader SSAOshader, ref Shader PBRshader)
+        public static void Settings(ref float camSpeed, ref bool vsyncOn, ref bool showOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref int numAOsamples, ref Shader defshader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader SSAOshader, ref Shader PBRshader)
         {
             ImGui.Begin("Settings");
 
@@ -511,6 +511,8 @@ namespace Modine.ImGUI
                 ImGui.Indent(20);
                 if (ImGui.CollapsingHeader("SSAO"))
                 {
+                    ImGui.Indent(20);
+
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                     if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff))
@@ -535,6 +537,8 @@ namespace Modine.ImGUI
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Text("Gaussian Radius");
                     if (ImGui.SliderInt("##Gaussian Radius", ref gaussianRadius, 1, 16)) SSAOshader.SetInt("gaussianRadius", gaussianRadius);
+
+                    ImGui.Unindent();
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -642,12 +646,20 @@ namespace Modine.ImGUI
                 ImGui.SliderFloat("##Camera Speed", ref camSpeed, 1, 20, "%.1f");
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Separator();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 ImGui.Text("Font Size");
                 if (ImGui.SliderFloat("##Font Size", ref fontSize, 0.1f, 2)) ImGui.GetIO().FontGlobalScale = fontSize;
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Separator();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Checkbox(" Show Outlines", ref showOutlines);
                 
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
                 ImGui.Text("Outline Width");
                 if (ImGui.SliderFloat("##Outline Width", ref outlineWidth, 0.5f, 20, "%.1f")) outlineShader.SetFloat("radius", outlineWidth);
                 
@@ -656,6 +668,8 @@ namespace Modine.ImGUI
                 ImGui.Text("Outline Steps");
                 if (ImGui.SliderInt("##Outline Steps", ref outlineSteps, 1, 32)) outlineShader.SetInt("numSteps", outlineSteps);
 
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 ImGui.Checkbox(" Show ImGUI Demo", ref showImGUIdemo);

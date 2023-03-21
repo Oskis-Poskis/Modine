@@ -104,7 +104,7 @@ namespace Modine.Common
             GL.Enable(EnableCap.DepthTest);
         }
 
-        public static void RenderDefaultRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gNormal, Matrix4 projectionMatrix, int numSamples)
+        public static void RenderPPRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gNormal, Matrix4 projectionMatrix, int numSamples)
         {
             postprocessShader.Use();
 

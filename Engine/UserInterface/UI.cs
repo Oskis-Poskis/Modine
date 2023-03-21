@@ -375,8 +375,8 @@ namespace Modine.ImGUI
         }
 
         private static string selectedFolderPath = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
-        private static Texture folderIcon = Texture.LoadFromFile("Resources/FolderIcon.png");
-        private static Texture idk = Texture.LoadFromFile("Resources/failedtoload.png");
+        private static Texture folderIcon = Texture.LoadFromFile("Assets/Resources/FolderIcon.png");
+        private static Texture idk = Texture.LoadFromFile("Assets/Resources/failedtoload.png");
 
         public static void AssetBrowser()
         {

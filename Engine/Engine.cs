@@ -149,8 +149,8 @@ namespace Modine
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
 
-            int numRows = 5;
-            int numCols = 5;
+            int numRows = 2;
+            int numCols = 2;
             int spacing = 5;
             int startX = -((numCols - 1) * spacing) / 2;
             int startY = -((numRows - 1) * spacing) / 2;
@@ -184,7 +184,7 @@ namespace Modine
             ImGuiController = new  ImGuiController(viewportSize.X, viewportSize.Y);
             ImGuiWindows.LoadTheme();
 
-            //GLFW.MaximizeWindow(WindowPtr);
+            GLFW.MaximizeWindow(WindowPtr);
         }
 
         public static Vector3 GetRandomBrightColor()
@@ -425,7 +425,6 @@ namespace Modine
             defferedShader.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
             defferedShader.SetMatrix4("viewMatrixInv", Matrix4.Invert(viewMatrix));
 
-            GL.Finish();
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gNormal, gMetallicRough);
             if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
             // Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gNormal, projectionMatrix, numAOSamples);

@@ -78,7 +78,7 @@ namespace Modine.Common
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, TextureTarget.Texture2D, depthStencilTexture, 0);
         }
 
-        public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, Vector2i ClientSize, ref int frameBufferTexture, ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough, ref int gPosition, ref int blurAO)
+        public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, ref int frameBufferTexture, ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough, ref int gPosition, ref int blurAO)
         {            
             //Resize framebuffer textures
             if (viewportSize != previousViewportSize)

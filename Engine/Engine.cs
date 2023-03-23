@@ -350,7 +350,7 @@ namespace Modine
                 GL.StencilMask(0x00);
                 
                 float aspectRatio = (float)viewportSize.X / viewportSize.Y;
-                lightSpaceMatrix = Matrix4.LookAt(SunDirection * 10 + camera.position, Vector3.Zero + camera.position, Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-20, 20, -20, 20, 0.1f, 100);
+                lightSpaceMatrix = Matrix4.LookAt(SunDirection * 10 + camera.position, Vector3.Zero + camera.position, Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-10, 10, -10, 10, 0.1f, 100);
                 projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, 0.1f, 100);
                 viewMatrix = Matrix4.LookAt(camera.position, camera.position + camera.direction, Vector3.UnitY);
 
@@ -422,16 +422,11 @@ namespace Modine
             defferedShader.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
             defferedShader.SetMatrix4("viewMatrixInv", Matrix4.Invert(viewMatrix));
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gNormal, gMetallicRough);
-
-            postprocessShader.Use();
-            postprocessShader.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
-            postprocessShader.SetMatrix4("viewMatrix", viewMatrix);
-            Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gNormal, gPosition, projectionMatrix, numAOSamples);
             
+            Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gNormal, gPosition, numAOSamples, projectionMatrix, viewMatrix);
             if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
-
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture, blurAO);
-            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, ref blurAO);
+            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, ref blurAO);
 
             // Draw lights after postprocessing to avoid overlaps (AO and other effects)
             lightShader.Use();
@@ -439,11 +434,11 @@ namespace Modine
             lightShader.SetMatrix4("view", viewMatrix);
             for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Render(camera);
 
-            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-
             // Toggle fullscreen
             if (IsKeyDown(Keys.LeftControl) && IsKeyPressed(Keys.Space)) fullscreen = EngineUtility.ToggleBool(fullscreen);
+
+            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
             // Show all the ImGUI windows
             ImGuiController.Update(this, (float)time);

@@ -90,6 +90,7 @@ void main()
     {
         vec2 size = textureSize(frameBufferTexture, 0);
         fragColor = vec4(fxaa(UV, size) * smoothAO, 1);
+        // fragColor = vec4(vec3(smoothAO), 1);
     }
     else fragColor = vec4(texture(frameBufferTexture, UV).rgb * smoothAO, 1);
 }

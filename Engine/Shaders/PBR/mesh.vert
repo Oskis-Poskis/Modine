@@ -22,11 +22,8 @@ void main(void)
     gl_Position = vec4(aPosition, 1.0) * model * view * projection;
 
     fragPos = vec4(aPosition, 1.0) * model * view;
-
     UVs = aUVs;
-
     normals = aNormals * mat3(transpose(inverse(model)));
-
     fragPosLightSpace = vec4(vec3(vec4(aPosition, 1.0) * model), 1.0) * lightSpaceMatrix;
 
     vec3 T = normalize(vec3(aTangents * mat3(transpose(inverse(model)))));

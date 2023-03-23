@@ -57,14 +57,15 @@ void main()
 {
     vec3 color = texture(frameBufferTexture, UV).rgb;
     float _depth = texture(depth, UV).r;
+    vec3 _fragPos = ViewPosFromDepth(_depth, UV).xyz;
+    vec3 fragPos = texture(gPosition, UV).rgb;
+    if (_depth > 0.99) fragPos = vec3(0, 0, 0);
 
     if (ACES) color = ACESFilm(color);
     if (ssaoOnOff)
     {
         vec2 noiseScale = vec2(textureSize(gPosition, 0).x / 4, textureSize(gPosition, 0).y / 4);
 
-        vec3 _fragPos = ViewPosFromDepth(_depth, UV).xyz;
-        vec3 fragPos = texture(gPosition, UV).rgb;
         vec3 test = normalize(texture(gNormal, UV).rgb);
         vec3 norm = normalize(texture(gNormal, UV).rgb * mat3(inverse(transpose(viewMatrix))));
         vec3 randomVec = normalize(texture(texNoise, UV * noiseScale).xyz);

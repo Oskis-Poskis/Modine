@@ -104,8 +104,12 @@ namespace Modine.Common
             GL.Enable(EnableCap.DepthTest);
         }
 
-        public static void RenderPPRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gNormal, int gPosition, Matrix4 projectionMatrix, int numSamples)
+        public static void RenderPPRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gNormal, int gPosition, int numSamples, Matrix4 projectionMatrix, Matrix4 viewMatrix)
         {
+            postprocessShader.Use();
+            postprocessShader.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
+            postprocessShader.SetMatrix4("viewMatrix", viewMatrix);
+
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);

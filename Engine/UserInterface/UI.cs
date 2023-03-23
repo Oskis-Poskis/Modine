@@ -560,7 +560,7 @@ namespace Modine.ImGUI
                     OpenFileDialog selectFile = new  OpenFileDialog()
                     {
                         Title = "Select File",
-                        Filter = "Formats:|*.FBX; *.OBJ;"
+                        Filter = "Formats:|*.FBX; *.OBJ; *.GLTF; *.DAE;"
                     };
                     selectFile.ShowDialog();
                     string path = selectFile.FileName;
@@ -689,8 +689,8 @@ namespace Modine.ImGUI
                     if (ImGui.SliderInt("##SSAO Samples", ref numAOsamples, 1, 128)) ppshader.SetInt("kernelSize", numAOsamples);
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Text("Gaussian Radius");
-                    if (ImGui.SliderInt("##Gaussian Radius", ref gaussianRadius, 1, 16)) fxaaShader.SetInt("gaussianRadius", gaussianRadius);
+                    ImGui.Text("Blur Radius");
+                    if (ImGui.SliderInt("##Blur Radius", ref gaussianRadius, 1, 16)) fxaaShader.SetInt("gaussianRadius", gaussianRadius);
 
                     ImGui.Unindent();
                 }

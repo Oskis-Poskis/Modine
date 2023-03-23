@@ -148,6 +148,7 @@ void main()
     vec3 albedo = texture(gAlbedo, UV).rgb;
     float _depth = texture(depth, UV).r;
     vec3 fragPos = WorldPos(_depth).xyz;
+    if (_depth > 0.99) fragPos = vec3(0, 0, 0);
     vec3 N = texture(gNormal, UV).rgb;
     vec3 MetRoughShadow = texture(gMetallicRough, UV).rgb;
 

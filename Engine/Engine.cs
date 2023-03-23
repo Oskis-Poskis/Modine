@@ -45,7 +45,6 @@ namespace Modine
             defferedShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/deffered.frag");
             outlineShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/outline.frag");
             fxaaShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/fxaa.frag");
-            SSAOblurShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/SSAOblur.frag");
         }
 
         private bool viewportHovered;
@@ -60,7 +59,7 @@ namespace Modine
         Material defaultMat, krissVectorMat;
         public static List<Material> Materials = new  List<Material>();
         public static Shader PBRShader, lightShader, shadowShader;
-        public Shader postprocessShader, defferedShader, outlineShader, fxaaShader, SSAOblurShader;
+        public Shader postprocessShader, defferedShader, outlineShader, fxaaShader;
         Matrix4 projectionMatrix, viewMatrix, lightSpaceMatrix;
 
         Mesh krissVector, Room;
@@ -431,7 +430,6 @@ namespace Modine
             
             if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
 
-            //Postprocessing.RenderSSAOrect(ref SSAOblurShader, blurAO);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture, blurAO);
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, ref blurAO);
 
@@ -468,7 +466,7 @@ namespace Modine
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
-                ImGuiWindows.Settings(ref camera.speed, ref vsyncOn, ref showOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref numAOSamples, ref defferedShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref SSAOblurShader, ref PBRShader);
+                ImGuiWindows.Settings(ref camera.speed, ref vsyncOn, ref showOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref numAOSamples, ref defferedShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref PBRShader);
             }
 
             ImGuiController.Render();

@@ -104,11 +104,6 @@ namespace Modine.Common
                 GL.BindTexture(TextureTarget.Texture2D, blurAO);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
 
-                /*
-                GL.BindTexture(TextureTarget.Texture2D, SSAOblur);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
-                */
-
                 previousViewportSize = viewportSize;
             }
         }

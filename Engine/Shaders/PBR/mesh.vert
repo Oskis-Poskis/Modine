@@ -24,7 +24,9 @@ void main(void)
     fragPos = vec4(aPosition, 1.0) * model * view;
 
     UVs = aUVs;
+
     normals = aNormals * mat3(transpose(inverse(model)));
+
     fragPosLightSpace = vec4(vec3(vec4(aPosition, 1.0) * model), 1.0) * lightSpaceMatrix;
 
     vec3 T = normalize(vec3(aTangents * mat3(transpose(inverse(model)))));
@@ -32,4 +34,3 @@ void main(void)
     vec3 N = normalize(normals);
     TBN = mat3(T, B, N);
 }
-

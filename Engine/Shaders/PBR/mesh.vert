@@ -8,6 +8,7 @@ layout(location = 4) in vec3 aBiTangents;
 
 out vec2 UVs;
 out vec3 normals;
+out vec4 fragPos;
 out vec4 fragPosLightSpace;
 out mat3 TBN;
 
@@ -19,6 +20,8 @@ uniform mat4 lightSpaceMatrix;
 void main(void)
 {
     gl_Position = vec4(aPosition, 1.0) * model * view * projection;
+
+    fragPos = vec4(aPosition, 1.0) * model * view;
 
     UVs = aUVs;
     normals = aNormals * mat3(transpose(inverse(model)));

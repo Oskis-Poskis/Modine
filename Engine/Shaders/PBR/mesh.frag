@@ -3,10 +3,11 @@
 layout(location = 1) out vec3 gAlbedo;
 layout(location = 2) out vec3 gNormal;
 layout(location = 3) out vec3 gMetallicRough;
+layout(location = 4) out vec4 gPosition;
 
 in vec2 UVs;
 in vec3 normals;
-in vec3 fragPos;
+in vec4 fragPos;
 in vec4 fragPosLightSpace;
 in mat3 TBN;
 
@@ -62,11 +63,12 @@ void main()
     float roughness = material.roughness * texture(material.roughnessTex, UVs).r;
     float metallic = material.metallic * texture(material.metallicTex, UVs).r;
     vec3 normal = texture(material.normalTex, UVs).rgb * 2 - 1;
-
+    
     normal = normalize(TBN * normal);
 
     gAlbedo = albedo;
     gNormal = normal;
+    gPosition = fragPos;
 
     float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, direction);
     gMetallicRough = vec3(metallic, roughness, shadowCalc);

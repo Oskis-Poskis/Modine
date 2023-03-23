@@ -104,10 +104,8 @@ namespace Modine.Common
             GL.Enable(EnableCap.DepthTest);
         }
 
-        public static void RenderPPRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gNormal, Matrix4 projectionMatrix, int numSamples)
+        public static void RenderPPRect(ref Shader postprocessShader, int frameBufferTexture, int depthStencilTexture, int gNormal, int gPosition, Matrix4 projectionMatrix, int numSamples)
         {
-            postprocessShader.Use();
-
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
@@ -126,6 +124,17 @@ namespace Modine.Common
             postprocessShader.SetInt("texNoise", 2);
             postprocessShader.SetMatrix4("projection", projectionMatrix);
 
+            // Bind depth texture
+            GL.ActiveTexture(TextureUnit.Texture3);
+            GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
+            postprocessShader.SetInt("depth", 3);
+
+            // Bind normal texture
+            GL.ActiveTexture(TextureUnit.Texture4);
+            GL.BindTexture(TextureTarget.Texture2D, gPosition);
+            postprocessShader.SetInt("gPosition", 4);
+
             // Render quad with framebuffer and postprocessing
             GL.BindVertexArray(VAO);
             GL.Disable(EnableCap.DepthTest);
@@ -133,14 +142,14 @@ namespace Modine.Common
             GL.Enable(EnableCap.DepthTest);
         }
 
-        public static void RenderSSAOrect(ref Shader SSAOblurShader, int frameBufferTexture)
+        public static void RenderSSAOrect(ref Shader SSAOblurShader, int blurAO)
         {
             SSAOblurShader.Use();
 
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
-            SSAOblurShader.SetInt("frameBufferTexture", 0);
+            GL.BindTexture(TextureTarget.Texture2D, blurAO);
+            SSAOblurShader.SetInt("inAO", 0);
 
             // Render quad with framebuffer and added outline
             GL.Disable(EnableCap.DepthTest);
@@ -169,7 +178,7 @@ namespace Modine.Common
             GL.Enable(EnableCap.DepthTest);
         }
 
-        public static void RenderFXAARect(ref Shader fxaaShader, int frameBufferTexture)
+        public static void RenderFXAARect(ref Shader fxaaShader, int frameBufferTexture, int blurAO)
         {
             fxaaShader.Use();
 
@@ -177,6 +186,11 @@ namespace Modine.Common
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
             fxaaShader.SetInt("frameBufferTexture", 0);
+
+            // Bind framebuffer texture
+            GL.ActiveTexture(TextureUnit.Texture1);
+            GL.BindTexture(TextureTarget.Texture2D, blurAO);
+            fxaaShader.SetInt("inAO", 1);
 
             // Render quad with framebuffer and added outline
             GL.Disable(EnableCap.DepthTest);

@@ -5,7 +5,7 @@ using OpenTK.Windowing.Common;
 
 namespace Modine.Rendering
 {
-    public class RenderClass
+    public class RenderFuncs
     {
         public static void RenderShadowScene(int shadowRes, ref int depthMapFBO, OpenTK.Mathematics.Matrix4 lightSpaceMatrix, ref List<SceneObject> sceneObjects, Shader shadowShader)
         {

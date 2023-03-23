@@ -17,8 +17,6 @@ uniform float dirStrength = 1;
 uniform int countPL = 0;
 uniform float shadowFactor = 0.75;
 
-uniform bool ACES = true;
-
 const float constant = 1;
 const float linear = 0.09;
 const float quadratic = 0.032;
@@ -130,6 +128,7 @@ vec4 ViewPosFromDepth(float depth)
     float z = depth * 2.0 - 1.0;
     vec4 clipSpacePosition = vec4(UV * 2.0 - 1.0, z, 1.0);
     vec4 viewSpacePosition = clipSpacePosition * projMatrixInv;
+    viewSpacePosition /= viewSpacePosition.w;
 
     return viewSpacePosition;
 }
@@ -137,22 +136,9 @@ vec4 ViewPosFromDepth(float depth)
 vec3 WorldPos(float depth)
 {
     vec4 viewSpacePosition = ViewPosFromDepth(depth);
-
-    // Perspective division
-    viewSpacePosition /= viewSpacePosition.w;
     vec4 worldSpacePosition = viewSpacePosition * viewMatrixInv;
 
     return worldSpacePosition.xyz;
-}
-
-vec3 ACESFilm(vec3 x)
-{
-    float a = 2.51;
-    float b = 0.03;
-    float c = 2.43;
-    float d = 0.59;
-    float e = 0.14;
-    return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 5.0);
 }
 
 out vec4 fragColor;
@@ -161,7 +147,7 @@ void main()
 {
     vec3 albedo = texture(gAlbedo, UV).rgb;
     float _depth = texture(depth, UV).r;
-    vec3 fragPos = WorldPos(_depth);
+    vec3 fragPos = WorldPos(_depth).xyz;
     vec3 N = texture(gNormal, UV).rgb;
     vec3 MetRoughShadow = texture(gMetallicRough, UV).rgb;
 
@@ -185,8 +171,6 @@ void main()
 
     result = dirLighting * (1 - shadow * shadowFactor) + (albedo * ambient);
     result += pointLighting;
-
-    if (ACES) result.rgb = ACESFilm(result.rgb);
 
     fragColor = vec4(result, 1);
 }

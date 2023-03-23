@@ -12,6 +12,7 @@ using Modine.Rendering;
 using Modine.ImGUI;
 
 using static Modine.Rendering.SceneObject;
+using EngineUtlity = Modine.Common.EngineUtility;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
 namespace Modine
@@ -58,7 +59,7 @@ namespace Modine
         
         Material defaultMat, krissVectorMat;
         public static List<Material> Materials = new  List<Material>();
-        public Shader PBRShader, lightShader, shadowShader;
+        public static Shader PBRShader, lightShader, shadowShader;
         public Shader postprocessShader, defferedShader, outlineShader, fxaaShader, SSAOblurShader;
         Matrix4 projectionMatrix, viewMatrix, lightSpaceMatrix;
 
@@ -77,7 +78,7 @@ namespace Modine
         private bool fullscreen = false;
 
         private ImGuiController ImGuiController;
-        int framebufferTexture, depthStencilTexture, gAlbedo, gNormal, gMetallicRough, SSAOblur;
+        int framebufferTexture, depthStencilTexture, gAlbedo, gNormal, gMetallicRough, gPosition, blurAO;
         int FBO;
 
         public static int numAOSamples = 16;
@@ -106,7 +107,7 @@ namespace Modine
             FBO = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
 
-            Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref SSAOblur, viewportSize);
+            Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, ref blurAO, viewportSize);
             FramebufferErrorCode status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
 
             OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
@@ -141,7 +142,7 @@ namespace Modine
             SceneObject _room = new (PBRShader, "Room", Room);
 
             krissVector = new (vectorData, vectorIndicies, PBRShader, true, 1);
-            SceneObject _vector = new (PBRShader, NewName("Vector"), krissVector);
+            SceneObject _vector = new (PBRShader, EngineUtility.NewName(sceneObjects, "Vector"), krissVector);
             _vector.Scale = new (0.3f);
 
             sceneObjects.Add(_vector);
@@ -162,7 +163,7 @@ namespace Modine
                     int x = startX + col * spacing;
                     int z = startY + row * spacing;
                     Light light = new(lightShader, GetRandomBrightColor(), 1);
-                    SceneObject _light = new(lightShader, NewName("Light"), light);
+                    SceneObject _light = new(lightShader, EngineUtility.NewName(sceneObjects, "Light"), light);
                     _light.Position.X = x;
                     _light.Position.Z = z;
                     _light.Position.Y = 2;
@@ -179,12 +180,12 @@ namespace Modine
                 else if (sceneObject.Type == SceneObjectType.Light) count_PointLights += 1;
             }
 
-            triangleCount = CalculateTriangles();
+            triangleCount = EngineUtility.CalculateTriangles(sceneObjects);
 
             ImGuiController = new  ImGuiController(viewportSize.X, viewportSize.Y);
             ImGuiWindows.LoadTheme();
 
-            GLFW.MaximizeWindow(WindowPtr);
+            // GLFW.MaximizeWindow(WindowPtr);
         }
 
         public static Vector3 GetRandomBrightColor()
@@ -209,7 +210,7 @@ namespace Modine
         bool grabX = false, grabY = false, grabZ = false;
         float originalDistance = 0;
         Vector3 originalPosition = Vector3.Zero;
-        Vector3 newPosition = Vector3.Zero, newPosition2 = Vector3.Zero;
+        Vector3 newPosWS = Vector3.Zero;
         public bool showStats;
 
         protected override void OnUpdateFrame(FrameEventArgs args)
@@ -232,38 +233,34 @@ namespace Modine
                 if (IsKeyDown(Keys.D)) camera.position += moveAmount * Vector3.Normalize(Vector3.Cross(camera.direction, Vector3.UnitY));
                 if (IsKeyDown(Keys.E)) camera.position += moveAmount * Vector3.UnitY;
                 if (IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
-                if (IsKeyDown(Keys.LeftAlt) && IsKeyPressed(Keys.G))
-                {
-                    sceneObjects[selectedSceneObject].Position = Vector3.Zero;
-                }
                 
+                if (IsKeyDown(Keys.LeftAlt) && IsKeyPressed(Keys.G)) sceneObjects[selectedSceneObject].Position = Vector3.Zero;
                 if (IsKeyPressed(Keys.G) && !IsKeyDown(Keys.LeftAlt))
                 {
                     if (isObjectPickedUp) return;
                     originalPosition = sceneObjects[selectedSceneObject].Position;
-                    isObjectPickedUp = true;
                     originalDistance = Vector3.Distance(camera.position, originalPosition);
+                    isObjectPickedUp = true;
                     grabX = false; grabY = false; grabZ = false;
                 }
 
                 if (isObjectPickedUp)
                 {
-                    float x = MapRange(MousePosition.X, 0, viewportSize.X, -1, 1);
-                    float y = MapRange(MousePosition.Y, 0, viewportSize.Y, 1, -1);
-                    float z = 1.0f;
-                    Vector3 ray_nds = new (x, y, z);
-                    Vector4 ray_clip = new (ray_nds.X, ray_nds.Y, -1.0f, 1.0f);
+                    float x = EngineUtility.MapRange(MousePosition.X, 0, viewportSize.X, -1, 1);
+                    float y = EngineUtility.MapRange(MousePosition.Y, 0, viewportSize.Y, 1, -1);
+                    Vector3 ray_nds = new(x, y, 1.0f);
+                    Vector4 ray_clip = new(ray_nds.X, ray_nds.Y, -1.0f, 1.0f);
                     Vector4 ray_eye = ray_clip * Matrix4.Invert(projectionMatrix);
-                    ray_eye = new (ray_eye.X, ray_eye.Y, -1.0f, 1.0f);
+                    ray_eye = new(ray_eye.X, ray_eye.Y, -1.0f, 1.0f);
                     Vector3 ray_wor = (ray_eye * Matrix4.Invert(viewMatrix)).Xyz;
 
-                    newPosition = Raycast(ray_wor, originalDistance);
-                    newPosition2 = Raycast(camera.position, Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Position));
+                    newPosWS = Raycast(ray_wor, originalDistance);
+
                     if (IsMouseButtonPressed(MouseButton.Button1)) isObjectPickedUp = false;
-                    
+
                     if (IsKeyPressed(Keys.X))
                     {
-                        grabX = ToggleBool(grabX);
+                        grabX = EngineUtility.ToggleBool(grabX);
                         grabY = false;
                         grabZ = false;
                     }
@@ -271,7 +268,7 @@ namespace Modine
                     if (IsKeyPressed(Keys.Y))
                     {
                         grabX = false;
-                        grabY = ToggleBool(grabY);;
+                        grabY = EngineUtility.ToggleBool(grabY);
                         grabZ = false;
                     }
 
@@ -279,7 +276,7 @@ namespace Modine
                     {
                         grabX = false;
                         grabY = false;
-                        grabZ = ToggleBool(grabZ);;
+                        grabZ = EngineUtility.ToggleBool(grabZ);
                     }
 
                     if (IsKeyPressed(Keys.Escape))
@@ -289,10 +286,10 @@ namespace Modine
                         return;
                     }
 
-                    if (grabX) sceneObjects[selectedSceneObject].Position = new (newPosition2.X, originalPosition.Y, originalPosition.Z);
-                    if (grabY) sceneObjects[selectedSceneObject].Position = new (originalPosition.X, newPosition2.Y, originalPosition.Z);
-                    if (grabZ) sceneObjects[selectedSceneObject].Position = new (originalPosition.X, originalPosition.Y, newPosition2.Z);
-                    if (!grabX && !grabY && !grabZ) sceneObjects[selectedSceneObject].Position = newPosition;
+                    if (grabX) sceneObjects[selectedSceneObject].Position = new(newPosWS.X, originalPosition.Y, originalPosition.Z);
+                    if (grabY) sceneObjects[selectedSceneObject].Position = new(originalPosition.X, newPosWS.Y, originalPosition.Z);
+                    if (grabZ) sceneObjects[selectedSceneObject].Position = new(originalPosition.X, originalPosition.Y, newPosWS.Z);
+                    if (!grabX && !grabY && !grabZ) sceneObjects[selectedSceneObject].Position = newPosWS;
                 }
             }
             
@@ -317,11 +314,13 @@ namespace Modine
 
         public void RenderScene(double time)
         {
-            RenderClass.RenderShadowScene(shadowRes, ref depthMapFBO, lightSpaceMatrix, ref sceneObjects, shadowShader);
+            VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
+            RenderFuncs.RenderShadowScene(shadowRes, ref depthMapFBO, lightSpaceMatrix, ref sceneObjects, shadowShader);
 
             // Render normal scene
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
+            GL.DrawBuffers(6, new  DrawBuffersEnum[] { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3, DrawBuffersEnum.ColorAttachment4, DrawBuffersEnum.ColorAttachment5 });
             GL.ClearColor(new  Color4(ambient.X, ambient.Y, ambient.Z, 1));
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
@@ -352,13 +351,12 @@ namespace Modine
                 GL.StencilMask(0x00);
                 
                 float aspectRatio = (float)viewportSize.X / viewportSize.Y;
-                lightSpaceMatrix = Matrix4.LookAt(SunDirection * 10, new (0, 0, 0), Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-10, 10, -10, 10, 0.1f, 100);
+                lightSpaceMatrix = Matrix4.LookAt(SunDirection * 10 + camera.position, Vector3.Zero + camera.position, Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-20, 20, -20, 20, 0.1f, 100);
                 projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, 0.1f, 100);
                 viewMatrix = Matrix4.LookAt(camera.position, camera.position + camera.direction, Vector3.UnitY);
 
                 GL.ActiveTexture(TextureUnit.Texture4);
                 GL.BindTexture(TextureTarget.Texture2D, depthMap);
-                GL.DrawBuffers(4, new  DrawBuffersEnum[] { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3 });
                 PBRShader.Use();
                 PBRShader.SetMatrix4("projection", projectionMatrix);
                 PBRShader.SetMatrix4("view", viewMatrix);
@@ -424,34 +422,45 @@ namespace Modine
             defferedShader.SetVector3("viewPos", camera.position); 
             defferedShader.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
             defferedShader.SetMatrix4("viewMatrixInv", Matrix4.Invert(viewMatrix));
-
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gNormal, gMetallicRough);
-            if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
-            // Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gNormal, projectionMatrix, numAOSamples);
-            // Postprocessing.RenderSSAOrect(ref SSAOblurShader, framebufferTexture);
-            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
 
-            // Draw lights after postprocessing to avoid overlaps
+            postprocessShader.Use();
+            postprocessShader.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
+            postprocessShader.SetMatrix4("viewMatrix", viewMatrix);
+            Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gNormal, gPosition, projectionMatrix, numAOSamples);
+            
+            if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
+
+            //Postprocessing.RenderSSAOrect(ref SSAOblurShader, blurAO);
+            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture, blurAO);
+            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, ref blurAO);
+
+            // Draw lights after postprocessing to avoid overlaps (AO and other effects)
             lightShader.Use();
             lightShader.SetMatrix4("projection", projectionMatrix);
             lightShader.SetMatrix4("view", viewMatrix);
             for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Render(camera);
 
-            // Resize depth and framebuffer texture if size has changed
-            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ClientSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref SSAOblur);
-
-            OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
-            if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());
-
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+
+            // Toggle fullscreen
+            if (IsKeyDown(Keys.LeftControl) && IsKeyPressed(Keys.Space)) fullscreen = EngineUtility.ToggleBool(fullscreen);
 
             // Show all the ImGUI windows
             ImGuiController.Update(this, (float)time);
             ImGui.DockSpaceOverViewport();
-
             ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
             if (showStats) ImGuiWindows.SmallStats(viewportSize, viewportPos, FPScounter.fps, FPScounter.ms, count_Meshes, count_PointLights, triangleCount);
+            
+            // Quick menu
+            if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
+            {
+                showQuickMenu = EngineUtility.ToggleBool(showQuickMenu);
+                if (showQuickMenu) ImGui.SetNextWindowPos(new(MouseState.Position.X, MouseState.Position.Y));
+            }
+            if (showQuickMenu) ImGuiWindows.QuickMenu(ref sceneObjects, ref selectedSceneObject, ref showQuickMenu, ref triangleCount);
+            
             if (!fullscreen)
             {
                 ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes);
@@ -461,224 +470,19 @@ namespace Modine
                 ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
                 ImGuiWindows.Settings(ref camera.speed, ref vsyncOn, ref showOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref numAOSamples, ref defferedShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref SSAOblurShader, ref PBRShader);
             }
-            
-            // Toggle fullscreen
-            if (IsKeyDown(Keys.LeftControl) && IsKeyPressed(Keys.Space)) fullscreen = ToggleBool(fullscreen);
-
-            // Quick menu
-            if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
-            {
-                showQuickMenu = ToggleBool(showQuickMenu);
-                if (showQuickMenu)
-                {
-                    SN.Vector2 mousePos = new  SN.Vector2(MouseState.Position.X, MouseState.Position.Y);
-                    ImGui.SetNextWindowPos(mousePos);
-                }
-            }
-
-            if (showQuickMenu)
-            {
-                ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 2);
-                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new SN.Vector2(7, 5));
-                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new SN.Vector2(4));
-                ImGui.Begin("QuickMenu", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoSavedSettings);
-                
-                ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
-
-                // Center text
-                float availableWidth = ImGui.GetContentRegionAvail().X;
-                ImGui.SetCursorPosX((availableWidth - ImGui.CalcTextSize("Quick Menu").X) / 2);
-                ImGui.Text("Quick Menu");
-
-                ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
-                ImGui.Separator();
-                ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
-
-                if (ImGui.BeginMenu("Mesh"))
-                {
-                    ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
-
-                    if (ImGui.MenuItem("Cube"))
-                    {
-                        int[] cubeIndices;
-                        VertexData[] cubeVertexData;
-                        ModelImporter.LoadModel("Assets/Models/Cube.fbx", out cubeVertexData, out cubeIndices);
-
-                        Mesh cube = new  Mesh(cubeVertexData, cubeIndices, PBRShader, true, 0);
-                        SceneObject _cube = new (PBRShader, NewName("Cube"), cube);
-                        sceneObjects.Add(_cube);
-
-                        selectedSceneObject = sceneObjects.Count - 1;
-
-                        triangleCount = CalculateTriangles();
-
-                        showQuickMenu = false;
-                    }
-
-                    ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
-                    ImGui.Separator();
-                    ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
-
-                    if (ImGui.MenuItem("Sphere"))
-                    {
-                        VertexData[] sphereVertexData;
-                        int[] sphereIndices;
-                        ModelImporter.LoadModel("Assets/Models/Sphere.fbx", out sphereVertexData, out sphereIndices);
-
-                        Mesh sphere = new  Mesh(sphereVertexData, sphereIndices, PBRShader, true, 0);
-                        SceneObject _sphere = new (PBRShader, NewName("Sphere"), sphere);
-                        sceneObjects.Add(_sphere);
-
-                        selectedSceneObject = sceneObjects.Count - 1;
-
-                        triangleCount = CalculateTriangles();
-
-                        showQuickMenu = false;
-                    }
-
-                    ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
-                    ImGui.Separator();
-                    ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
-
-                    if (ImGui.MenuItem("Plane"))
-                    {
-                        VertexData[] planeVertexData;
-                        int[] planeIndices;
-                        ModelImporter.LoadModel("Assets/Models/Floor.fbx", out planeVertexData, out planeIndices);
-
-                        Mesh plane = new  Mesh(planeVertexData, planeIndices, PBRShader, true, 0);
-                        SceneObject _plane = new (PBRShader, NewName("Plane"), plane);
-                        sceneObjects.Add(_plane);
-
-                        selectedSceneObject = sceneObjects.Count - 1;
-
-                        triangleCount = CalculateTriangles();
-
-                        showQuickMenu = false;
-                    }
-
-                    ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
-                    ImGui.Separator();
-                    ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
-
-                    if (ImGui.MenuItem("Import Mesh"))
-                    {
-                        OpenFileDialog selectFile = new  OpenFileDialog()
-                        {
-                            Title = "Select File",
-                            Filter = "Formats:|*.FBX; *.OBJ;"
-                        };
-                        selectFile.ShowDialog();
-                        string path = selectFile.FileName;
-
-                        if (File.Exists(path))
-                        {
-                            VertexData[] cubeVertexData;
-                            int[] cubeIndices;
-                            string name;
-                            ModelImporter.LoadModel(path, out cubeVertexData, out cubeIndices, out name);
-
-                            Mesh import = new  Mesh(cubeVertexData, cubeIndices, PBRShader, true, 0);
-                            SceneObject _import = new (PBRShader, NewName(name), import);
-                            sceneObjects.Add(_import);
-
-                            selectedSceneObject = sceneObjects.Count - 1;
-                        }
-
-                        showQuickMenu = false;
-                    }
-
-                    ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
-                        
-                    ImGui.EndMenu();
-                }
-
-                if (ImGui.BeginMenu("Light"))
-                {
-                    if (ImGui.MenuItem("Point Light"))
-                    {
-                        Light light = new  Light(lightShader, new (1, 1, 1), 5);
-                        SceneObject _light = new (PBRShader, NewName("Light"), light);
-                        sceneObjects.Add(_light);
-
-                        selectedSceneObject = sceneObjects.Count - 1;
-
-                        showQuickMenu = false;
-                    }
-
-                    ImGui.EndMenu();
-                }
-
-                ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
-                ImGui.Separator();
-                ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
-
-                ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0);
-                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new SN.Vector2(6));
-                if (ImGui.Button("Delete selection") && sceneObjects.Count != 0)
-                {
-                    sceneObjects[selectedSceneObject].Dispose();
-                    sceneObjects.RemoveAt(selectedSceneObject);
-                    triangleCount = Game.CalculateTriangles();
-                    if (selectedSceneObject != 0) selectedSceneObject -= 1;
-                }
-                ImGui.PopStyleVar(5);
-
-                ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
-
-                ImGui.End();
-                ImGui.PopStyleVar();
-            }
 
             ImGuiController.Render();
-
-            VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
-
             SwapBuffers();
-        }
 
-        public static string NewName(string baseName)
-        {
-            int index = 0;
-            string nName = baseName;
-
-            // Loop through the existing material names to find a unique name
-            while (sceneObjects.Any(m => m.Name == nName))
-            {
-                index++;
-                nName = $"{baseName}.{index.ToString("D3")}";
-            }
-
-            return nName;
-        }
-
-        public bool ToggleBool(bool toggleBool)
-        {
-            bool _bool = false;
-
-            if (toggleBool == true) _bool = false;
-            if (toggleBool == false) _bool = true;
-
-            return _bool;
-        }
-
-        public static int CalculateTriangles()
-        {
-            int count = 0;
-            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh) count += sceneObject.Mesh.vertexCount / 3;
-            
-            return count;
-        }
-
-        float MapRange(float value, float inputMin, float inputMax, float outputMin, float outputMax) {
-            return ((value - inputMin) / (inputMax - inputMin)) * (outputMax - outputMin) + outputMin;
+            OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
+            if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());
         }
 
         Vector3 Raycast(Vector3 origin, float distance)
         {
             // NDS
-            float x = MapRange(MousePosition.X, 0, viewportSize.X, -1, 1);
-            float y = MapRange(MousePosition.Y, 0, viewportSize.Y, 1, -1);
+            float x = EngineUtility.MapRange(MousePosition.X, 0, viewportSize.X, -1, 1);
+            float y = EngineUtility.MapRange(MousePosition.Y, 0, viewportSize.Y, 1, -1);
             float z = 1.0f;
             Vector3 ray_nds = new (x, y, z);
 

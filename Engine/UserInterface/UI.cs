@@ -59,7 +59,7 @@ namespace Modine.ImGUI
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 string newName = _sceneObject.Name;
                 ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
-                if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _sceneObject.Name = Modine.Game.NewName(newName);
+                if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _sceneObject.Name = Common.EngineUtility.NewName(sceneObjects, newName);
                 ImGui.PopItemWidth();
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -470,6 +470,160 @@ namespace Modine.ImGUI
             }
         }
 
+        public static void QuickMenu(ref List<SceneObject> sceneObjects, ref int selectedSceneObject, ref bool showQuickMenu, ref int triangleCount)
+        {
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 2);
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new SN.Vector2(7, 5));
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new SN.Vector2(4));
+            ImGui.Begin("QuickMenu", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoSavedSettings);
+            
+            ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
+
+            // Center text
+            float availableWidth = ImGui.GetContentRegionAvail().X;
+            ImGui.SetCursorPosX((availableWidth - ImGui.CalcTextSize("Quick Menu").X) / 2);
+            ImGui.Text("Quick Menu");
+
+            ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
+            ImGui.Separator();
+            ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
+
+            if (ImGui.BeginMenu("Mesh"))
+            {
+                ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
+
+                if (ImGui.MenuItem("Cube"))
+                {
+                    int[] cubeIndices;
+                    VertexData[] cubeVertexData;
+                    ModelImporter.LoadModel("Assets/Models/Cube.fbx", out cubeVertexData, out cubeIndices);
+
+                    Mesh cube = new  Mesh(cubeVertexData, cubeIndices, Game.PBRShader, true, 0);
+                    SceneObject _cube = new(Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Cube"), cube);
+                    sceneObjects.Add(_cube);
+
+                    selectedSceneObject = sceneObjects.Count - 1;
+
+                    triangleCount = Common.EngineUtility.CalculateTriangles(sceneObjects);
+
+                    showQuickMenu = false;
+                }
+
+                ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
+                ImGui.Separator();
+                ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
+
+                if (ImGui.MenuItem("Sphere"))
+                {
+                    VertexData[] sphereVertexData;
+                    int[] sphereIndices;
+                    ModelImporter.LoadModel("Assets/Models/Sphere.fbx", out sphereVertexData, out sphereIndices);
+
+                    Mesh sphere = new  Mesh(sphereVertexData, sphereIndices, Game.PBRShader, true, 0);
+                    SceneObject _sphere = new (Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Sphere"), sphere);
+                    sceneObjects.Add(_sphere);
+
+                    selectedSceneObject = sceneObjects.Count - 1;
+
+                    triangleCount = Common.EngineUtility.CalculateTriangles(sceneObjects);
+
+                    showQuickMenu = false;
+                }
+
+                ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
+                ImGui.Separator();
+                ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
+
+                if (ImGui.MenuItem("Plane"))
+                {
+                    VertexData[] planeVertexData;
+                    int[] planeIndices;
+                    ModelImporter.LoadModel("Assets/Models/Floor.fbx", out planeVertexData, out planeIndices);
+
+                    Mesh plane = new  Mesh(planeVertexData, planeIndices, Game.PBRShader, true, 0);
+                    SceneObject _plane = new (Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Plane"), plane);
+                    sceneObjects.Add(_plane);
+
+                    selectedSceneObject = sceneObjects.Count - 1;
+
+                    triangleCount = Common.EngineUtility.CalculateTriangles(sceneObjects);
+
+                    showQuickMenu = false;
+                }
+
+                ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
+                ImGui.Separator();
+                ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
+
+                if (ImGui.MenuItem("Import Mesh"))
+                {
+                    OpenFileDialog selectFile = new  OpenFileDialog()
+                    {
+                        Title = "Select File",
+                        Filter = "Formats:|*.FBX; *.OBJ;"
+                    };
+                    selectFile.ShowDialog();
+                    string path = selectFile.FileName;
+
+                    if (File.Exists(path))
+                    {
+                        VertexData[] cubeVertexData;
+                        int[] cubeIndices;
+                        string name;
+                        ModelImporter.LoadModel(path, out cubeVertexData, out cubeIndices, out name);
+
+                        Mesh import = new  Mesh(cubeVertexData, cubeIndices, Game.PBRShader, true, 0);
+                        SceneObject _import = new(Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, name), import);
+                        sceneObjects.Add(_import);
+
+                        selectedSceneObject = sceneObjects.Count - 1;
+                    }
+
+                    showQuickMenu = false;
+                }
+
+                ImGui.Dummy(new  System.Numerics.Vector2(0f, 3));
+                    
+                ImGui.EndMenu();
+            }
+
+            if (ImGui.BeginMenu("Light"))
+            {
+                if (ImGui.MenuItem("Point Light"))
+                {
+                    Light light = new  Light(Game.lightShader, new (1, 1, 1), 5);
+                    SceneObject _light = new (Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Light"), light);
+                    sceneObjects.Add(_light);
+
+                    selectedSceneObject = sceneObjects.Count - 1;
+
+                    showQuickMenu = false;
+                }
+
+                ImGui.EndMenu();
+            }
+
+            ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
+            ImGui.Separator();
+            ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
+
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0);
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new SN.Vector2(6));
+            if (ImGui.Button("Delete selection") && sceneObjects.Count != 0)
+            {
+                sceneObjects[selectedSceneObject].Dispose();
+                sceneObjects.RemoveAt(selectedSceneObject);
+                triangleCount = Common.EngineUtility.CalculateTriangles(sceneObjects);
+                if (selectedSceneObject != 0) selectedSceneObject -= 1;
+            }
+            ImGui.PopStyleVar(5);
+
+            ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
+
+            ImGui.End();
+            ImGui.PopStyleVar();
+        }
+        
         static int selectedIndex = 3;
         static float shadowBias = 0.0018f;
         static bool fxaaOnOff = true;
@@ -518,7 +672,7 @@ namespace Modine.ImGUI
                     if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff))
                     {
                         ppshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
-                        SSAOshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
+                        fxaaShader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -536,7 +690,7 @@ namespace Modine.ImGUI
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Text("Gaussian Radius");
-                    if (ImGui.SliderInt("##Gaussian Radius", ref gaussianRadius, 1, 16)) SSAOshader.SetInt("gaussianRadius", gaussianRadius);
+                    if (ImGui.SliderInt("##Gaussian Radius", ref gaussianRadius, 1, 16)) fxaaShader.SetInt("gaussianRadius", gaussianRadius);
 
                     ImGui.Unindent();
                 }
@@ -551,7 +705,7 @@ namespace Modine.ImGUI
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                if (ImGui.Checkbox(" Tonemapping", ref ACESonoff)) defshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
+                if (ImGui.Checkbox(" Tonemapping", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
                 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 

@@ -1,12 +1,14 @@
 #version 330 core
 
 uniform sampler2D frameBufferTexture;
+uniform sampler2D inAO;
 uniform bool fxaaOnOff = true;
 
 in vec2 UV;
 out vec4 fragColor;
 
-vec3 tex(vec2 p) {
+vec3 tex(vec2 p)
+{
     return texture(frameBufferTexture, p).rgb; 
 }
 
@@ -57,14 +59,37 @@ vec3 fxaa(vec2 p, vec2 RES)
     return ((lumaB < lumaMin) || (lumaB > lumaMax)) ? rgbA : rgbB;
 }
 
+uniform bool ssaoOnOff = true;
+uniform int gaussianRadius = 3;
+
 // Modification of: https://www.shadertoy.com/view/sltcRf
 void main()
 {	
+    float ao = texture(inAO, UV).r;
+    float smoothAO = 0;
+    if (ssaoOnOff)
+    {
+        vec2 offset;
+        vec2 texelSize = 1.0 / vec2(textureSize(inAO, 0));
+        float result = 0.0;
+        for (int x = -gaussianRadius; x <= gaussianRadius; ++x) 
+        {
+            for (int y = -gaussianRadius; y <= gaussianRadius; ++y) 
+            {
+                offset = vec2(float(x), float(y)) * texelSize;
+                result += texture(inAO, UV + offset).r;
+            }
+        }
+        float blur = result / ((gaussianRadius * 2 + 1) * (gaussianRadius * 2 + 1));
+        
+        smoothAO = blur;
+    }
+    else smoothAO = 1;
+
     if (fxaaOnOff)
     {
         vec2 size = textureSize(frameBufferTexture, 0);
-        fragColor = vec4(fxaa(UV, size), 1);
+        fragColor = vec4(fxaa(UV, size) * smoothAO, 1);
     }
-
-    else fragColor = vec4(texture(frameBufferTexture, UV).rgb, 1);
+    else fragColor = vec4(texture(frameBufferTexture, UV).rgb * smoothAO, 1);
 }

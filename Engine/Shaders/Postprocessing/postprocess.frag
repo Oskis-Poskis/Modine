@@ -18,9 +18,6 @@ uniform float radius = 0.8;
 uniform int kernelSize = 16;
 float bias = 0.025;
 
-float near = 0.5;
-float far = 100;
-
 vec4 ViewPosFromDepth(float depth, vec2 uvs)
 {
     float z = depth * 2.0 - 1.0;
@@ -57,9 +54,8 @@ void main()
 {
     vec3 color = texture(frameBufferTexture, UV).rgb;
     float _depth = texture(depth, UV).r;
-    vec3 _fragPos = ViewPosFromDepth(_depth, UV).xyz;
-    vec3 fragPos = texture(gPosition, UV).rgb;
-    if (_depth > 0.99) fragPos = vec3(0, 0, 0);
+    vec3 fragPos = ViewPosFromDepth(_depth, UV).xyz;
+    // vec3 fragPos = texture(gPosition, UV).rgb;
 
     if (ACES) color = ACESFilm(color);
     if (ssaoOnOff)
@@ -93,6 +89,7 @@ void main()
         occlusion = 1.0 - (occlusion / kernelSize);
         occlusion = pow(occlusion, SSAOpower);
         outAO = vec3(occlusion);
+        if (_depth == 1) outAO = vec3(1);
     }
     else outAO = vec3(1);
     

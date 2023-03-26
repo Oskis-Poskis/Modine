@@ -47,7 +47,7 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
     float r = (roughness + 1.0);
-    float k = (r*r) / 8.0;
+    float k = (r * r) / 8.0;
 
     float nom   = NdotV;
     float denom = NdotV * (1.0 - k) + k;
@@ -148,7 +148,6 @@ void main()
     vec3 albedo = texture(gAlbedo, UV).rgb;
     float _depth = texture(depth, UV).r;
     vec3 fragPos = WorldPos(_depth).xyz;
-    if (_depth > 0.99) fragPos = vec3(0, 0, 0);
     vec3 N = texture(gNormal, UV).rgb;
     vec3 MetRoughShadow = texture(gMetallicRough, UV).rgb;
 
@@ -173,5 +172,6 @@ void main()
     result = dirLighting * (1 - shadow * shadowFactor) + (albedo * ambient);
     result += pointLighting;
 
+    if (_depth == 1) discard;
     fragColor = vec4(result, 1);
 }

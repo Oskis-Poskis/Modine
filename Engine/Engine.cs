@@ -3,8 +3,6 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-
-using SN = System.Numerics;
 using ImGuiNET;
 
 using Modine.Common;
@@ -12,7 +10,6 @@ using Modine.Rendering;
 using Modine.ImGUI;
 
 using static Modine.Rendering.SceneObject;
-using EngineUtlity = Modine.Common.EngineUtility;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
 namespace Modine
@@ -149,8 +146,8 @@ namespace Modine
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
 
-            int numRows = 2;
-            int numCols = 2;
+            int numRows = 10;
+            int numCols = 10;
             int spacing = 5;
             int startX = -((numCols - 1) * spacing) / 2;
             int startY = -((numRows - 1) * spacing) / 2;
@@ -425,7 +422,7 @@ namespace Modine
             
             Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gNormal, gPosition, numAOSamples, projectionMatrix, viewMatrix);
             if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
-            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture, blurAO);
+            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture, blurAO, depthStencilTexture);
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, ref blurAO);
 
             // Draw lights after postprocessing to avoid overlaps (AO and other effects)

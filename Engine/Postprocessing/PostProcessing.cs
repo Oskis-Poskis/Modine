@@ -182,7 +182,7 @@ namespace Modine.Common
             GL.Enable(EnableCap.DepthTest);
         }
 
-        public static void RenderFXAARect(ref Shader fxaaShader, int frameBufferTexture, int blurAO)
+        public static void RenderFXAARect(ref Shader fxaaShader, int frameBufferTexture, int blurAO, int depthStencilTexture)
         {
             fxaaShader.Use();
 
@@ -195,6 +195,12 @@ namespace Modine.Common
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, blurAO);
             fxaaShader.SetInt("inAO", 1);
+
+            // Bind depth texture
+            GL.ActiveTexture(TextureUnit.Texture2);
+            GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
+            fxaaShader.SetInt("depth", 2);
 
             // Render quad with framebuffer and added outline
             GL.Disable(EnableCap.DepthTest);

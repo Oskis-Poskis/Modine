@@ -27,10 +27,9 @@ namespace Modine.Common
             pitch -= deltaY * sensitivity;
             pitch = MathHelper.Clamp(pitch, -MathHelper.PiOver2 + 0.005f, MathHelper.PiOver2 - 0.005f);
 
-            direction = new Vector3(
-                (float)Math.Cos(yaw) * (float)Math.Cos(pitch),
-                (float)Math.Sin(pitch),
-                (float)Math.Sin(yaw) * (float)Math.Cos(pitch));
+            direction = new Vector3((float)Math.Cos(yaw) * (float)Math.Cos(pitch),
+                                    (float)Math.Sin(pitch),
+                                    (float)Math.Sin(yaw) * (float)Math.Cos(pitch));
         }
     }
 }

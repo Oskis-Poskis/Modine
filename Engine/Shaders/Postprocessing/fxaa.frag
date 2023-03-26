@@ -2,6 +2,7 @@
 
 uniform sampler2D frameBufferTexture;
 uniform sampler2D inAO;
+uniform sampler2D depth;
 uniform bool fxaaOnOff = true;
 
 in vec2 UV;
@@ -66,6 +67,8 @@ uniform int gaussianRadius = 3;
 void main()
 {	
     float ao = texture(inAO, UV).r;
+    float _depth = texture(depth, UV).r;
+
     float smoothAO = 0;
     if (ssaoOnOff)
     {

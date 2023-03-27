@@ -146,8 +146,8 @@ namespace Modine
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
 
-            int numRows = 10;
-            int numCols = 10;
+            int numRows = 0;
+            int numCols = 0;
             int spacing = 5;
             int startX = -((numCols - 1) * spacing) / 2;
             int startY = -((numRows - 1) * spacing) / 2;

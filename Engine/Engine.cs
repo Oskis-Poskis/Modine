@@ -422,7 +422,7 @@ namespace Modine
             
             Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gNormal, gPosition, numAOSamples, projectionMatrix, viewMatrix);
             if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
-            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture, blurAO, depthStencilTexture);
+            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, ref blurAO);
 
             // Draw lights after postprocessing to avoid overlaps (AO and other effects)
@@ -454,7 +454,7 @@ namespace Modine
             if (!fullscreen)
             {
                 ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes);
-                ImGuiWindows.AssetBrowser();
+                // ImGuiWindows.AssetBrowser();
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);

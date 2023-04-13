@@ -79,7 +79,7 @@ namespace Modine
         private bool fullscreen = false;
 
         private ImGuiController ImGuiController;
-        int framebufferTexture, depthStencilTexture, gAlbedo, gNormal, gMetallicRough, gPosition, blurAO;
+        int framebufferTexture, depthStencilTexture, gAlbedo, gNormal, gMetallicRough, gPosition;
         int FBO;
 
         public static int numAOSamples = 16;
@@ -420,7 +420,7 @@ namespace Modine
             defferedShader.SetVector3("viewPos", camera.position); 
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gNormal, gPosition, gMetallicRough);
 
-            //Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture);
+            Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture);
             if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition);

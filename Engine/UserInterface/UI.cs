@@ -169,7 +169,9 @@ namespace Modine.ImGUI
             
             ImGui.Image((IntPtr)framebufferTexture, new(windowSize.X, windowSize.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
 
-            viewportHovered = ImGui.IsWindowHovered() ? true : false;
+            //viewportHovered = ImGui.IsWindowHovered() ? true : false;
+            viewportHovered = true;
+
             ImGui.End();
         }
 

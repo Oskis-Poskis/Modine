@@ -152,5 +152,6 @@ void main()
     result = dirLighting * (1 - shadow * shadowFactor) + (albedo * ambient);
     result += pointLighting;
 
+    if (_depth == 1) discard;
     fragColor = vec4(result, 1);
 }

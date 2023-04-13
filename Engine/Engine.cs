@@ -420,9 +420,9 @@ namespace Modine
             defferedShader.SetVector3("viewPos", camera.position); 
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gNormal, gPosition, gMetallicRough);
 
-            Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture);
+            //Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture);
             if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
-            // Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition);
 
             // Draw lights after postprocessing to avoid overlaps (AO and other effects)
@@ -456,12 +456,10 @@ namespace Modine
             GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
             GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
 
-            // RenderCompRect(ref CompDisplayShader, compTexture);
-
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, compTexture);
 
-            ImGui.Begin("Raytracing");
+            ImGui.Begin("Raytraced Scene");
             compSize = new(Convert.ToInt32(ImGui.GetContentRegionAvail().X), Convert.ToInt32(ImGui.GetContentRegionAvail().Y));
             ResizeCompTex(compSize, ref compTexture);
             ImGui.Image((IntPtr)compTexture, new(compSize.X, compSize.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));

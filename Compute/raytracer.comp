@@ -26,8 +26,8 @@ void main() {
 
     ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
     ivec2 screen_size = imageSize(img_output);
-    float horizontalCoefficient = ((float(pixel_coords.x) * 2 - screen_size.x) / screen_size.x);
-    float verticalCoefficient = ((float(pixel_coords.y) * 2 - screen_size.y) / screen_size.x);
+    float horizontalCoefficient = ((float(pixel_coords.x) * 2 - screen_size.x) / screen_size.y);
+    float verticalCoefficient = ((float(pixel_coords.y) * 2 - screen_size.y) / screen_size.y); 
 
     vec3 pixel = vec3(0.0);
 
@@ -50,7 +50,8 @@ void main() {
     float discriminant = b * b - 4.0 * a * c;
 
     if (discriminant > 0) {
-        pixel += sphere.color;
+        float t = (-b - sqrt(discriminant)) / (2 * a);
+        pixel += normalize(ray.origin + t * ray.direction - sphere.center);
     }
 
     imageStore(img_output, pixel_coords, vec4(pixel,1.0));

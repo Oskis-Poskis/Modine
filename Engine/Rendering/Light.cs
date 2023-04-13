@@ -58,8 +58,8 @@ namespace Modine.Rendering
 
             Matrix4 model = Matrix4.Identity;
             model *= Matrix4.CreateScale(0.15f);
-            model *= Matrix4.CreateRotationX(Math.Clamp(cam.pitch, -89, 89)) *
-                     Matrix4.CreateRotationY(-cam.yaw - MathHelper.PiOver2) * 
+            model *= Matrix4.CreateRotationX(Math.Clamp(cam.phi, -89, 89)) *
+                     Matrix4.CreateRotationY(-cam.theta - MathHelper.PiOver2) * 
                      Matrix4.CreateRotationZ(0);
             model *= Matrix4.CreateTranslation(pos);
 

@@ -94,7 +94,6 @@ namespace Modine
         Shader CompDisplayShader;
         ComputeShader RaytracingShader;
         int compTexture;
-        int computeFBO;
         Vector2i compSize = new(1024);
 
         unsafe protected override void OnLoad()
@@ -125,8 +124,8 @@ namespace Modine
             Postprocessing.SetupPPRect(ref postprocessShader);
 
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1, 0.5f, 100);
-            viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, new (0, 1, 0));
-            camera = new  Camera(new (0, 0, 2), -Vector3.UnitZ, 6);
+            viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitY, new(0, 1, 0));
+            camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 6);
             defaultMat = new ("Default", new (0.8f), 0, 0.3f, 0.0f, PBRShader);
 
             defferedShader.SetVector3("ambient", ambient);
@@ -190,11 +189,7 @@ namespace Modine
             ImGuiController = new  ImGuiController(viewportSize.X, viewportSize.Y);
             ImGuiWindows.LoadTheme();
 
-            //computeFBO = GL.GenFramebuffer();
-            //GL.BindFramebuffer(FramebufferTarget.Framebuffer, computeFBO);
             SetupCompRect(ref compTexture, compSize);
-
-            // GLFW.MaximizeWindow(WindowPtr);
         }
 
         public static Vector3 GetRandomBrightColor()
@@ -308,9 +303,6 @@ namespace Modine
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             base.OnRenderFrame(args);
-
-            
-
             RenderScene(args.Time);
         }
 
@@ -455,6 +447,8 @@ namespace Modine
 
 
             RaytracingShader.Use();
+            RaytracingShader.SetVector3("camera.direction", camera.direction);
+            RaytracingShader.SetVector3("camera.position", camera.position);
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindImageTexture(0, compTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
@@ -467,11 +461,13 @@ namespace Modine
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, compTexture);
 
-            ImGui.Begin("Scene");
+            ImGui.Begin("Raytracing");
             compSize = new(Convert.ToInt32(ImGui.GetContentRegionAvail().X), Convert.ToInt32(ImGui.GetContentRegionAvail().Y));
             ResizeCompTex(compSize, ref compTexture);
             ImGui.Image((IntPtr)compTexture, new(compSize.X, compSize.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
             ImGui.End();
+
+
 
 
 

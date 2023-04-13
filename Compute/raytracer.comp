@@ -74,12 +74,14 @@ bool triangleIntersect1(Ray ray, Triangle triangle)
     vec3 pvec = cross(ray.direction, edge2);
     float det = dot(edge1, pvec);
 
-    if (det != 0.0) {
+    if (det != 0.0)
+    {
         float inv_det = 1.0 / det;
         vec3 tvec = ray.origin - triangle.v0;
         float u = dot(tvec, pvec) * inv_det;
 
-        if (u >= 0.0 && u <= 1.0) {
+        if (u >= 0.0 && u <= 1.0)
+        {
             vec3 qvec = cross(tvec, edge1);
             float v = dot(ray.direction, qvec) * inv_det;
 
@@ -87,10 +89,13 @@ bool triangleIntersect1(Ray ray, Triangle triangle)
                 float t = dot(edge2, qvec) * inv_det;
                 return true;
             }
+
             else return false;
         }
+
         else return false;
     }
+    
     else return false;
 }
 

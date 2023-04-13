@@ -7,9 +7,11 @@ using ImGuiNET;
 
 using Modine.Common;
 using Modine.Rendering;
+using Modine.Compute;
 using Modine.ImGUI;
 
 using static Modine.Rendering.SceneObject;
+using static Modine.Compute.RenderTexture;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
 namespace Modine
@@ -27,7 +29,7 @@ namespace Modine
                 WindowState = WindowState.Normal,
                 API = ContextAPI.OpenGL,
                 Profile = ContextProfile.Core,
-                APIVersion = new  Version(3, 3),
+                APIVersion = new  Version(4, 3),
                 Flags = ContextFlags.Debug
             })
         {
@@ -42,6 +44,9 @@ namespace Modine
             defferedShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/deffered.frag");
             outlineShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/outline.frag");
             fxaaShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/fxaa.frag");
+
+            CompDisplayShader = new("Compute/fbo.vert", "Compute/fbo.frag");
+            RaytracingShader = new ComputeShader("Compute/raytracer.comp");
         }
 
         private bool viewportHovered;
@@ -86,6 +91,12 @@ namespace Modine
 
         FPScounter FPScounter = new ();
 
+        Shader CompDisplayShader;
+        ComputeShader RaytracingShader;
+        int compTexture;
+        int computeFBO;
+        Vector2i compSize = new(1024);
+
         unsafe protected override void OnLoad()
         {
             base.OnLoad();
@@ -103,7 +114,7 @@ namespace Modine
             FBO = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
 
-            Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, ref blurAO, viewportSize);
+            Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, viewportSize);
             FramebufferErrorCode status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
 
             OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
@@ -132,8 +143,6 @@ namespace Modine
 
             ModelImporter.LoadModel("Assets/Models/TestRoom.fbx", out vertexData, out indices);
             Room = new  Mesh(vertexData, indices, PBRShader, true, 0);
-
-            Postprocessing.GenNoise(numAOSamples);
 
             SceneObject _room = new (PBRShader, "Room", Room);
 
@@ -180,6 +189,10 @@ namespace Modine
 
             ImGuiController = new  ImGuiController(viewportSize.X, viewportSize.Y);
             ImGuiWindows.LoadTheme();
+
+            //computeFBO = GL.GenFramebuffer();
+            //GL.BindFramebuffer(FramebufferTarget.Framebuffer, computeFBO);
+            SetupCompRect(ref compTexture, compSize);
 
             // GLFW.MaximizeWindow(WindowPtr);
         }
@@ -295,6 +308,9 @@ namespace Modine
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             base.OnRenderFrame(args);
+
+            
+
             RenderScene(args.Time);
         }
 
@@ -347,7 +363,7 @@ namespace Modine
                 GL.StencilMask(0x00);
                 
                 float aspectRatio = (float)viewportSize.X / viewportSize.Y;
-                lightSpaceMatrix = Matrix4.LookAt(SunDirection * 10 + camera.position, Vector3.Zero + camera.position, Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-10, 10, -10, 10, 0.1f, 100);
+                lightSpaceMatrix = Matrix4.LookAt(SunDirection * 10, Vector3.Zero, Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-10, 10, -10, 10, 0.1f, 100);
                 projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, 0.1f, 100);
                 viewMatrix = Matrix4.LookAt(camera.position, camera.position + camera.direction, Vector3.UnitY);
 
@@ -404,26 +420,18 @@ namespace Modine
                 GL.Disable(EnableCap.StencilTest);
             }
 
-            if (numAOSamples != previousAOSamples)
-            {
-                Postprocessing.GenNoise(numAOSamples);
-                previousAOSamples = numAOSamples;
-            }
-
             // Use different shaders for engine and viewport effects
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             
             defferedShader.Use();
             defferedShader.SetInt("countPL", count_PointLights);
             defferedShader.SetVector3("viewPos", camera.position); 
-            defferedShader.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
-            defferedShader.SetMatrix4("viewMatrixInv", Matrix4.Invert(viewMatrix));
-            Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gNormal, gMetallicRough);
-            
-            Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture, depthStencilTexture, gNormal, gPosition, numAOSamples, projectionMatrix, viewMatrix);
+            Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gNormal, gPosition, gMetallicRough);
+
+            Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture);
             if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
-            Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
-            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, ref blurAO);
+            // Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition);
 
             // Draw lights after postprocessing to avoid overlaps (AO and other effects)
             lightShader.Use();
@@ -443,6 +451,30 @@ namespace Modine
             ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
             if (showStats) ImGuiWindows.SmallStats(viewportSize, viewportPos, FPScounter.fps, FPScounter.ms, count_Meshes, count_PointLights, triangleCount);
             
+
+
+
+            RaytracingShader.Use();
+
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindImageTexture(0, compTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            GL.DispatchCompute(compSize.X, compSize.Y, 1);
+            GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
+            GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+
+            // RenderCompRect(ref CompDisplayShader, compTexture);
+
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, compTexture);
+
+            ImGui.Begin("Scene");
+            compSize = new(Convert.ToInt32(ImGui.GetContentRegionAvail().X), Convert.ToInt32(ImGui.GetContentRegionAvail().Y));
+            ResizeCompTex(compSize, ref compTexture);
+            ImGui.Image((IntPtr)compTexture, new(compSize.X, compSize.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
+            ImGui.End();
+
+
+
             // Quick menu
             if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
             {

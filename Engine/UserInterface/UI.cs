@@ -629,11 +629,6 @@ namespace Modine.ImGUI
         static bool fxaaOnOff = true;
         static bool ACESonoff = true;
 
-        static bool ssaoOnOff = true;
-        static float ssaoRadius = 0.8f;
-        static float SSAOpower = 0.5f;
-        static int gaussianRadius = 3;
-
         static bool showImGUIdemo = false;
         static float strength = 1.75f;
         static float fontSize = 0.9f;
@@ -660,40 +655,7 @@ namespace Modine.ImGUI
 
             if (ImGui.CollapsingHeader("Post Processing"))
             {
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                
                 ImGui.Indent(20);
-                if (ImGui.CollapsingHeader("SSAO"))
-                {
-                    ImGui.Indent(20);
-
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-                    if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff))
-                    {
-                        ppshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
-                        fxaaShader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
-                    }
-
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    
-                    ImGui.Text("SSAO Radius");
-                    if (ImGui.SliderFloat("##SSAO Radius", ref ssaoRadius, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("radius", ssaoRadius);
-                    
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Text("SSAO Strength");
-                    if (ImGui.SliderFloat("##SSAO Power", ref SSAOpower, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("SSAOpower", SSAOpower);
-
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Text("SSAO Samples");
-                    if (ImGui.SliderInt("##SSAO Samples", ref numAOsamples, 1, 128)) ppshader.SetInt("kernelSize", numAOsamples);
-
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Text("Blur Radius");
-                    if (ImGui.SliderInt("##Blur Radius", ref gaussianRadius, 1, 16)) fxaaShader.SetInt("gaussianRadius", gaussianRadius);
-
-                    ImGui.Unindent();
-                }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();

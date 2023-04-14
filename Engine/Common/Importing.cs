@@ -38,6 +38,8 @@ namespace Modine.Common
                     indices[j++] = face.Indices[k];
                 }
             }
+
+            Console.WriteLine("Indices: " + indices.Count() + " - " + "Vertices: " + vertdata.Count());
             
             name = mesh.Name;
             //Console.WriteLine(mesh.HasTangentBasis);

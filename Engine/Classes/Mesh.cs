@@ -32,6 +32,7 @@ namespace Modine.Rendering
         public bool castShadow;
         public string meshName;
         public int MaterialIndex;
+        public VertexData[] vertexData;
 
         public Mesh(VertexData[] vertData, int[] indices, Shader shader, bool CastShadow, int matIndex) : base(meshShader: shader)
         {
@@ -62,6 +63,8 @@ namespace Modine.Rendering
             castShadow = CastShadow;
             MaterialIndex = matIndex;
 
+            vertexData = vertData;
+
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
@@ -80,7 +83,6 @@ namespace Modine.Rendering
 
             GL.BindVertexArray(vaoHandle);
             GL.DrawElements(PrimitiveType.Triangles, vertexCount, DrawElementsType.UnsignedInt, 0);
-
             GL.BindVertexArray(0);
         }
 

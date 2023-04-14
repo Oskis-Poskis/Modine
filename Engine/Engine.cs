@@ -94,7 +94,7 @@ namespace Modine
 
         Shader CompDisplayShader;
         ComputeShader RaytracingShader;
-        int compTexture;
+        int compTexture, triangleDataTexture;
         Vector2i compSize = new(1024);
 
         unsafe protected override void OnLoad()
@@ -139,7 +139,7 @@ namespace Modine
                 Texture.LoadFromFile("Assets/Resources/1_Roughness.png"),
                 Texture.LoadFromFile("Assets/Resources/1_Metallic.png"),
                 Texture.LoadFromFile("Assets/Resources/1_Normal.png"));
-            ModelImporter.LoadModel("Assets/Resources/KrissVector.fbx", out vectorData, out vectorIndicies);
+            ModelImporter.LoadModel("Assets/Models/Cube.fbx", out vectorData, out vectorIndicies);
 
             ModelImporter.LoadModel("Assets/Models/TestRoom.fbx", out vertexData, out indices);
             Room = new  Mesh(vertexData, indices, PBRShader, true, 0);
@@ -191,6 +191,7 @@ namespace Modine
             ImGuiWindows.LoadTheme();
 
             SetupCompRect(ref compTexture, compSize);
+            CreateResourceMemory(ref triangleDataTexture, sceneObjects[0].Mesh.vertexData);
         }
 
         public static Vector3 GetRandomBrightColor()
@@ -238,6 +239,7 @@ namespace Modine
                 if (IsKeyDown(Keys.D)) camera.position += moveAmount * Vector3.Normalize(Vector3.Cross(camera.direction, Vector3.UnitY));
                 if (IsKeyDown(Keys.E)) camera.position += moveAmount * Vector3.UnitY;
                 if (IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
+                if (IsKeyDown(Keys.LeftControl) && IsKeyPressed(Keys.Space)) fullscreen = EngineUtility.ToggleBool(fullscreen);
                 
                 if (IsKeyDown(Keys.LeftAlt) && IsKeyPressed(Keys.G)) sceneObjects[selectedSceneObject].Position = Vector3.Zero;
                 if (IsKeyPressed(Keys.G) && !IsKeyDown(Keys.LeftAlt))
@@ -313,6 +315,14 @@ namespace Modine
 
             ImGuiController.WindowResized(e.Width, e.Height);
         }
+
+
+
+        
+
+
+
+
 
         bool showQuickMenu = false;
 
@@ -414,9 +424,6 @@ namespace Modine
 
             // Use different shaders for engine and viewport effects
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-
-            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             
             defferedShader.Use();
             defferedShader.SetInt("countPL", count_PointLights);
@@ -427,15 +434,10 @@ namespace Modine
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition);
 
-            // Draw lights after postprocessing to avoid overlaps (AO and other effects)
             lightShader.Use();
             lightShader.SetMatrix4("projection", projectionMatrix);
             lightShader.SetMatrix4("view", viewMatrix);
             for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Render(camera);
-
-            /*
-            // Toggle fullscreen
-            if (IsKeyDown(Keys.LeftControl) && IsKeyPressed(Keys.Space)) fullscreen = EngineUtility.ToggleBool(fullscreen);
 
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
@@ -443,37 +445,25 @@ namespace Modine
             // Show all the ImGUI windows
             ImGuiController.Update(this, (float)time);
             ImGui.DockSpaceOverViewport();
-            ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes, ref selectedTexture);
             int[] textures = new int[]{framebufferTexture, gAlbedo, gPosition, gNormal, compTexture};
+            ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes, ref selectedTexture);
             ImGuiWindows.Viewport(textures[selectedTexture], depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
             if (showStats) ImGuiWindows.SmallStats(viewportSize, viewportPos, FPScounter.fps, FPScounter.ms, count_Meshes, count_PointLights, triangleCount);
 
             RaytracingShader.Use();
             RaytracingShader.SetVector3("camera.direction", camera.direction);
             RaytracingShader.SetVector3("camera.position", camera.position);
-
             ResizeTexture(viewportSize, ref compTexture, PixelInternalFormat.Rgba32f, PixelFormat.Rgba);
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindImageTexture(0, compTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            
+            
+
             GL.DispatchCompute(viewportSize.X, viewportSize.Y, 1);
             GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
             GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
 
-
-
-            /*
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, gAlbedo);
-
-            ImGui.Begin("Def");
-            Vector2i size1 = new(Convert.ToInt32(ImGui.GetContentRegionAvail().X), Convert.ToInt32(ImGui.GetContentRegionAvail().Y));
-            ImGui.Image((IntPtr)gAlbedo, new(size1.X, size1.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
-            ImGui.End();
-            */
-
-
-            /*
             // Quick menu
             if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
             {
@@ -492,8 +482,6 @@ namespace Modine
             }
 
             ImGuiController.Render();
-            */
-
             SwapBuffers();
 
             OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();

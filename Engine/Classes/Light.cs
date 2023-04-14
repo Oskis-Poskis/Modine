@@ -15,8 +15,6 @@ namespace Modine.Rendering
         public float strength = 1.0f;
         public string lightName;
 
-        public static Light _light;
-
         float[] vertices = new float[]
         {
             // First triangle
@@ -44,8 +42,6 @@ namespace Modine.Rendering
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
-            _light = this;
-
             this.lightShader = shader;
             this.lightName = Name;
             this.lightColor = _color;
@@ -57,7 +53,7 @@ namespace Modine.Rendering
             Matrix4 viewMatrix = Matrix4.LookAt(cam.position, cam.position + cam.direction, Vector3.UnitY);
 
             Matrix4 model = Matrix4.Identity;
-            model *= Matrix4.CreateScale(0.15f);
+            model *= Matrix4.CreateScale(0.1f);
             model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(cam.phi)) *
                      Matrix4.CreateRotationY(-MathHelper.DegreesToRadians(cam.theta + 90)) * 
                      Matrix4.CreateRotationZ(0);

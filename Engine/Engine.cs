@@ -54,7 +54,7 @@ namespace Modine
 
         private Vector2i viewportPos, viewportSize, previousViewportSize;
 
-        Vector3 ambient = new (0.04f);
+        Vector3 ambient = new (0.08f);
         Vector3 SunDirection = new(1);
         float shadowFactor = 0.75f;
         
@@ -79,6 +79,7 @@ namespace Modine
         private bool fullscreen = false;
 
         private ImGuiController ImGuiController;
+        int selectedTexture = 0;
         int framebufferTexture, depthStencilTexture, gAlbedo, gNormal, gMetallicRough, gPosition;
         int FBO;
 
@@ -296,14 +297,13 @@ namespace Modine
                     if (!grabX && !grabY && !grabZ) sceneObjects[selectedSceneObject].Position = newPosWS;
                 }
             }
-            
-            FPScounter.Count(args);
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             base.OnRenderFrame(args);
             RenderScene(args.Time);
+            FPScounter.Count(args);
         }
 
         protected override void OnResize(ResizeEventArgs e)
@@ -426,10 +426,10 @@ namespace Modine
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition);
 
             // Draw lights after postprocessing to avoid overlaps (AO and other effects)
-            lightShader.Use();
-            lightShader.SetMatrix4("projection", projectionMatrix);
-            lightShader.SetMatrix4("view", viewMatrix);
-            for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Render(camera);
+            // lightShader.Use();
+            // lightShader.SetMatrix4("projection", projectionMatrix);
+            // lightShader.SetMatrix4("view", viewMatrix);
+            // for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Render(camera);
 
             // Toggle fullscreen
             if (IsKeyDown(Keys.LeftControl) && IsKeyPressed(Keys.Space)) fullscreen = EngineUtility.ToggleBool(fullscreen);
@@ -440,34 +440,35 @@ namespace Modine
             // Show all the ImGUI windows
             ImGuiController.Update(this, (float)time);
             ImGui.DockSpaceOverViewport();
-            ImGuiWindows.Viewport(framebufferTexture, depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
+            int[] textures = new int[]{framebufferTexture, gAlbedo, gPosition, gNormal, compTexture};
+            ImGuiWindows.Viewport(textures[selectedTexture], depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
             if (showStats) ImGuiWindows.SmallStats(viewportSize, viewportPos, FPScounter.fps, FPScounter.ms, count_Meshes, count_PointLights, triangleCount);
             
-
 
 
             RaytracingShader.Use();
             RaytracingShader.SetVector3("camera.direction", camera.direction);
             RaytracingShader.SetVector3("camera.position", camera.position);
 
+            ResizeTexture(viewportSize, ref compTexture, PixelInternalFormat.Rgba32f, PixelFormat.Rgba);
+
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindImageTexture(0, compTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
-            GL.DispatchCompute(compSize.X, compSize.Y, 1);
+            GL.DispatchCompute(viewportSize.X, viewportSize.Y, 1);
             GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
             GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
 
+
+
+            /*
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, compTexture);
+            GL.BindTexture(TextureTarget.Texture2D, gAlbedo);
 
-            ImGui.Begin("Raytraced Scene");
-            compSize = new(Convert.ToInt32(ImGui.GetContentRegionAvail().X), Convert.ToInt32(ImGui.GetContentRegionAvail().Y));
-            ResizeCompTex(compSize, ref compTexture);
-            ImGui.Image((IntPtr)compTexture, new(compSize.X, compSize.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
+            ImGui.Begin("Def");
+            Vector2i size1 = new(Convert.ToInt32(ImGui.GetContentRegionAvail().X), Convert.ToInt32(ImGui.GetContentRegionAvail().Y));
+            ImGui.Image((IntPtr)gAlbedo, new(size1.X, size1.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
             ImGui.End();
-
-
-
-
+            */
 
             // Quick menu
             if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
@@ -479,7 +480,7 @@ namespace Modine
             
             if (!fullscreen)
             {
-                ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes);
+                ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes, ref selectedTexture);
                 // ImGuiWindows.AssetBrowser();
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);

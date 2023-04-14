@@ -42,11 +42,11 @@ namespace Modine.Compute
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
         }
 
-        public static void ResizeCompTex(Vector2i viewportSize, ref int frameBufferTexture)
+        public static void ResizeTexture(Vector2i viewportSize, ref int texture, PixelInternalFormat pif, PixelFormat pf)
         {            
             //Resize framebuffer
-            GL.BindTexture(TextureTarget.Texture2D, frameBufferTexture);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.BindTexture(TextureTarget.Texture2D, texture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, pif, viewportSize.X, viewportSize.Y, 0, pf, PixelType.UnsignedByte, IntPtr.Zero);
         }
 
         public static void RenderCompRect(ref Shader FBOshader, int framebufferTexture)

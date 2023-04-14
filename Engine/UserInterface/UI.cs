@@ -196,6 +196,12 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
+        static OpenFileDialog selectFile = new OpenFileDialog()
+        {
+            Title = "Select File",
+            Filter = "Formats:|*.PNG;*.JPG;*.JPEG;",
+        };
+
         public static void MaterialEditor(ref List<SceneObject> sceneObjects, ref Shader meshShader, int selectedIndex, ref List<Material> materials)
         {
             ImGui.Begin("Material Editor");
@@ -267,11 +273,6 @@ namespace Modine.ImGUI
                     
                     if (ImGui.Button("Load Albedo Texture"))
                     {
-                        OpenFileDialog selectFile = new OpenFileDialog()
-                        {
-                            Title = "Select File",
-                            Filter = "Formats:|*.PNG;"
-                        };
                         selectFile.ShowDialog();
 
                         string path = selectFile.FileName;
@@ -295,11 +296,6 @@ namespace Modine.ImGUI
                     }
                     if (ImGui.Button("Load Roughness Texture"))
                     {
-                        OpenFileDialog selectFile = new OpenFileDialog()
-                        {
-                            Title = "Select File",
-                            Filter = "Formats:|*.PNG;"
-                        };
                         selectFile.ShowDialog();
 
                         string path = selectFile.FileName;
@@ -323,11 +319,6 @@ namespace Modine.ImGUI
                     }
                     if (ImGui.Button("Load Metallic Texture"))
                     {
-                        OpenFileDialog selectFile = new OpenFileDialog()
-                        {
-                            Title = "Select File",
-                            Filter = "Formats:|*.PNG;"
-                        };
                         selectFile.ShowDialog();
 
                         string path = selectFile.FileName;
@@ -356,11 +347,6 @@ namespace Modine.ImGUI
 
                     if (ImGui.Button("Load Normal Texture"))
                     {
-                        OpenFileDialog selectFile = new OpenFileDialog()
-                        {
-                            Title = "Select File",
-                            Filter = "Formats:|*.PNG;"
-                        };
                         selectFile.ShowDialog();
 
                         string path = selectFile.FileName;
@@ -804,7 +790,10 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        public static void Header(double FPS, double MS, int meshCount)
+        private static int selectedInt = 0;
+        private static readonly string[] intOptions = {"Combined", "Albedo", "World Space Position", "World Space Normal", "Raytraced Scene"};
+
+        public static void Header(double FPS, double MS, int meshCount, ref int selectedTexture)
         {
             ImGui.BeginMainMenuBar();
 
@@ -822,6 +811,10 @@ namespace Modine.ImGUI
             {
                 ImGui.EndMenu();
             }
+
+            ImGui.Dummy(new System.Numerics.Vector2(15, 0));
+            ImGui.SetNextItemWidth(175);
+            if (ImGui.Combo("##texture", ref selectedInt, intOptions, intOptions.Length)) selectedTexture = selectedInt;
 
             float textWidth = ImGui.CalcTextSize("FPS: " + FPS.ToString("0") + "      " + GL.GetString(StringName.Renderer) + "      " + "ms: " + MS.ToString("0.00")).X;
             ImGui.SetCursorPosX(ImGui.GetWindowWidth() - textWidth - 10);

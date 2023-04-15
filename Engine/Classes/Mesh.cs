@@ -33,8 +33,9 @@ namespace Modine.Rendering
         public string meshName;
         public int MaterialIndex;
         public VertexData[] vertexData;
+        public int[] indices;
 
-        public Mesh(VertexData[] vertData, int[] indices, Shader shader, bool CastShadow, int matIndex) : base(meshShader: shader)
+        public Mesh(VertexData[] vertData, int[] ind, Shader shader, bool CastShadow, int matIndex) : base(meshShader: shader)
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -45,7 +46,7 @@ namespace Modine.Rendering
 
             eboHandle = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, eboHandle);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, ind.Length * sizeof(uint), ind, BufferUsageHint.StaticDraw);
 
             GL.EnableVertexAttribArray(0);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 0);
@@ -59,11 +60,12 @@ namespace Modine.Rendering
             GL.VertexAttribPointer(4, 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 11 * sizeof(float));
             
             meshName = Name;
-            vertexCount = indices.Length;
+            vertexCount = ind.Length;
             castShadow = CastShadow;
             MaterialIndex = matIndex;
 
             vertexData = vertData;
+            indices = ind;
 
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);

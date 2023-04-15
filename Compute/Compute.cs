@@ -66,65 +66,35 @@ namespace Modine.Compute
         public struct Triangle
         {
             public Vector3 v0;
+            public float pad0;
             public Vector3 v1;
+            public float pad1;
             public Vector3 v2;
+            public float pad2;
         }
 
-        private static List<float> triangleData = new List<float>();
-        public static void CreateResourceMemory(ref int triangleDataTexture, VertexData[] vertexData)
+        public static void CreateResourceMemory(VertexData[] vertexData, int[] indices)
         {
-            // (cx cy cz r) (r g b roughness)
-            for (int i = 0; i < 3; i++)
+            Triangle[] triangleData = new Triangle[indices.Length];
+
+            for (int i = 0; i < indices.Length; i += 3)
             {
-                for (int attribute = 0; attribute < 12; attribute++)
-                {
-                    triangleData.Add(0.0f);
-                }
-
                 Triangle triangle;
-                //triangle.v0 = vertexData[i].Position;
-                //triangle.v1 = vertexData[i + 1].Position;
-                //triangle.v2 = vertexData[i + 2].Position;
+                triangle.v0 = vertexData[indices[i]].Position;
+                triangle.pad0 = 0;
+                triangle.v1 = vertexData[indices[i + 1]].Position;
+                triangle.pad1 = 0;
+                triangle.v2 = vertexData[indices[i + 2]].Position;
+                triangle.pad2 = 0;
 
-                triangle.v0 = new(-1, 0, -1);
-                triangle.v1 = new(0, 0, 1);
-                triangle.v2 = new(1, 0, -1);
-
-                recordTriangle(i, triangle);
-                Console.WriteLine("V0" + triangle.v0 + " - " + "V1" + triangle.v1 + " - " + "V2" + triangle.v1);
+                triangleData[i] = triangle;
             }
 
-            triangleDataTexture = GL.GenTexture();
-            GL.ActiveTexture(TextureUnit.Texture10);
-            GL.BindTexture(TextureTarget.Texture2D, triangleDataTexture);
+            const int BINDING_INDEX = 0;
 
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb32f, 3, 3, 0, PixelFormat.Rgba, PixelType.Float, triangleData.ToArray());
-
-            GL.ActiveTexture(TextureUnit.Texture10);
-            GL.BindImageTexture(10, triangleDataTexture, 0, false, 0, TextureAccess.ReadOnly, SizedInternalFormat.Rgba32f);
-        }
-
-        private static void recordTriangle(int i, Triangle triangle)
-        {
-            triangleData[12 * i] =     triangle.v0[0];
-            triangleData[12 * i + 1] = triangle.v0[1];
-            triangleData[12 * i + 2] = triangle.v0[2];
-            triangleData[12 * i + 3] = 0;
-
-            triangleData[12 * i + 4] = triangle.v1[0];
-            triangleData[12 * i + 5] = triangle.v1[1];
-            triangleData[12 * i + 6] = triangle.v1[2];
-            triangleData[12 * i + 7] = 0;
-
-            triangleData[12 * i + 8] = triangle.v2[0];
-            triangleData[12 * i + 9] = triangle.v2[1];
-            triangleData[12 * i + 10] = triangle.v2[2];
-            triangleData[12 * i + 11] = 0;
+            GL.CreateBuffers(1, out int buffer);
+            GL.NamedBufferStorage(buffer, sizeof(float) * 12 * triangleData.Count(), ref triangleData.ToArray()[0], BufferStorageFlags.DynamicStorageBit);
+            GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, BINDING_INDEX, buffer);
         }
     }
 }

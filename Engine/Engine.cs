@@ -94,7 +94,7 @@ namespace Modine
 
         Shader CompDisplayShader;
         ComputeShader RaytracingShader;
-        int compTexture, triangleDataTexture;
+        int compTexture;
         Vector2i compSize = new(1024);
 
         unsafe protected override void OnLoad()
@@ -134,12 +134,12 @@ namespace Modine
             PBRShader.SetVector3("direction", SunDirection);
             defferedShader.SetFloat("shadowFactor", shadowFactor);
 
-            krissVectorMat = new ("VectorMat", new (1), 1, 1, 0, PBRShader,
+            krissVectorMat = new ("VectorMat", new(1), 1, 1, 0, PBRShader,
                 Texture.LoadFromFile("Assets/Resources/1_Albedo.png"),
                 Texture.LoadFromFile("Assets/Resources/1_Roughness.png"),
                 Texture.LoadFromFile("Assets/Resources/1_Metallic.png"),
                 Texture.LoadFromFile("Assets/Resources/1_Normal.png"));
-            ModelImporter.LoadModel("Assets/Models/Cube.fbx", out vectorData, out vectorIndicies);
+            ModelImporter.LoadModel("Assets/Models/Suzanne.fbx", out vectorData, out vectorIndicies);
 
             ModelImporter.LoadModel("Assets/Models/TestRoom.fbx", out vertexData, out indices);
             Room = new  Mesh(vertexData, indices, PBRShader, true, 0);
@@ -191,7 +191,7 @@ namespace Modine
             ImGuiWindows.LoadTheme();
 
             SetupCompRect(ref compTexture, compSize);
-            CreateResourceMemory(ref triangleDataTexture, sceneObjects[0].Mesh.vertexData);
+            CreateResourceMemory(sceneObjects[0].Mesh.vertexData, sceneObjects[0].Mesh.indices);
         }
 
         public static Vector3 GetRandomBrightColor()
@@ -315,14 +315,6 @@ namespace Modine
 
             ImGuiController.WindowResized(e.Width, e.Height);
         }
-
-
-
-        
-
-
-
-
 
         bool showQuickMenu = false;
 
@@ -453,14 +445,13 @@ namespace Modine
             RaytracingShader.Use();
             RaytracingShader.SetVector3("camera.direction", camera.direction);
             RaytracingShader.SetVector3("camera.position", camera.position);
+            RaytracingShader.SetInt("triangleCount", sceneObjects[0].Mesh.indices.Length);
             ResizeTexture(viewportSize, ref compTexture, PixelInternalFormat.Rgba32f, PixelFormat.Rgba);
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindImageTexture(0, compTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
-            
-            
 
-            GL.DispatchCompute(viewportSize.X, viewportSize.Y, 1);
+            GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
             GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
             GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
 

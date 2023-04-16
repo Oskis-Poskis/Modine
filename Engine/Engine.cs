@@ -129,6 +129,7 @@ namespace Modine
             camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 6);
             defaultMat = new ("Default", new (0.8f), 0, 0.3f, 0.0f, PBRShader);
 
+            RaytracingShader.SetVector3("ambient", ambient);
             defferedShader.SetVector3("ambient", ambient);
             defferedShader.SetVector3("direction", SunDirection);
             PBRShader.SetVector3("direction", SunDirection);
@@ -442,18 +443,20 @@ namespace Modine
             ImGuiWindows.Viewport(textures[selectedTexture], depthMap, out viewportSize, out viewportPos, out viewportHovered, shadowRes);
             if (showStats) ImGuiWindows.SmallStats(viewportSize, viewportPos, FPScounter.fps, FPScounter.ms, count_Meshes, count_PointLights, triangleCount);
 
-            RaytracingShader.Use();
-            RaytracingShader.SetVector3("camera.direction", camera.direction);
-            RaytracingShader.SetVector3("camera.position", camera.position);
-            RaytracingShader.SetInt("triangleCount", sceneObjects[0].Mesh.indices.Length);
-            ResizeTexture(viewportSize, ref compTexture, PixelInternalFormat.Rgba32f, PixelFormat.Rgba);
+            if (selectedTexture == 4)
+            {
+                RaytracingShader.Use();
+                RaytracingShader.SetVector3("camera.direction", camera.direction);
+                RaytracingShader.SetVector3("camera.position", camera.position);
+                ResizeTexture(viewportSize, ref compTexture, PixelInternalFormat.Rgba32f, PixelFormat.Rgba);
 
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindImageTexture(0, compTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+                GL.ActiveTexture(TextureUnit.Texture0);
+                GL.BindImageTexture(0, compTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
 
-            GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
-            GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
-            GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+                GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
+                GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
+                GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            }
 
             // Quick menu
             if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
@@ -469,7 +472,7 @@ namespace Modine
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
-                ImGuiWindows.Settings(ref camera.speed, ref vsyncOn, ref showOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref numAOSamples, ref defferedShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref PBRShader);
+                ImGuiWindows.Settings(ref camera.speed, ref vsyncOn, ref showOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref numAOSamples, ref defferedShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref PBRShader, ref RaytracingShader);
             }
 
             ImGuiController.Render();

@@ -71,6 +71,12 @@ namespace Modine.Compute
             public float pad1;
             public Vector3 v2;
             public float pad2;
+            public Vector3 normal0;
+            public float pad3;
+            public Vector3 normal1;
+            public float pad4;
+            public Vector3 normal2;
+            public float pad5;
         }
 
         public static void CreateResourceMemory(VertexData[] vertexData, int[] indices)
@@ -86,6 +92,12 @@ namespace Modine.Compute
                 triangle.pad1 = 0;
                 triangle.v2 = vertexData[indices[i + 2]].Position;
                 triangle.pad2 = 0;
+                triangle.normal0 = vertexData[indices[i]].Normals;
+                triangle.pad3 = 0;
+                triangle.normal1 = vertexData[indices[i + 1]].Normals;
+                triangle.pad4 = 0;
+                triangle.normal2 = vertexData[indices[i + 2]].Normals;
+                triangle.pad5 = 0;
 
                 triangleData[i] = triangle;
             }
@@ -93,7 +105,7 @@ namespace Modine.Compute
             const int BINDING_INDEX = 0;
 
             GL.CreateBuffers(1, out int buffer);
-            GL.NamedBufferStorage(buffer, sizeof(float) * 12 * triangleData.Count(), ref triangleData.ToArray()[0], BufferStorageFlags.DynamicStorageBit);
+            GL.NamedBufferStorage(buffer, sizeof(float) * 24 * triangleData.Count(), ref triangleData.ToArray()[0], BufferStorageFlags.DynamicStorageBit);
             GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, BINDING_INDEX, buffer);
         }
     }

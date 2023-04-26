@@ -1,10 +1,10 @@
+using imnodesNET;
+using ImPlotNET;
 using ImGuiNET;
-using System;
-using System.Collections.Generic;
+
 using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Diagnostics;
@@ -41,7 +41,7 @@ namespace Modine.ImGUI
         /// <summary>
         /// Constructs a new ImGuiController.
         /// </summary>
-        public ImGuiController(int width, int height)
+        public unsafe ImGuiController(int width, int height)
         {
             _windowWidth = width;
             _windowHeight = height;
@@ -51,12 +51,14 @@ namespace Modine.ImGUI
 
             KHRDebugAvailable = (major == 4 && minor >= 3) || IsExtensionSupported("KHR_debug");
 
-            IntPtr context = ImGui.CreateContext();
+            IntPtr context = ImGuiNET.ImGui.CreateContext();
             ImGui.SetCurrentContext(context);
-            var io = ImGui.GetIO();
-            //io.Fonts.AddFontDefault();
-            io.Fonts.AddFontFromFileTTF("Assets/Fonts/Rubik-Medium.ttf", 16);
+            imnodes.Initialize();
+            imnodes.SetImGuiContext(context);
+            ImPlot.SetImGuiContext(context);
 
+            var io = ImGui.GetIO();
+            io.Fonts.AddFontFromFileTTF("Assets/Fonts/Rubik-Medium.ttf", 16);
             io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
             io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
             io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;

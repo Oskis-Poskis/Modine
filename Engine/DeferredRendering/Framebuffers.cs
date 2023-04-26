@@ -7,7 +7,7 @@ namespace Modine.Common
     {
         public static void SetupFBO(ref int framebufferTexture, ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough, ref int gPosition, Vector2i viewportSize)
         {
-            // Color Texture
+            // Rendered Texture
             framebufferTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);

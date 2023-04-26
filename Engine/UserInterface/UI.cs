@@ -155,7 +155,7 @@ namespace Modine.ImGUI
             }
         }
 
-        public static void Viewport(int framebufferTexture, int depthMap, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered, int shadowRes)
+        public static void Viewport(int framebufferTexture, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered)
         {
             ImGui.Begin("Viewport");
             windowSize = new(
@@ -165,14 +165,11 @@ namespace Modine.ImGUI
                 Convert.ToInt32(ImGui.GetWindowPos().X),
                 Convert.ToInt32(ImGui.GetWindowPos().Y));
 
-            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
-            
-            
+            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);            
             ImGui.Image((IntPtr)framebufferTexture, new(windowSize.X, windowSize.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
 
             //viewportHovered = ImGui.IsWindowHovered() ? true : false;
             viewportHovered = true;
-
             ImGui.End();
         }
 
@@ -625,7 +622,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref float camSpeed, ref bool vsyncOn, ref bool showOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref int numAOsamples, ref Shader defshader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader PBRshader, ref ComputeShader rtShader)
+        public static void Settings(ref float camSpeed, ref float farPlane, ref float nearPlane, ref bool vsyncOn, ref bool showOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader defshader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader PBRshader)
         {
             ImGui.Begin("Settings");
 
@@ -636,6 +633,14 @@ namespace Modine.ImGUI
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 ImGui.Checkbox(" VSync", ref vsyncOn);
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Text("Near Plane");
+                float np = nearPlane;
+                float fp = farPlane;
+                if (ImGui.SliderFloat("##NearPlane", ref np, 0.1f, 0.5f, "%.1f")) nearPlane = np;
+                if (ImGui.SliderFloat("##FarPlane", ref fp, 1, 100, "%.1f")) farPlane = fp;
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -696,7 +701,7 @@ namespace Modine.ImGUI
                 {
                     ambient = new(color.X, color.Y, color.Z);
                     defshader.SetVector3("ambient", ambient);
-                    rtShader.SetVector3("ambient", ambient);
+                    // rtShader.SetVector3("ambient", ambient);
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));

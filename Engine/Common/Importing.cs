@@ -39,7 +39,7 @@ namespace Modine.Common
                 }
             }
 
-            Console.WriteLine("Indices: " + indices.Count() + " - " + "Vertices: " + vertdata.Count());
+            // Console.WriteLine("Indices: " + indices.Count() + " - " + "Vertices: " + vertdata.Count());
             
             name = mesh.Name;
             //Console.WriteLine(mesh.HasTangentBasis);

@@ -5,7 +5,8 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using ImGuiNET;
 using imnodesNET;
-using ImPlotNET;
+
+using System.Runtime.InteropServices;
 
 using Modine.Common;
 using Modine.Rendering;
@@ -97,6 +98,34 @@ namespace Modine
         int compTexture;
         // Vector2i compSize = new(1024);
 
+        private static void OnDebugMessage(
+            DebugSource source,     // Source of the debugging message.
+            DebugType type,         // Type of the debugging message.
+            int id,                 // ID associated with the message.
+            DebugSeverity severity, // Severity of the message.
+            int length,             // Length of the string in pMessage.
+            IntPtr pMessage,        // Pointer to message string.
+            IntPtr pUserParam)      // The pointer you gave to OpenGL, explained later.
+        {
+            // In order to access the string pointed to by pMessage, you can use Marshal
+            // class to copy its contents to a C# string without unsafe code. You can
+            // also use the new function Marshal.PtrToStringUTF8 since .NET Core 1.1.
+            string message = Marshal.PtrToStringAnsi(pMessage, length);
+
+            // The rest of the function is up to you to implement, however a debug output
+            // is always useful.
+            Console.WriteLine("[{0} source={1} type={2} id={3}] {4}", severity, source, type, id, message);
+
+            // Potentially, you may want to throw from the function for certain severity
+            // messages.
+            if (type == DebugType.DebugTypeError)
+            {
+                throw new Exception(message);
+            }
+        }
+
+        private static DebugProc DebugMessageDelegate = OnDebugMessage;
+
         unsafe protected override void OnLoad()
         {
             base.OnLoad();
@@ -105,11 +134,13 @@ namespace Modine
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.StencilTest);
+            GL.Enable(EnableCap.DebugOutput);
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
             GL.PointSize(5);
             IsVisible = true;
 
             VSync = VSyncMode.On;
+            GL.DebugMessageCallback(DebugMessageDelegate, IntPtr.Zero);
 
             FBO = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
@@ -145,9 +176,9 @@ namespace Modine
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
 
-            int numRows = 10;
-            int numCols = 10;
-            int spacing = 15;
+            int numRows = 15;
+            int numCols = 15;
+            int spacing = (int)(25/3);
             int startX = -((numCols - 1) * spacing) / 2;
             int startY = -((numRows - 1) * spacing) / 2;
 
@@ -159,20 +190,34 @@ namespace Modine
                     int z = startY + row * spacing;
 
                     krissVector = new(vectorData, vectorIndicies, PBRShader, true, 1);
-                    SceneObject _vector = new(PBRShader, EngineUtility.NewName(sceneObjects, "Vector"), krissVector);
-                    _vector.Scale = new(0.15f);
-
                     SceneObject vector = new(PBRShader, EngineUtility.NewName(sceneObjects, "Vector"), krissVector);
+                    vector.Scale = new(0.75f);
+                    vector.Rotation.X = 180;
                     vector.Position.X = x;
                     vector.Position.Z = z;
-                    vector.Position.Y = 2;
+                    vector.Position.Y = 0;
                     sceneObjects.Add(vector);
+                }
+            }
 
-                    Light light = new(lightShader, GetRandomBrightColor(), 5);
+            int numRows2 = 25;
+            int numCols2 = 25;
+            int spacing2 = (int)(25/5);
+            int startX2 = -((numCols2 - 1) * spacing) / 2;
+            int startY2 = -((numRows2 - 1) * spacing) / 2;
+
+            for (int row = 0; row < numRows2; row++)
+            {
+                for (int col = 0; col < numCols2; col++)
+                {
+                    int x = startX + col * spacing2;
+                    int z = startY + row * spacing2;
+
+                    Light light = new(lightShader, GetRandomBrightColor(), 10);
                     SceneObject _light = new(lightShader, EngineUtility.NewName(sceneObjects, "Light"), light);
                     _light.Position.X = x;
                     _light.Position.Z = z;
-                    _light.Position.Y = 5;
+                    _light.Position.Y = 6;
 
                     sceneObjects.Add(_light);
                 }
@@ -189,10 +234,13 @@ namespace Modine
             triangleCount = EngineUtility.CalculateTriangles(sceneObjects);
 
             ImGuiController = new Modine.ImGUI.ImGuiController(viewportSize.X, viewportSize.Y);
-            ImGuiWindows.LoadTheme();
             imnodes.PushColorStyle(ColorStyle.GridBackground, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.15f)));
             imnodes.PushColorStyle(ColorStyle.GridLine, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.3f)));
             imnodes.PushStyleVar(StyleVar.NodeCornerRounding, 5f);
+            imnodes.PushStyleVar(StyleVar.NodeBorderThickness, 2);
+            ImGuiWindows.LoadTheme();
+
+            CreateLightResourceMemory(sceneObjects);
 
             // SetupCompRect(ref compTexture, compSize);
             // CreateResourceMemory(sceneObjects[0].Mesh.vertexData, sceneObjects[0].Mesh.indices);
@@ -323,6 +371,39 @@ namespace Modine
         bool showQuickMenu = false;
         bool selectedIsMesh = false;
 
+        public struct SSBOlight
+        {
+            public Vector3 lightPos;
+            public float strength;
+            public Vector3 lightColor;
+            public float p0;
+        }
+    
+        public static void CreateLightResourceMemory(List<SceneObject> sceneObjs)
+        {
+            List<SSBOlight> lightData = new List<SSBOlight>();
+
+            for (int i = 0; i < sceneObjs.Count; i++)
+            {
+                if (sceneObjs[i].Type == SceneObjectType.Light)
+                {
+                    SSBOlight light;
+                    light.lightPos = sceneObjs[i].Position;
+                    light.strength = sceneObjs[i].Light.strength;
+                    light.lightColor = sceneObjs[i].Light.lightColor;
+                    light.p0 = 0;
+
+                    lightData.Add(light);
+                }
+            }
+
+            const int BINDING_INDEX = 0;
+
+            GL.CreateBuffers(1, out int buffer);
+            GL.NamedBufferStorage(buffer, sizeof(float) * 8 * lightData.Count(), ref lightData.ToArray()[0], BufferStorageFlags.DynamicStorageBit);
+            GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, BINDING_INDEX, buffer);
+        }
+
         public void RenderScene(double time)
         {
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
@@ -362,7 +443,7 @@ namespace Modine
                 GL.StencilMask(0x00);
                 
                 float aspectRatio = (float)viewportSize.X / viewportSize.Y;
-                lightSpaceMatrix = Matrix4.LookAt(SunDirection * 10, Vector3.Zero, Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-10, 10, -10, 10, 0.1f, 100);
+                lightSpaceMatrix = Matrix4.LookAt(SunDirection * 10, Vector3.Zero, Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-60, 60, -60, 60, 0.1f, 100);
                 projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, nearPlane, farPlane);
                 viewMatrix = Matrix4.LookAt(camera.position, camera.position + camera.direction, Vector3.UnitY);
 
@@ -374,17 +455,8 @@ namespace Modine
                 PBRShader.SetInt("shadowMap", 4);
                 PBRShader.SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
 
-                int index = 0;
                 for (int i = 0; i < sceneObjects.Count; i++)
                 {
-                    if (sceneObjects[i].Type == SceneObjectType.Light)
-                    {
-                        defferedShader.SetVector3("pointLights[" + index + "].lightColor", sceneObjects[i].Light.lightColor);
-                        defferedShader.SetVector3("pointLights[" + index + "].lightPos", sceneObjects[i].Position);
-                        defferedShader.SetFloat("pointLights[" + index + "].strength", sceneObjects[i].Light.strength);
-                        index += 1;
-                    }
-
                     if (sceneObjects[i].Type == SceneObjectType.Mesh)
                     {
                         Materials[sceneObjects[i].Mesh.MaterialIndex].SetShaderUniforms(PBRShader);
@@ -403,7 +475,6 @@ namespace Modine
                 {
                     case SceneObjectType.Mesh:
                         PBRShader.Use();
-                        Materials[sceneObjects[selectedSceneObject].Mesh.MaterialIndex].SetShaderUniforms(PBRShader);
                         sceneObjects[selectedSceneObject].Render();
                         break;
                     
@@ -423,7 +494,6 @@ namespace Modine
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             
             defferedShader.Use();
-            defferedShader.SetInt("countPL", count_PointLights);
             defferedShader.SetVector3("viewPos", camera.position); 
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gNormal, gPosition, gMetallicRough);
             Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture);
@@ -443,21 +513,55 @@ namespace Modine
             ImGuiController.Update(this, (float)time);
             ImGui.DockSpaceOverViewport();
 
-            selectedIsMesh = sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh ? true : false;
+            int[] textures = new int[]{framebufferTexture, gAlbedo, gPosition, gNormal, compTexture};
+            ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes, ref selectedTexture);
+            ImGuiWindows.Viewport(textures[selectedTexture], out viewportSize, out viewportPos, out viewportHovered);
+            if (showStats) ImGuiWindows.SmallStats(viewportSize, viewportPos, FPScounter.fps, FPScounter.ms, count_Meshes, count_PointLights, triangleCount);
+
+            if (selectedTexture == 4)
+            {
+                /*
+                RaytracingShader.Use();
+                RaytracingShader.SetVector3("camera.direction", camera.direction);
+                RaytracingShader.SetVector3("camera.position", camera.position);
+                ResizeTexture(viewportSize, ref compTexture, PixelInternalFormat.Rgba32f, PixelFormat.Rgba);
+
+                GL.ActiveTexture(TextureUnit.Texture0);
+                GL.BindImageTexture(0, compTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+
+                GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
+                GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
+                GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+                */
+            }
+
+            // Quick menu
+            if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
+            {
+                showQuickMenu = EngineUtility.ToggleBool(showQuickMenu);
+                if (showQuickMenu) ImGui.SetNextWindowPos(new(MouseState.Position.X, MouseState.Position.Y));
+            }
+            if (showQuickMenu) ImGuiWindows.QuickMenu(ref sceneObjects, ref selectedSceneObject, ref showQuickMenu, ref triangleCount);
+            
+            if (!fullscreen)
+            {
+                selectedIsMesh = sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh ? true : false;
             
             ImGui.Begin("Material Editor##2");
             if (selectedIsMesh)
             {
-                ImGui.Text("   " + Materials[sceneObjects[selectedSceneObject].Mesh.MaterialIndex].Name);
+                if (sceneObjects[selectedSceneObject].Mesh.MaterialIndex < Materials.Count()) ImGui.Text("   " + Materials[sceneObjects[selectedSceneObject].Mesh.MaterialIndex].Name);
+                else ImGui.Text("   " + "Temp");
                 imnodes.BeginNodeEditor();
 
                 // Output node
                 imnodes.PushColorStyle(ColorStyle.TitleBar, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.875f, 0.233f, 0.203f, 1.000f)));
                 imnodes.PushColorStyle(ColorStyle.TitleBarHovered, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.875f, 0.233f, 0.203f, 1.000f) * 1.25f));
-                imnodes.PushColorStyle(ColorStyle.TitleBarSelected, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.875f, 0.233f, 0.203f, 1.000f) * 0.75f));
+                imnodes.PushColorStyle(ColorStyle.TitleBarSelected, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.875f, 0.233f, 0.203f, 1.000f) * 0.9f));
                 imnodes.BeginNode(1);
                 imnodes.BeginNodeTitleBar();
-                ImGui.Text(Materials[sceneObjects[selectedSceneObject].Mesh.MaterialIndex].Name);
+                if (sceneObjects[selectedSceneObject].Mesh.MaterialIndex < Materials.Count()) ImGui.Text(Materials[sceneObjects[selectedSceneObject].Mesh.MaterialIndex].Name);
+                else ImGui.Text("Temp");
                 imnodes.EndNodeTitleBar();
 
                 imnodes.BeginInputAttribute(2, PinShape.CircleFilled);
@@ -498,49 +602,14 @@ namespace Modine
                 imnodes.EndNode();
 
                 imnodes.EndNodeEditor();
-                
-                if (imnodes.IsLinkDropped()) Console.WriteLine("test");
             }
-            else ImGui.Text("No mesh selected :(");
             
             ImGui.End();
-
-            int[] textures = new int[]{framebufferTexture, gAlbedo, gPosition, gNormal, compTexture};
-            ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes, ref selectedTexture);
-            ImGuiWindows.Viewport(textures[selectedTexture], out viewportSize, out viewportPos, out viewportHovered);
-            if (showStats) ImGuiWindows.SmallStats(viewportSize, viewportPos, FPScounter.fps, FPScounter.ms, count_Meshes, count_PointLights, triangleCount);
-
-            if (selectedTexture == 4)
-            {
-                /*
-                RaytracingShader.Use();
-                RaytracingShader.SetVector3("camera.direction", camera.direction);
-                RaytracingShader.SetVector3("camera.position", camera.position);
-                ResizeTexture(viewportSize, ref compTexture, PixelInternalFormat.Rgba32f, PixelFormat.Rgba);
-
-                GL.ActiveTexture(TextureUnit.Texture0);
-                GL.BindImageTexture(0, compTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
-
-                GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
-                GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
-                GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
-                */
-            }
-
-            // Quick menu
-            if (IsKeyDown(Keys.LeftShift) && IsKeyPressed(Keys.Space))
-            {
-                showQuickMenu = EngineUtility.ToggleBool(showQuickMenu);
-                if (showQuickMenu) ImGui.SetNextWindowPos(new(MouseState.Position.X, MouseState.Position.Y));
-            }
-            if (showQuickMenu) ImGuiWindows.QuickMenu(ref sceneObjects, ref selectedSceneObject, ref showQuickMenu, ref triangleCount);
             
-            if (!fullscreen)
-            {
                 // ImGuiWindows.AssetBrowser();
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
-                ImGuiWindows.ObjectProperties(ref sceneObjects, selectedSceneObject);
+                ImGuiWindows.Properties(ref sceneObjects, selectedSceneObject, ref Materials);
                 ImGuiWindows.Settings(ref camera.speed, ref farPlane, ref nearPlane, ref vsyncOn, ref showOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref defferedShader, ref postprocessShader, ref outlineShader, ref fxaaShader, ref PBRShader);
             }
 

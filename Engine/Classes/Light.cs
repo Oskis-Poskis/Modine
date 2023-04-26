@@ -53,7 +53,7 @@ namespace Modine.Rendering
             Matrix4 viewMatrix = Matrix4.LookAt(cam.position, cam.position + cam.direction, Vector3.UnitY);
 
             Matrix4 model = Matrix4.Identity;
-            model *= Matrix4.CreateScale(0.2f);
+            model *= Matrix4.CreateScale(0.3f);
             model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(cam.phi)) *
                      Matrix4.CreateRotationY(-MathHelper.DegreesToRadians(cam.theta + 90)) * 
                      Matrix4.CreateRotationZ(0);

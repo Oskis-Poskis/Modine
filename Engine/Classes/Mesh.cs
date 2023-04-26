@@ -35,8 +35,6 @@ namespace Modine.Rendering
         public VertexData[] vertexData;
         public int[] indices;
 
-        public Matrix4 model;
-
         public Mesh(VertexData[] vertData, int[] ind, Shader shader, bool CastShadow, int matIndex) : base(meshShader: shader)
         {
             vaoHandle = GL.GenVertexArray();
@@ -76,7 +74,7 @@ namespace Modine.Rendering
 
         public override void Render(Vector3 pos, Vector3 rot, Vector3 scale, Shader meshShader)
         {   
-            model = Matrix4.Identity;
+            Matrix4 model = Matrix4.Identity;
             model *= Matrix4.CreateScale(scale);
             model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(rot.X)) *
                      Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rot.Y)) *

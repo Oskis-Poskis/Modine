@@ -1,4 +1,4 @@
-#version 330 core
+#version 430
 
 in vec2 UV;
 
@@ -12,7 +12,6 @@ uniform vec3 ambient;
 uniform vec3 viewPos;
 uniform vec3 direction;
 uniform float dirStrength = 1;
-uniform int countPL = 0;
 uniform float shadowFactor = 0.75;
 
 const float constant = 1;
@@ -21,11 +20,15 @@ const float quadratic = 0.032;
 
 struct PointLight {
     vec3 lightPos;
-    vec3 lightColor;
     float strength;
+    vec3 lightColor;
+    float p0;
 };
 
-uniform PointLight pointLights[128];
+layout(std430, binding = 0) readonly buffer PointLightSSBO
+{
+    PointLight PointLights[];
+};
 
 const float PI = 3.14159265359;
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -146,7 +149,7 @@ void main()
     dirLighting = pow(dirLighting, vec3(1 / 2.2));
 
     vec3 pointLighting = vec3(0);
-    for (int i = 0; i < countPL; i++) pointLighting += CalcPointLight(pointLights[i], V, N, F0, albedo, roughness, metallic, fragPos);
+    for (int i = 0; i < PointLights.length(); i++) pointLighting += CalcPointLight(PointLights[i], V, N, F0, albedo, roughness, metallic, fragPos);
     pointLighting = pow(pointLighting, vec3(1 / 2.2));
 
     result = dirLighting * (1 - shadow * shadowFactor) + (albedo * ambient);

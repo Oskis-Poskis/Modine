@@ -5,7 +5,7 @@
         [STAThread]
         static void Main()
         {
-            using Game game = new Game(1920, 1080, "Game Engine");
+            using Game game = new Game(1920, 1080, "Modine");
             game.Run();
         }
     }

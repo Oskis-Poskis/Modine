@@ -42,17 +42,19 @@ namespace Modine.ImGUI
                 ms.ToString("0.00") + " ms");
         }
 
-        public static void ObjectProperties(ref List<SceneObject> sceneObjects, int selectedMesh)
+        public static void ObjectProperties(ref List<SceneObject> sceneObjects, int selectedMesh, ref List<Material> materials)
         {
             ImGui.Begin("Properties");
 
-            Properties(ref sceneObjects, selectedMesh);
+            Properties(ref sceneObjects, selectedMesh, ref materials);
 
             ImGui.End();
         }
 
-        public static void Properties(ref List<SceneObject> sceneObjects, int selectedObject)
+        public static void Properties(ref List<SceneObject> sceneObjects, int selectedObject, ref List<Material> materials)
         {
+            ImGui.Begin("Properties");
+
             if (sceneObjects.Count > 0)
             {
                 SceneObject _sceneObject = sceneObjects[selectedObject];
@@ -70,6 +72,7 @@ namespace Modine.ImGUI
                 {
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Checkbox(" Cast shadow", ref _sceneObject.Mesh.castShadow);
+                    
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -112,15 +115,21 @@ namespace Modine.ImGUI
                         ImGui.Unindent();
                     }
 
-                    else if (_sceneObject.Type == SceneObjectType.Light)
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    string[] materialNames = new string[materials.Count];
+                    for (int i = 0; i < materials.Count; i++)
                     {
-                        SN.Vector3 tempPos = new(_sceneObject.Position.X, _sceneObject.Position.Y, _sceneObject.Position.Z);
-                        ImGui.Text("Position");
-                        if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
-                        {
-                            sceneObjects[selectedObject].Position = new(tempPos.X, tempPos.Y, tempPos.Z);
-                        }
+                        materialNames[i] = materials[i].Name;
                     }
+
+                    ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
+                    ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(20, 20, 20, 255f) / 255));
+                    ImGui.ListBox("##Materials", ref sceneObjects[selectedObject].Mesh.MaterialIndex, materialNames, materialNames.Length);
+                    ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(45f, 45f, 45f, 255f) / 255));
+                    ImGui.PopItemWidth();
                 }
 
                 else if (_sceneObject.Type == SceneObjectType.Light)
@@ -132,6 +141,7 @@ namespace Modine.ImGUI
                     if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
                     {
                         _sceneObject.Position = new(tempPos.X, tempPos.Y, tempPos.Z);
+                        Game.CreateLightResourceMemory(sceneObjects);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -141,6 +151,7 @@ namespace Modine.ImGUI
                     if (ImGui.DragFloat("##Strength", ref tempStrength, 0.1f))
                     {
                         _sceneObject.Light.strength = tempStrength;
+                        Game.CreateLightResourceMemory(sceneObjects);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -150,9 +161,12 @@ namespace Modine.ImGUI
                     if (ImGui.ColorPicker3("##Albedo", ref color))
                     {
                         _sceneObject.Light.lightColor = new(color.X, color.Y, color.Z);
+                        Game.CreateLightResourceMemory(sceneObjects);
                     }
                 }
             }
+        
+            ImGui.End();
         }
 
         public static void Viewport(int framebufferTexture, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered)
@@ -208,23 +222,10 @@ namespace Modine.ImGUI
             {
                 if (sceneObjects[selectedIndex].Type == SceneObjectType.Mesh)
                 {
-                    string[] materialNames = new string[materials.Count];
-                    for (int i = 0; i < materials.Count; i++)
-                    {
-                        materialNames[i] = materials[i].Name;
-                    }
-
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-                    ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
-                    ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(20, 20, 20, 255f) / 255));
-                    ImGui.ListBox("##Materials", ref sceneObjects[selectedIndex].Mesh.MaterialIndex, materialNames, materialNames.Length);
-                    ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(45f, 45f, 45f, 255f) / 255));
-                    ImGui.PopItemWidth();
-
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                     Material _material = materials[sceneObjects[selectedIndex].Mesh.MaterialIndex];
+                    
                     string newName = _material.Name;
                     if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _material.Name = newName;
 
@@ -249,14 +250,6 @@ namespace Modine.ImGUI
                         materials.Add(newMat);
 
                         sceneObjects[selectedIndex].Mesh.MaterialIndex = materials.Count - 1;
-                    }
-
-                    ImGui.SameLine();
-
-                    if (ImGui.Button("Delete Material") && sceneObjects[selectedIndex].Mesh.MaterialIndex != 0)
-                    {
-                        foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Mesh.MaterialIndex == sceneObjects[selectedIndex].Mesh.MaterialIndex) sceneObject.Mesh.MaterialIndex -= 1;
-                        materials.RemoveAt(sceneObjects[selectedIndex].Mesh.MaterialIndex + 1);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -584,6 +577,8 @@ namespace Modine.ImGUI
                     selectedSceneObject = sceneObjects.Count - 1;
 
                     showQuickMenu = false;
+
+                    Game.CreateLightResourceMemory(sceneObjects);
                 }
 
                 ImGui.EndMenu();
@@ -607,7 +602,6 @@ namespace Modine.ImGUI
             ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
 
             ImGui.End();
-            ImGui.PopStyleVar();
         }
         
         static int selectedIndex = 3;

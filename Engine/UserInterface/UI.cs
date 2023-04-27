@@ -141,7 +141,7 @@ namespace Modine.ImGUI
                     if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
                     {
                         _sceneObject.Position = new(tempPos.X, tempPos.Y, tempPos.Z);
-                        Game.CreateLightResourceMemory(sceneObjects);
+                        Game.CreatePointLightResourceMemory(sceneObjects);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -151,7 +151,7 @@ namespace Modine.ImGUI
                     if (ImGui.DragFloat("##Strength", ref tempStrength, 0.1f))
                     {
                         _sceneObject.Light.strength = tempStrength;
-                        Game.CreateLightResourceMemory(sceneObjects);
+                        Game.CreatePointLightResourceMemory(sceneObjects);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -161,7 +161,7 @@ namespace Modine.ImGUI
                     if (ImGui.ColorPicker3("##Albedo", ref color))
                     {
                         _sceneObject.Light.lightColor = new(color.X, color.Y, color.Z);
-                        Game.CreateLightResourceMemory(sceneObjects);
+                        Game.CreatePointLightResourceMemory(sceneObjects);
                     }
                 }
             }
@@ -233,6 +233,7 @@ namespace Modine.ImGUI
                     ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
+                    /*
                     if (ImGui.Button("Add Material"))
                     {
                         string baseName = "New Material";
@@ -251,6 +252,7 @@ namespace Modine.ImGUI
 
                         sceneObjects[selectedIndex].Mesh.MaterialIndex = materials.Count - 1;
                     }
+                    */
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Separator();
@@ -578,7 +580,7 @@ namespace Modine.ImGUI
 
                     showQuickMenu = false;
 
-                    Game.CreateLightResourceMemory(sceneObjects);
+                    Game.CreatePointLightResourceMemory(sceneObjects);
                 }
 
                 ImGui.EndMenu();
@@ -964,9 +966,9 @@ namespace Modine.ImGUI
             ImGui.PushStyleColor(ImGuiCol.SeparatorActive, new System.Numerics.Vector4(80f, 80f, 80f, 255) / 255);
 
             // Buttons
-            ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(255, 41, 55, 200) / 255);
-            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new System.Numerics.Vector4(255, 41, 55, 150) / 255);
-            ImGui.PushStyleColor(ImGuiCol.ButtonActive, new System.Numerics.Vector4(255, 41, 55, 100) / 255);
+            ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.343f, 0.343f, 0.343f, 0.784f));
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new System.Numerics.Vector4(0.343f, 0.343f, 0.343f, 0.784f) * 1.25f);
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, new System.Numerics.Vector4(0.343f, 0.343f, 0.343f, 0.784f) * 0.9f);
 
             // Docking and rezise
             // ImGui.PushStyleColor(ImGuiCol.DockingPreview, new System.Numerics.Vector4(30, 140, 120, 255) / 255);

@@ -32,7 +32,7 @@ namespace Modine
                 WindowState = WindowState.Normal,
                 API = ContextAPI.OpenGL,
                 Profile = ContextProfile.Core,
-                APIVersion = new  Version(4, 6),
+                APIVersion = new  Version(4, 3),
                 Flags = ContextFlags.Debug
             })
         {
@@ -48,6 +48,7 @@ namespace Modine
             outlineShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/outline.frag");
             fxaaShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/fxaa.frag");
 
+            deferredCompute = new ComputeShader("Engine/Shaders/Compute/deferred.comp");
             // RaytracingShader = new ComputeShader("Compute/raytracer.comp");
         }
 
@@ -74,7 +75,7 @@ namespace Modine
         Camera camera;
         static List<SceneObject> sceneObjects = new  List<SceneObject>();
         public static int selectedSceneObject = 0;
-        int count_PointLights, count_Meshes = 0;
+        static int count_PointLights, count_Meshes = 0;
 
         float farPlane = 1000;
         float nearPlane = 0.1f;
@@ -87,6 +88,9 @@ namespace Modine
         int selectedTexture = 0;
         int framebufferTexture, depthStencilTexture, gAlbedo, gNormal, gMetallicRough, gPosition;
         int FBO;
+
+        ComputeShader deferredCompute;
+        int renderTexture;
 
         int depthMapFBO;
         int depthMap;
@@ -147,17 +151,19 @@ namespace Modine
 
             Framebuffers.SetupFBO(ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, viewportSize);
             FramebufferErrorCode status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
-
-            OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
-            if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError) Console.WriteLine("OpenGL Error: " + error.ToString());
-            if (status != FramebufferErrorCode.FramebufferComplete) Console.WriteLine($"Framebuffer is incomplete: {status}");
-
             Framebuffers.SetupShadowFBO(ref depthMapFBO, ref depthMap, shadowRes);
             Postprocessing.SetupPPRect(ref postprocessShader);
 
+            GL.BindTexture(TextureTarget.Texture2D, renderTexture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1, nearPlane, farPlane);
             viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitY, new(0, 1, 0));
-            camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 50);
+            camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 5);
             defaultMat = new ("Default", new (0.8f), 0, 0.3f, 0.0f, PBRShader);
 
             // RaytracingShader.SetVector3("ambient", ambient);
@@ -176,6 +182,12 @@ namespace Modine
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
 
+            krissVector = new(vectorData, vectorIndicies, PBRShader, true, 1);
+            SceneObject vector = new(PBRShader, EngineUtility.NewName(sceneObjects, "Vector"), krissVector);
+            vector.Scale = new(0.75f);
+            sceneObjects.Add(vector);
+
+            /*
             int numRows = 15;
             int numCols = 15;
             int spacing = (int)(25/3);
@@ -200,18 +212,18 @@ namespace Modine
                 }
             }
 
-            int numRows2 = 25;
-            int numCols2 = 25;
-            int spacing2 = (int)(25/5);
-            int startX2 = -((numCols2 - 1) * spacing) / 2;
-            int startY2 = -((numRows2 - 1) * spacing) / 2;
+            int numRows2 = 32;
+            int numCols2 = 32;
+            int spacing2 = (int)(1);
+            int startX2 = -((numCols2 - 1) * spacing2) / 2;
+            int startY2 = -((numRows2 - 1) * spacing2) / 2;
 
             for (int row = 0; row < numRows2; row++)
             {
                 for (int col = 0; col < numCols2; col++)
                 {
-                    int x = startX + col * spacing2;
-                    int z = startY + row * spacing2;
+                    int x = startX2 + col * spacing2;
+                    int z = startY2 + row * spacing2;
 
                     Light light = new(lightShader, GetRandomBrightColor(), 10);
                     SceneObject _light = new(lightShader, EngineUtility.NewName(sceneObjects, "Light"), light);
@@ -221,7 +233,7 @@ namespace Modine
 
                     sceneObjects.Add(_light);
                 }
-            }
+            }*/
 
             count_Meshes = 0;
             count_PointLights = 0;
@@ -240,7 +252,7 @@ namespace Modine
             imnodes.PushStyleVar(StyleVar.NodeBorderThickness, 2);
             ImGuiWindows.LoadTheme();
 
-            CreateLightResourceMemory(sceneObjects);
+            CreatePointLightResourceMemory(sceneObjects);
 
             // SetupCompRect(ref compTexture, compSize);
             // CreateResourceMemory(sceneObjects[0].Mesh.vertexData, sceneObjects[0].Mesh.indices);
@@ -379,7 +391,7 @@ namespace Modine
             public float p0;
         }
     
-        public static void CreateLightResourceMemory(List<SceneObject> sceneObjs)
+        public static void CreatePointLightResourceMemory(List<SceneObject> sceneObjs)
         {
             List<SSBOlight> lightData = new List<SSBOlight>();
 
@@ -397,11 +409,14 @@ namespace Modine
                 }
             }
 
-            const int BINDING_INDEX = 0;
+            if (count_PointLights > 0)
+            {
+                const int BINDING_INDEX = 0;
 
-            GL.CreateBuffers(1, out int buffer);
-            GL.NamedBufferStorage(buffer, sizeof(float) * 8 * lightData.Count(), ref lightData.ToArray()[0], BufferStorageFlags.DynamicStorageBit);
-            GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, BINDING_INDEX, buffer);
+                GL.CreateBuffers(1, out int buffer);
+                GL.NamedBufferStorage(buffer, sizeof(float) * 8 * lightData.Count(), ref lightData.ToArray()[0], BufferStorageFlags.DynamicStorageBit);
+                GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, BINDING_INDEX, buffer);
+            }
         }
 
         public void RenderScene(double time)
@@ -492,28 +507,67 @@ namespace Modine
 
             // Use different shaders for engine and viewport effects
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             
+            deferredCompute.Use();
+            ResizeTexture(viewportSize, ref renderTexture, PixelInternalFormat.Rgba32f, PixelFormat.Rgba);
+
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindImageTexture(0, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+
+            GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
+            GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
+            GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            
+            /*
             defferedShader.Use();
             defferedShader.SetVector3("viewPos", camera.position); 
             Postprocessing.RenderDefferedRect(ref defferedShader, depthStencilTexture, gAlbedo, gNormal, gPosition, gMetallicRough);
+
+            // Bind framebuffer texture
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, gAlbedo);
+            deferredCompute.SetInt("gAlbedo", 0);
+            
+            // Bind depth texture
+            GL.ActiveTexture(TextureUnit.Texture1);
+            GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
+            defferedShader.SetInt("depth", 1);
+
+            // Bind normal texture
+            GL.ActiveTexture(TextureUnit.Texture2);
+            GL.BindTexture(TextureTarget.Texture2D, gNormal);
+            defferedShader.SetInt("gNormal", 2);
+
+            // Bind position texture
+            GL.ActiveTexture(TextureUnit.Texture3);
+            GL.BindTexture(TextureTarget.Texture2D, gPosition);
+            defferedShader.SetInt("gPosition", 3);
+        
+            // Bind Metallic and Roughness texture
+            GL.ActiveTexture(TextureUnit.Texture4);
+            GL.BindTexture(TextureTarget.Texture2D, gMetallicRough);
+            defferedShader.SetInt("gMetallicRough", 4);
+
             Postprocessing.RenderPPRect(ref postprocessShader, framebufferTexture);
             if (showOutlines) Postprocessing.RenderOutlineRect(ref outlineShader, framebufferTexture, depthStencilTexture);
             Postprocessing.RenderFXAARect(ref fxaaShader, framebufferTexture);
+            */
+            
             Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref framebufferTexture, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition);
-
+    
             lightShader.Use();
             lightShader.SetMatrix4("projection", projectionMatrix);
             lightShader.SetMatrix4("view", viewMatrix);
             for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Render(camera);
 
-            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-
             // Show all the ImGUI windows
             ImGuiController.Update(this, (float)time);
             ImGui.DockSpaceOverViewport();
 
-            int[] textures = new int[]{framebufferTexture, gAlbedo, gPosition, gNormal, compTexture};
+            int[] textures = new int[]{ renderTexture, gAlbedo, gPosition, gNormal, compTexture };
             ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes, ref selectedTexture);
             ImGuiWindows.Viewport(textures[selectedTexture], out viewportSize, out viewportPos, out viewportHovered);
             if (showStats) ImGuiWindows.SmallStats(viewportSize, viewportPos, FPScounter.fps, FPScounter.ms, count_Meshes, count_PointLights, triangleCount);
@@ -545,66 +599,76 @@ namespace Modine
             
             if (!fullscreen)
             {
-                selectedIsMesh = sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh ? true : false;
-            
-            ImGui.Begin("Material Editor##2");
-            if (selectedIsMesh)
-            {
-                if (sceneObjects[selectedSceneObject].Mesh.MaterialIndex < Materials.Count()) ImGui.Text("   " + Materials[sceneObjects[selectedSceneObject].Mesh.MaterialIndex].Name);
-                else ImGui.Text("   " + "Temp");
-                imnodes.BeginNodeEditor();
-
-                // Output node
-                imnodes.PushColorStyle(ColorStyle.TitleBar, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.875f, 0.233f, 0.203f, 1.000f)));
-                imnodes.PushColorStyle(ColorStyle.TitleBarHovered, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.875f, 0.233f, 0.203f, 1.000f) * 1.25f));
-                imnodes.PushColorStyle(ColorStyle.TitleBarSelected, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.875f, 0.233f, 0.203f, 1.000f) * 0.9f));
-                imnodes.BeginNode(1);
-                imnodes.BeginNodeTitleBar();
-                if (sceneObjects[selectedSceneObject].Mesh.MaterialIndex < Materials.Count()) ImGui.Text(Materials[sceneObjects[selectedSceneObject].Mesh.MaterialIndex].Name);
-                else ImGui.Text("Temp");
-                imnodes.EndNodeTitleBar();
-
-                imnodes.BeginInputAttribute(2, PinShape.CircleFilled);
-                ImGui.Text("Albedo");
-                imnodes.EndInputAttribute();
-
-                imnodes.BeginInputAttribute(3, PinShape.CircleFilled);
-                ImGui.Text("Roughness");
-                imnodes.EndInputAttribute();
-
-                imnodes.BeginInputAttribute(4, PinShape.CircleFilled);
-                ImGui.Text("Metallic");
-                imnodes.EndInputAttribute();
-
-                imnodes.BeginInputAttribute(5, PinShape.CircleFilled);
-                ImGui.Text("Normals");
-                imnodes.EndInputAttribute();
+                if (sceneObjects.Count > 0)
+                {
+                    selectedIsMesh = sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh ? true : false;
                 
-                ImGui.Dummy(new(80, 30));
-                imnodes.EndNode();
+                    ImGui.Begin("Material Editor##2");
+                    if (selectedIsMesh)
+                    {
+                        if (sceneObjects[selectedSceneObject].Mesh.MaterialIndex < Materials.Count()) ImGui.Text("   " + Materials[sceneObjects[selectedSceneObject].Mesh.MaterialIndex].Name);
+                        else ImGui.Text("   " + "Temp");
+                        imnodes.BeginNodeEditor();
 
-                // Input node
-                imnodes.PushColorStyle(ColorStyle.TitleBar, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.231f, 0.779f, 0.148f, 1.000f)));
-                imnodes.PushColorStyle(ColorStyle.TitleBarHovered, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.231f, 0.779f, 0.148f, 1.000f) * 1.25f));
-                imnodes.PushColorStyle(ColorStyle.TitleBarSelected, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.231f, 0.779f, 0.148f, 1.000f) * 0.9f));
-                imnodes.BeginNode(6);
-                imnodes.BeginNodeTitleBar();
-                ImGui.Text("Input");
-                imnodes.EndNodeTitleBar();
+                        // Output node
+                        imnodes.PushColorStyle(ColorStyle.TitleBar, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.875f, 0.233f, 0.203f, 1.000f)));
+                        imnodes.PushColorStyle(ColorStyle.TitleBarHovered, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.875f, 0.233f, 0.203f, 1.000f) * 1.25f));
+                        imnodes.PushColorStyle(ColorStyle.TitleBarSelected, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.875f, 0.233f, 0.203f, 1.000f) * 0.9f));
+                        imnodes.BeginNode(1);
+                        imnodes.BeginNodeTitleBar();
+                        if (sceneObjects[selectedSceneObject].Mesh.MaterialIndex < Materials.Count()) ImGui.Text(Materials[sceneObjects[selectedSceneObject].Mesh.MaterialIndex].Name);
+                        else ImGui.Text("Temp");
 
-                imnodes.BeginOutputAttribute(7, PinShape.QuadFilled);
-                ImGui.Indent(60);
-                ImGui.Text("UVs");
-                ImGui.Unindent();
-                imnodes.EndOutputAttribute();
+                        imnodes.EndNodeTitleBar();
 
-                ImGui.Dummy(new(80, 30));
-                imnodes.EndNode();
+                        imnodes.BeginInputAttribute(2, PinShape.CircleFilled);
+                        ImGui.Text("Albedo");
+                        imnodes.EndInputAttribute();
 
-                imnodes.EndNodeEditor();
-            }
-            
-            ImGui.End();
+                        imnodes.BeginInputAttribute(3, PinShape.CircleFilled);
+                        ImGui.Text("Roughness");
+                        imnodes.EndInputAttribute();
+
+                        imnodes.BeginInputAttribute(4, PinShape.CircleFilled);
+                        ImGui.Text("Metallic");
+                        imnodes.EndInputAttribute();
+
+                        imnodes.BeginInputAttribute(5, PinShape.CircleFilled);
+                        ImGui.Text("Normals");
+                        imnodes.EndInputAttribute();
+                        
+                        ImGui.Dummy(new(80, 30));
+                        imnodes.EndNode();
+
+                        // Input node
+                        imnodes.PushColorStyle(ColorStyle.TitleBar, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.231f, 0.779f, 0.148f, 1.000f)));
+                        imnodes.PushColorStyle(ColorStyle.TitleBarHovered, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.231f, 0.779f, 0.148f, 1.000f) * 1.25f));
+                        imnodes.PushColorStyle(ColorStyle.TitleBarSelected, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(0.231f, 0.779f, 0.148f, 1.000f) * 0.9f));
+                        
+                        imnodes.BeginNode(6);
+                        imnodes.BeginNodeTitleBar();
+                        ImGui.Text("Input");
+                        imnodes.EndNodeTitleBar();
+
+                        imnodes.BeginOutputAttribute(7, PinShape.QuadFilled);
+                        ImGui.Indent(60);
+                        ImGui.Text("UVs");
+                        ImGui.Unindent();
+                        imnodes.EndOutputAttribute();
+                        ImGui.Dummy(new(80, 30));
+                        imnodes.EndNode();
+
+                        imnodes.EndNodeEditor();
+                    }
+                    
+                    ImGui.End();
+                }
+
+                else
+                {
+                    ImGui.Begin("Material Editor##2");
+                    ImGui.End();
+                }
             
                 // ImGuiWindows.AssetBrowser();
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
@@ -650,17 +714,17 @@ namespace Modine
 
             if (viewportHovered)
             {
-                if (e.Key == Keys.D1)
+                if (e.Key == Keys.KeyPad1)
                 {
                     GL.Enable(EnableCap.CullFace);
                     _polygonMode = PolygonMode.Fill;
                 }
-                if (e.Key == Keys.D2)
+                if (e.Key == Keys.KeyPad2)
                 {
                     GL.Disable(EnableCap.CullFace);
                     _polygonMode = PolygonMode.Line;
                 }
-                if (e.Key == Keys.D3)
+                if (e.Key == Keys.KeyPad3)
                 {
                     GL.Disable(EnableCap.CullFace);
                     _polygonMode = PolygonMode.Point;

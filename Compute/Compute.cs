@@ -45,7 +45,7 @@ namespace Modine.Compute
 
         public static void ResizeTexture(Vector2i viewportSize, ref int texture, PixelInternalFormat pif, PixelFormat pf)
         {            
-            //Resize framebuffer
+            // Resize texture
             GL.BindTexture(TextureTarget.Texture2D, texture);
             GL.TexImage2D(TextureTarget.Texture2D, 0, pif, viewportSize.X, viewportSize.Y, 0, pf, PixelType.UnsignedByte, IntPtr.Zero);
         }

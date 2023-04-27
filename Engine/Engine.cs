@@ -32,7 +32,7 @@ namespace Modine
                 WindowState = WindowState.Normal,
                 API = ContextAPI.OpenGL,
                 Profile = ContextProfile.Core,
-                APIVersion = new  Version(4, 3),
+                APIVersion = new Version(4, 3),
                 Flags = ContextFlags.Debug
             })
         {
@@ -154,6 +154,7 @@ namespace Modine
             Framebuffers.SetupShadowFBO(ref depthMapFBO, ref depthMap, shadowRes);
             Postprocessing.SetupPPRect(ref postprocessShader);
 
+            renderTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, renderTexture);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);

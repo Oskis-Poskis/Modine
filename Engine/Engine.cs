@@ -43,13 +43,11 @@ namespace Modine
             PBRShader = new Shader("Engine/Shaders/PBR/mesh.vert", "Engine/Shaders/PBR/mesh.frag");
             shadowShader = new Shader("Engine/Shaders/PBR/shadow.vert", "Engine/Shaders/PBR/shadow.frag");
             lightShader = new Shader("Engine/Shaders/Lights/light.vert", "Engine/Shaders/Lights/light.frag");
-            postprocessShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/postprocess.frag");
-            defferedShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/deffered.frag");
-            outlineShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/outline.frag");
-            fxaaShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/fxaa.frag");
 
             deferredCompute = new ComputeShader("Engine/Shaders/Compute/deferred.comp");
             outlineCompute = new ComputeShader("Engine/Shaders/Compute/outline.comp");
+
+            fxaaShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/fxaa.frag");
             // RaytracingShader = new ComputeShader("Compute/raytracer.comp");
         }
 

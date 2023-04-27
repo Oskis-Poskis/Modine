@@ -252,11 +252,11 @@ namespace Modine.ImGUI
 
                         sceneObjects[selectedIndex].Mesh.MaterialIndex = materials.Count - 1;
                     }
-                    */
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    */
 
                     SN.Vector4 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z, 1);
                     ImGui.Text("Albedo");
@@ -618,7 +618,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref float camSpeed, ref float farPlane, ref float nearPlane, ref bool vsyncOn, ref bool showOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref Shader defshader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader PBRshader)
+        public static void Settings(ref float camSpeed, ref float farPlane, ref float nearPlane, ref bool vsyncOn, ref bool showOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref ComputeShader defshader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader PBRshader)
         {
             ImGui.Begin("Settings");
 
@@ -657,7 +657,7 @@ namespace Modine.ImGUI
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                if (ImGui.Checkbox(" Tonemapping", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
+                if (ImGui.Checkbox(" Tonemapping", ref ACESonoff)) defshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
                 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -716,7 +716,7 @@ namespace Modine.ImGUI
                 if (ImGui.SliderFloat("##Shadow Factor", ref shadowFac, 0, 1))
                 {
                     ShadowFactor = shadowFac;
-                    PBRshader.SetFloat("shadowFactor", ShadowFactor);
+                    defshader.SetFloat("shadowFactor", ShadowFactor);
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -794,7 +794,7 @@ namespace Modine.ImGUI
         }
 
         private static int selectedInt = 0;
-        private static readonly string[] intOptions = {"Combined", "Albedo", "World Space Position", "World Space Normal", "Raytraced Scene"};
+        private static readonly string[] intOptions = {"Combined", "Albedo", "World Space Position", "World Space Normal"};
 
         public static void Header(double FPS, double MS, int meshCount, ref int selectedTexture)
         {

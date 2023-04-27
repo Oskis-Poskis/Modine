@@ -1,17 +1,17 @@
 #version 430
 
 layout(local_size_x = 8, local_size_y = 8) in;
-layout(rgba32f, binding = 5) uniform image2D img_output;
+layout(rgba32f, binding = 4) writeonly uniform image2D img_output;
 
-uniform sampler2D gAlbedo;
-uniform sampler2D gNormal;
-uniform sampler2D gPosition;
-uniform sampler2D gMetallicRough;
+layout(binding = 0) uniform sampler2D gAlbedo;
+layout(binding = 1) uniform sampler2D gNormal;
+layout(binding = 2) uniform sampler2D gPosition;
+layout(binding = 3) uniform sampler2D gMetallicRough;
 
 uniform vec3 ambient;
 uniform vec3 viewPos;
 uniform vec3 direction;
-uniform float dirStrength = 1;
+uniform float dirStrength = 1.0;
 uniform float shadowFactor = 0.75;
 
 uniform bool ACES = true;
@@ -47,11 +47,12 @@ void main()
 {
     ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
     ivec2 screen_size = imageSize(img_output);
+    vec2 UVs = (vec2(pixel_coords) + 0.5) / vec2(screen_size); // Add 0.5 to center the texel
 
-    vec3 albedo = texelFetch(gAlbedo, pixel_coords, 0).rgb;
-    vec3 N = texelFetch(gNormal, pixel_coords, 0).rgb;
-    vec3 fragPos = texelFetch(gPosition, pixel_coords, 0).rgb;
-    vec3 MetRoughShadow = texelFetch(gMetallicRough, pixel_coords, 0).rgb;
+    vec3 albedo = texture(gAlbedo, UVs).rgb;
+    vec3 N = texture(gNormal, UVs).rgb;
+    vec3 fragPos = texture(gPosition, UVs).rgb;
+    vec3 MetRoughShadow = texture(gMetallicRough, UVs).rgb;
 
     float metallic = MetRoughShadow.r;
     float roughness = MetRoughShadow.g;
@@ -77,6 +78,7 @@ void main()
     if (ACES) result = ACESFilm(result);
     imageStore(img_output, pixel_coords, vec4(result, 1.0));
 }
+
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {

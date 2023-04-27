@@ -169,7 +169,7 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        public static void Viewport(int framebufferTexture, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered)
+        public static void Viewport(int texture, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered)
         {
             ImGui.Begin("Viewport");
             windowSize = new(
@@ -179,8 +179,8 @@ namespace Modine.ImGUI
                 Convert.ToInt32(ImGui.GetWindowPos().X),
                 Convert.ToInt32(ImGui.GetWindowPos().Y));
 
-            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);            
-            ImGui.Image((IntPtr)framebufferTexture, new(windowSize.X, windowSize.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
+            GL.BindTexture(TextureTarget.Texture2D, texture); 
+            ImGui.Image((IntPtr)texture, new(windowSize.X, windowSize.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
 
             //viewportHovered = ImGui.IsWindowHovered() ? true : false;
             viewportHovered = true;
@@ -618,7 +618,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref float camSpeed, ref float farPlane, ref float nearPlane, ref bool vsyncOn, ref bool showOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref ComputeShader defshader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader PBRshader)
+        public static void Settings(ref float camSpeed, ref float farPlane, ref float nearPlane, ref bool vsyncOn, ref bool showOutlines, ref bool debugOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref ComputeShader defshader, ref Shader ppshader, ref ComputeShader outlineShader, ref Shader fxaaShader, ref Shader PBRshader)
         {
             ImGui.Begin("Settings");
 
@@ -761,6 +761,10 @@ namespace Modine.ImGUI
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Checkbox(" Debug Outlines", ref debugOutlines);
+                
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                 ImGui.Checkbox(" Show Outlines", ref showOutlines);

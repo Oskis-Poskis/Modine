@@ -1,9 +1,10 @@
-#version 330
+#version 430
 
-layout(location = 1) out vec3 gAlbedo;
-layout(location = 2) out vec3 gNormal;
-layout(location = 3) out vec3 gMetallicRough;
-layout(location = 4) out vec4 gPosition;
+layout(location = 0) out vec3 gAlbedo;
+layout(location = 1) out vec3 gNormal;
+layout(location = 2) out vec3 gMetallicRough;
+layout(location = 3) out vec4 gPosition;
+layout(binding = 5) uniform sampler2D shadowMap;
 
 in vec2 UVs;
 in vec3 normals;
@@ -27,7 +28,6 @@ struct Material {
 
 uniform Material material;
 uniform float shadowBias = 0.0018;
-uniform sampler2D shadowMap;
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 {

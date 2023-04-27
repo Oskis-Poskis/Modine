@@ -55,6 +55,7 @@ namespace Modine
 
         private bool viewportHovered;
         public bool showOutlines = true;
+        public bool debugOutlines = true;
 
         private Vector2i viewportPos, viewportSize, previousViewportSize;
 
@@ -180,12 +181,7 @@ namespace Modine
 
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
-
-            krissVector = new(vectorData, vectorIndicies, PBRShader, true, 1);
-            SceneObject vector = new(PBRShader, EngineUtility.NewName(sceneObjects, "Vector"), krissVector);
-            sceneObjects.Add(vector);
             
-            /*
             int numRows = 15;
             int numCols = 15;
             int spacing = (int)(25/3);
@@ -201,8 +197,7 @@ namespace Modine
 
                     krissVector = new(vectorData, vectorIndicies, PBRShader, true, 1);
                     SceneObject vector = new(PBRShader, EngineUtility.NewName(sceneObjects, "Vector"), krissVector);
-                    vector.Scale = new(0.75f);
-                    vector.Rotation.X = 180;
+                    vector.Scale = new(0.5f);
                     vector.Position.X = x;
                     vector.Position.Z = z;
                     vector.Position.Y = 0;
@@ -210,6 +205,7 @@ namespace Modine
                 }
             }
 
+            /*
             int numRows2 = 15;
             int numCols2 = 15;
             int spacing2 = (int)(25/3);
@@ -457,16 +453,15 @@ namespace Modine
                 GL.StencilMask(0x00);
                 
                 float aspectRatio = (float)viewportSize.X / viewportSize.Y;
-                lightSpaceMatrix = Matrix4.LookAt(SunDirection * 10, Vector3.Zero, Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-60, 60, -60, 60, 0.1f, 100);
+                lightSpaceMatrix = Matrix4.LookAt(SunDirection * 10, Vector3.Zero, Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-15, 15, -15, 15, 0.1f, 100);
                 projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, nearPlane, farPlane);
                 viewMatrix = Matrix4.LookAt(camera.position, camera.position + camera.direction, Vector3.UnitY);
 
-                GL.ActiveTexture(TextureUnit.Texture4);
+                GL.ActiveTexture(TextureUnit.Texture5);
                 GL.BindTexture(TextureTarget.Texture2D, depthMap);
                 PBRShader.Use();
                 PBRShader.SetMatrix4("projection", projectionMatrix);
                 PBRShader.SetMatrix4("view", viewMatrix);
-                PBRShader.SetInt("shadowMap", 4);
                 PBRShader.SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
 
                 for (int i = 0; i < sceneObjects.Count; i++)
@@ -504,61 +499,60 @@ namespace Modine
                 GL.Disable(EnableCap.StencilTest);
             }
             
-
-
             deferredCompute.Use();
             deferredCompute.SetVector3("viewPos", camera.position);
 
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, gAlbedo);
-            deferredCompute.SetInt("gAlbedo", 0);
             
             // Bind normal texture
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, gNormal);
-            deferredCompute.SetInt("gNormal", 1);
 
             // Bind position texture
             GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, gPosition);
-            deferredCompute.SetInt("gPosition", 2);
         
             // Bind Metallic and Roughness texture
             GL.ActiveTexture(TextureUnit.Texture3);
             GL.BindTexture(TextureTarget.Texture2D, gMetallicRough);
-            deferredCompute.SetInt("gMetallicRough", 3);
 
-            GL.ActiveTexture(TextureUnit.Texture5);
-            GL.BindImageTexture(5, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            GL.ActiveTexture(TextureUnit.Texture4);
+            GL.BindImageTexture(4, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
             // Resize renderTexture
+            GL.BindTexture(TextureTarget.Texture2D, renderTexture);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 
             GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
             GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
-            GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f); 
-
-
-            /*
-            outlineCompute.Use();
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, renderTexture);
-            outlineCompute.SetInt("renderTexture", 0);
-
-            // Bind stencil texture for outline in fragshader
-            GL.ActiveTexture(TextureUnit.Texture1);
-            GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
-            outlineCompute.SetInt("stencilTexture", 1);
-
-            GL.ActiveTexture(TextureUnit.Texture5);
-            GL.BindImageTexture(5, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
-
-            GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
-            GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
             GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
-            */
+
+
             
+            if (showOutlines)
+            {
+                outlineCompute.Use();
+                outlineCompute.SetInt("debug", Convert.ToInt32(debugOutlines));
+
+                GL.ActiveTexture(TextureUnit.Texture0);
+                GL.BindTexture(TextureTarget.Texture2D, renderTexture);
+                outlineCompute.SetInt("renderTexture", 0);
+
+                // Bind stencil texture for outline in fragshader
+                GL.ActiveTexture(TextureUnit.Texture1);
+                GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
+                outlineCompute.SetInt("stencilTexture", 1);
+                
+                GL.ActiveTexture(TextureUnit.Texture4);
+                GL.BindImageTexture(4, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+
+                GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
+                GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
+                GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            }
+
 
 
             lightShader.Use();
@@ -666,7 +660,7 @@ namespace Modine
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.Properties(ref sceneObjects, selectedSceneObject, ref Materials);
-                ImGuiWindows.Settings(ref camera.speed, ref farPlane, ref nearPlane, ref vsyncOn, ref showOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref deferredCompute, ref postprocessShader, ref outlineShader, ref fxaaShader, ref PBRShader);
+                ImGuiWindows.Settings(ref camera.speed, ref farPlane, ref nearPlane, ref vsyncOn, ref showOutlines, ref debugOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref deferredCompute, ref postprocessShader, ref outlineCompute, ref fxaaShader, ref PBRShader);
             }
 
             ImGuiController.Render();

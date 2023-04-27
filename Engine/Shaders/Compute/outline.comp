@@ -8,6 +8,7 @@ uniform usampler2D stencilTexture;
 
 uniform int numSteps = 12;
 uniform float radius = 3.0;
+uniform bool debug = false;
 
 const float TAU = 6.28318530;
 
@@ -15,22 +16,23 @@ void main()
 {
     ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
     ivec2 screen_size = imageSize(img_output);
-    // vec2 UVs = vec2(pixel_coords) / vec2(screen_size);
+    vec2 UVs = (vec2(pixel_coords) + 0.5) / vec2(screen_size); // Add 0.5 to center the texel
     
-    vec4 color = vec4(texelFetch(renderTexture, pixel_coords, 0).rgb, 1.0);
-    uint stencil = texelFetch(stencilTexture, pixel_coords, 0).r;
+    vec4 color = vec4(texture(renderTexture, UVs).rgb, 1.0);
+    uint stencil = texture(stencilTexture, UVs).r;
     
     vec2 aspect = 1.0 / vec2(textureSize(stencilTexture, 0));
     float outlinemask = 0.0;
     for (float i = 0.0; i < TAU; i += TAU / numSteps)
     {
         vec2 offset = vec2(sin(i), cos(i)) * aspect * radius;
-        float col = texelFetch(stencilTexture, clamp(pixel_coords + ivec2(offset), 0, 1), 0).r;
+        float col = texture(stencilTexture, UVs + offset).r;
         
         outlinemask = mix(outlinemask, 1.0, col);
     }
     outlinemask = mix(outlinemask, 0.0, stencil);
 
     vec4 final = mix(color, vec4(0.75, 0.4, 0.0, 1.0), clamp(outlinemask, 0.0, 1.0));
-    imageStore(img_output, pixel_coords, final); 
+    if (!debug) imageStore(img_output, pixel_coords, final);
+    else imageStore(img_output, pixel_coords, vec4(vec3(outlinemask), 1.0));
 }

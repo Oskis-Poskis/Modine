@@ -180,7 +180,12 @@ namespace Modine
 
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
+
+            krissVector = new(vectorData, vectorIndicies, PBRShader, true, 1);
+            SceneObject vector = new(PBRShader, EngineUtility.NewName(sceneObjects, "Vector"), krissVector);
+            sceneObjects.Add(vector);
             
+            /*
             int numRows = 15;
             int numCols = 15;
             int spacing = (int)(25/3);
@@ -227,6 +232,7 @@ namespace Modine
                     sceneObjects.Add(_light);
                 }
             }
+            */
 
             count_Meshes = 0;
             count_PointLights = 0;
@@ -498,6 +504,8 @@ namespace Modine
                 GL.Disable(EnableCap.StencilTest);
             }
             
+
+
             deferredCompute.Use();
             deferredCompute.SetVector3("viewPos", camera.position);
 
@@ -528,7 +536,8 @@ namespace Modine
 
             GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
             GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
-            GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f); 
+
 
             /*
             outlineCompute.Use();
@@ -542,14 +551,14 @@ namespace Modine
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
             outlineCompute.SetInt("stencilTexture", 1);
 
-            ResizeTexture(viewportSize, ref renderTexture, PixelInternalFormat.Rgba32f, PixelFormat.Rgba);
             GL.ActiveTexture(TextureUnit.Texture5);
-            GL.BindImageTexture(0, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            GL.BindImageTexture(5, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
 
             GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
             GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
             GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
             */
+            
 
 
             lightShader.Use();

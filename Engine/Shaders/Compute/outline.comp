@@ -1,7 +1,7 @@
 #version 430
 
 layout(local_size_x = 8, local_size_y = 8) in;
-layout(rgba32f, binding = 0) uniform image2D img_output;
+layout(rgba32f, binding = 5) uniform image2D img_output;
 
 uniform sampler2D renderTexture;
 uniform usampler2D stencilTexture;
@@ -32,5 +32,5 @@ void main()
     outlinemask = mix(outlinemask, 0.0, stencil);
 
     vec4 final = mix(color, vec4(0.75, 0.4, 0.0, 1.0), clamp(outlinemask, 0.0, 1.0));
-    imageStore(img_output, pixel_coords, vec4(stencil));
+    imageStore(img_output, pixel_coords, final); 
 }

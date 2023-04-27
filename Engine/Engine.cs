@@ -55,7 +55,7 @@ namespace Modine
 
         private bool viewportHovered;
         public bool showOutlines = true;
-        public bool debugOutlines = true;
+        public bool debugOutlines = false;
 
         private Vector2i viewportPos, viewportSize, previousViewportSize;
 

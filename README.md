@@ -1,8 +1,5 @@
 # Modine
-## My second C# OpenGL Game Engine with some improvements
-**GUI** using [ImGUI.NET](https://www.nuget.org/packages/ImGui.NET)
-
-**3D Model Loading** using [AssimpNet](https://www.nuget.org/packages/AssimpNet)
+## This is my final high school project, a 3D engine made with OpenGL and C#
 
 ## Editor Usage
 First person camera rotation

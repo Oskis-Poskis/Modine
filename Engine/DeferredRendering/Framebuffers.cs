@@ -10,7 +10,7 @@ namespace Modine.Common
             // Albedo Texture
             gAlbedo = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, gAlbedo);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
@@ -67,7 +67,7 @@ namespace Modine.Common
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Depth24Stencil8, viewportSize.X, viewportSize.Y, 0, PixelFormat.DepthStencil, PixelType.UnsignedInt248, IntPtr.Zero);
 
                 GL.BindTexture(TextureTarget.Texture2D, gAlbedo);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 
                 GL.BindTexture(TextureTarget.Texture2D, gNormal);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16Snorm, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);

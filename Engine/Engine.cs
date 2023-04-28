@@ -180,9 +180,9 @@ namespace Modine
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
             
-            int numRows = 15;
-            int numCols = 15;
-            int spacing = (int)(25/3);
+            int numRows = 3;
+            int numCols = 3;
+            int spacing = 5;
             int startX = -((numCols - 1) * spacing) / 2;
             int startY = -((numRows - 1) * spacing) / 2;
 
@@ -361,6 +361,7 @@ namespace Modine
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             base.OnRenderFrame(args);
+            
             RenderScene(args.Time);
             FPScounter.Count(args);
         }
@@ -423,6 +424,7 @@ namespace Modine
             GL.DrawBuffers(5, new  DrawBuffersEnum[] { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3, DrawBuffersEnum.ColorAttachment4 });
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.ClearColor(new  Color4(ambient.X, ambient.Y, ambient.Z, 1));
+            GL.ClearDepth(1);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
 
             count_Meshes = 0; count_PointLights = 0;

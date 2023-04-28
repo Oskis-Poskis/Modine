@@ -40,12 +40,12 @@ namespace Modine
             viewportSize = this.Size;
             previousViewportSize = viewportSize;
 
-            PBRShader = new Shader("Engine/Shaders/PBR/mesh.vert", "Engine/Shaders/PBR/mesh.frag");
-            shadowShader = new Shader("Engine/Shaders/PBR/shadow.vert", "Engine/Shaders/PBR/shadow.frag");
+            PBRShader = new Shader("Engine/Shaders/Deferred Rendering/PBR/mesh.vert", "Engine/Shaders/Deferred Rendering/PBR/mesh.frag");
+            shadowShader = new Shader("Engine/Shaders/Deferred Rendering/PBR/shadow.vert", "Engine/Shaders/Deferred Rendering/PBR/shadow.frag");
             lightShader = new Shader("Engine/Shaders/Lights/light.vert", "Engine/Shaders/Lights/light.frag");
 
-            deferredCompute = new ComputeShader("Engine/Shaders/Compute/deferred.comp");
-            outlineCompute = new ComputeShader("Engine/Shaders/Compute/outline.comp");
+            deferredCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/deferred.comp");
+            outlineCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/outline.comp");
 
             // RaytracingShader = new ComputeShader("Compute/raytracer.comp");
         }
@@ -498,6 +498,7 @@ namespace Modine
             
             deferredCompute.Use();
             deferredCompute.SetVector3("viewPos", camera.position);
+            deferredCompute.SetMatrix4("projMatrix", projectionMatrix);
             deferredCompute.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
             deferredCompute.SetMatrix4("viewMatrixInv", Matrix4.Invert(viewMatrix));
 
@@ -518,8 +519,8 @@ namespace Modine
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
 
-            GL.ActiveTexture(TextureUnit.Texture5);
-            GL.BindImageTexture(5, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            GL.ActiveTexture(TextureUnit.Texture4);
+            GL.BindImageTexture(4, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
             // Resize renderTexture
             GL.BindTexture(TextureTarget.Texture2D, renderTexture);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
@@ -535,16 +536,14 @@ namespace Modine
 
                 GL.ActiveTexture(TextureUnit.Texture0);
                 GL.BindTexture(TextureTarget.Texture2D, renderTexture);
-                outlineCompute.SetInt("renderTexture", 0);
 
                 // Bind stencil texture for outline in fragshader
                 GL.ActiveTexture(TextureUnit.Texture1);
                 GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.StencilIndex);
-                outlineCompute.SetInt("stencilTexture", 1);
                 
-                GL.ActiveTexture(TextureUnit.Texture4);
-                GL.BindImageTexture(4, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+                GL.ActiveTexture(TextureUnit.Texture2);
+                GL.BindImageTexture(2, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
 
                 GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
                 GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);

@@ -610,6 +610,8 @@ namespace Modine.ImGUI
         static float shadowBias = 0.0018f;
         static bool fxaaOnOff = true;
         static bool ACESonoff = true;
+        static float ChromaticAbberationRadius = 1;
+        static float ChromaticAbberationStrength = 5;
 
         static bool showImGUIdemo = false;
         static float strength = 1.75f;
@@ -618,7 +620,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref float camSpeed, ref float farPlane, ref float nearPlane, ref bool vsyncOn, ref bool showOutlines, ref bool debugOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref ComputeShader defshader, ref ComputeShader outlineShader, ref Shader PBRshader)
+        public static void Settings(ref float camSpeed, ref float farPlane, ref float nearPlane, ref bool vsyncOn, ref bool showOutlines, ref bool debugOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref ComputeShader defshader, ref ComputeShader outlineShader, ref ComputeShader ppShader, ref Shader PBRshader)
         {
             ImGui.Begin("Settings");
 
@@ -652,6 +654,11 @@ namespace Modine.ImGUI
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 
                 //if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
+                ImGui.Text("Radius");
+                if (ImGui.SliderFloat("##Radius", ref ChromaticAbberationRadius, 0.25f, 2)) ppShader.SetFloat("ChromaticAbberationRadius", ChromaticAbberationRadius);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Text("Strength");
+                if (ImGui.SliderFloat("##Strength", ref ChromaticAbberationStrength, 0, 1)) ppShader.SetFloat("ChromaticAbberationStrength", ChromaticAbberationStrength);
                 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();

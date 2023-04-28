@@ -16,7 +16,6 @@ layout(binding = 1) uniform sampler2D gNormal;
 layout(binding = 2) uniform sampler2D gMetallicRough;
 layout(binding = 3) uniform sampler2D depthTexture;
 
-uniform mat4 projMatrix;
 uniform mat4 projMatrixInv;
 uniform mat4 viewMatrixInv;
 
@@ -69,7 +68,6 @@ vec3 hash(uvec3 x)
     return vec3(x)*(1.0/float(0xffffffffU));
 }
 
-
 void main()
 {
     ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
@@ -103,21 +101,14 @@ void main()
     result = pointLighting;
     result += dirLighting * (1 - shadow * shadowFactor) + (albedo.rgb * ambient);
 
-
-    mat4 ttttpt = projMatrix;
-
-
     // If statement no good -.-
     if (albedo.a == 0)
     {
         if (ACES) result = ACESFilm(result);
-        imageStore(img_output, pixel_coords, vec4(hash(uvec3(vec2(pixel_coords), 1)), 1.0));
+        imageStore(img_output, pixel_coords, vec4(result, 1.0));
     }
 
-    else
-    {
-        imageStore(img_output, pixel_coords, vec4(ambient, 1.0));
-    }
+    else imageStore(img_output, pixel_coords, vec4(ambient, 1.0));
 }
 
 vec4 ViewPosFromDepth(float depth, vec2 uv)

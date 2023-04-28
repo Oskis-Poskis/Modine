@@ -46,6 +46,7 @@ namespace Modine
 
             deferredCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/deferred.comp");
             outlineCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/outline.comp");
+            postprocessCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/postprocess.comp");
 
             // RaytracingShader = new ComputeShader("Compute/raytracer.comp");
         }
@@ -89,6 +90,7 @@ namespace Modine
 
         ComputeShader deferredCompute;
         ComputeShader outlineCompute;
+        ComputeShader postprocessCompute;
         int renderTexture;
 
         int depthMapFBO;
@@ -498,7 +500,6 @@ namespace Modine
             
             deferredCompute.Use();
             deferredCompute.SetVector3("viewPos", camera.position);
-            deferredCompute.SetMatrix4("projMatrix", projectionMatrix);
             deferredCompute.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
             deferredCompute.SetMatrix4("viewMatrixInv", Matrix4.Invert(viewMatrix));
 
@@ -529,6 +530,19 @@ namespace Modine
             GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
             GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
             
+            /*
+            postprocessCompute.Use();
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, renderTexture);
+            
+            GL.ActiveTexture(TextureUnit.Texture1);
+            GL.BindImageTexture(1, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+
+            GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
+            GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
+            GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            */
+
             if (showOutlines)
             {
                 outlineCompute.Use();
@@ -655,7 +669,7 @@ namespace Modine
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.Properties(ref sceneObjects, selectedSceneObject, ref Materials);
-                ImGuiWindows.Settings(ref camera.speed, ref farPlane, ref nearPlane, ref vsyncOn, ref showOutlines, ref debugOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref deferredCompute, ref outlineCompute, ref PBRShader);
+                ImGuiWindows.Settings(ref camera.speed, ref farPlane, ref nearPlane, ref vsyncOn, ref showOutlines, ref debugOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref deferredCompute, ref outlineCompute, ref postprocessCompute, ref PBRShader);
             }
 
             ImGuiController.Render();

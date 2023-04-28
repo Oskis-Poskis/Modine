@@ -618,7 +618,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref float camSpeed, ref float farPlane, ref float nearPlane, ref bool vsyncOn, ref bool showOutlines, ref bool debugOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref ComputeShader defshader, ref Shader ppshader, ref ComputeShader outlineShader, ref Shader fxaaShader, ref Shader PBRshader)
+        public static void Settings(ref float camSpeed, ref float farPlane, ref float nearPlane, ref bool vsyncOn, ref bool showOutlines, ref bool debugOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref ComputeShader defshader, ref ComputeShader outlineShader, ref Shader PBRshader)
         {
             ImGui.Begin("Settings");
 
@@ -651,7 +651,7 @@ namespace Modine.ImGUI
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 
-                if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
+                //if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
                 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();
@@ -798,7 +798,7 @@ namespace Modine.ImGUI
         }
 
         private static int selectedInt = 0;
-        private static readonly string[] intOptions = {"Combined", "Albedo", "World Space Position", "World Space Normal"};
+        private static readonly string[] intOptions = {"Combined", "Albedo", "World Space Normal"};
 
         public static void Header(double FPS, double MS, int meshCount, ref int selectedTexture)
         {

@@ -37,6 +37,7 @@ namespace Modine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment2, TextureTarget.Texture2D, gMetallicRough, 0);
 
+            /*
             // Position Texture
             gPosition = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, gPosition);
@@ -46,6 +47,7 @@ namespace Modine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment3, TextureTarget.Texture2D, gPosition, 0);
+            */
 
             // Depth Texture
             depthStencilTexture = GL.GenTexture();
@@ -58,7 +60,7 @@ namespace Modine.Common
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, TextureTarget.Texture2D, depthStencilTexture, 0);
         }
 
-        public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough, ref int gPosition)
+        public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough)
         {            
             //Resize framebuffer textures
             if (viewportSize != previousViewportSize)
@@ -74,9 +76,6 @@ namespace Modine.Common
 
                 GL.BindTexture(TextureTarget.Texture2D, gMetallicRough);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
-
-                GL.BindTexture(TextureTarget.Texture2D, gPosition);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
 
                 previousViewportSize = viewportSize;
             }

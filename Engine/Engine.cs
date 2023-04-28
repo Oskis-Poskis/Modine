@@ -47,7 +47,6 @@ namespace Modine
             deferredCompute = new ComputeShader("Engine/Shaders/Compute/deferred.comp");
             outlineCompute = new ComputeShader("Engine/Shaders/Compute/outline.comp");
 
-            fxaaShader = new Shader("Engine/Shaders/Postprocessing/1_rect.vert", "Engine/Shaders/Postprocessing/fxaa.frag");
             // RaytracingShader = new ComputeShader("Compute/raytracer.comp");
         }
 
@@ -64,7 +63,6 @@ namespace Modine
         Material defaultMat, krissVectorMat;
         public static List<Material> Materials = new  List<Material>();
         public static Shader PBRShader, lightShader, shadowShader;
-        public Shader postprocessShader, defferedShader, outlineShader, fxaaShader;
         Matrix4 projectionMatrix, viewMatrix, lightSpaceMatrix;
 
         Mesh krissVector, Room;
@@ -149,7 +147,6 @@ namespace Modine
             Framebuffers.SetupFBO(ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, viewportSize);
             FramebufferErrorCode status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
             Framebuffers.SetupShadowFBO(ref depthMapFBO, ref depthMap, shadowRes);
-            Postprocessing.SetupPPRect(ref postprocessShader);
 
             renderTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, renderTexture);
@@ -501,6 +498,8 @@ namespace Modine
             
             deferredCompute.Use();
             deferredCompute.SetVector3("viewPos", camera.position);
+            deferredCompute.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
+            deferredCompute.SetMatrix4("viewMatrixInv", Matrix4.Invert(viewMatrix));
 
             // Bind framebuffer texture
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -509,17 +508,18 @@ namespace Modine
             // Bind normal texture
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, gNormal);
-
-            // Bind position texture
-            GL.ActiveTexture(TextureUnit.Texture2);
-            GL.BindTexture(TextureTarget.Texture2D, gPosition);
         
             // Bind Metallic and Roughness texture
-            GL.ActiveTexture(TextureUnit.Texture3);
+            GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, gMetallicRough);
 
-            GL.ActiveTexture(TextureUnit.Texture4);
-            GL.BindImageTexture(4, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            // Bind depth
+            GL.ActiveTexture(TextureUnit.Texture3);
+            GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
+
+            GL.ActiveTexture(TextureUnit.Texture5);
+            GL.BindImageTexture(5, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
             // Resize renderTexture
             GL.BindTexture(TextureTarget.Texture2D, renderTexture);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
@@ -559,13 +559,13 @@ namespace Modine
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition);
+            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough);
 
             // Show all the ImGUI windows
             ImGuiController.Update(this, (float)time);
             ImGui.DockSpaceOverViewport();
 
-            int[] textures = new int[]{ renderTexture, gAlbedo, gPosition, gNormal };
+            int[] textures = new int[]{ renderTexture, gAlbedo, gNormal };
             ImGuiWindows.Header(FPScounter.fps, FPScounter.ms, count_Meshes, ref selectedTexture);
             ImGuiWindows.Viewport(textures[selectedTexture], out viewportSize, out viewportPos, out viewportHovered);
             if (showStats) ImGuiWindows.SmallStats(viewportSize, viewportPos, FPScounter.fps, FPScounter.ms, count_Meshes, count_PointLights, triangleCount);
@@ -656,7 +656,7 @@ namespace Modine
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.Properties(ref sceneObjects, selectedSceneObject, ref Materials);
-                ImGuiWindows.Settings(ref camera.speed, ref farPlane, ref nearPlane, ref vsyncOn, ref showOutlines, ref debugOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref deferredCompute, ref postprocessShader, ref outlineCompute, ref fxaaShader, ref PBRShader);
+                ImGuiWindows.Settings(ref camera.speed, ref farPlane, ref nearPlane, ref vsyncOn, ref showOutlines, ref debugOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref deferredCompute, ref outlineCompute, ref PBRShader);
             }
 
             ImGuiController.Render();

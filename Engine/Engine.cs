@@ -527,8 +527,6 @@ namespace Modine
             GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
             GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
             GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
-
-
             
             if (showOutlines)
             {
@@ -552,8 +550,6 @@ namespace Modine
                 GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
                 GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
             }
-
-
 
             lightShader.Use();
             lightShader.SetMatrix4("projection", projectionMatrix);

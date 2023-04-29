@@ -57,7 +57,7 @@ namespace Modine
 
         private Vector2i viewportPos, viewportSize, previousViewportSize;
 
-        Vector3 ambient = new (0.08f);
+        Vector3 ambient = new(0.03f);
         Vector3 SunDirection = new(1);
         float shadowFactor = 0.75f;
         
@@ -139,6 +139,7 @@ namespace Modine
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.StencilTest);
             GL.Enable(EnableCap.DebugOutput);
+            GL.Enable(EnableCap.Blend);
             
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
             GL.PointSize(5);
@@ -478,11 +479,13 @@ namespace Modine
                     }
                 }
 
+                GL.DepthMask(false);
                 lightShader.Use();
                 lightShader.SetMatrix4("projection", projectionMatrix);
                 lightShader.SetMatrix4("view", viewMatrix);
                 pointLightTexture.Use(TextureUnit.Texture0);
                 for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Render(camera);
+                GL.DepthMask(true);
 
                 // Render selected sceneobject infront of everything and dont write to color buffer
                 GL.Disable(EnableCap.DepthTest);

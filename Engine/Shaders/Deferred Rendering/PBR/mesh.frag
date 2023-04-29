@@ -1,5 +1,6 @@
 #version 430
 
+layout(location = 0) out vec4 mainTexture;
 layout(location = 1) out vec4 gAlbedo;
 layout(location = 2) out vec4 gNormal;
 layout(location = 3) out vec4 gMetallicRough;
@@ -66,6 +67,7 @@ void main()
     
     normal = normalize(TBN * normal);
 
+    mainTexture = vec4(0.0);
     gAlbedo = vec4(albedo, 1.0);
     gNormal = vec4(normal, 1.0);
 

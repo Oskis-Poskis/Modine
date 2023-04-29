@@ -56,42 +56,44 @@ void main()
     ivec2 screen_size = imageSize(img_output);
     vec2 UVs = (vec2(pixel_coords) + 0.5) / vec2(screen_size); // Add 0.5 to center the texel
 
+    float depth = texture(depthTexture, UVs).r;
     vec4 mainTex = texture(mainTexture, UVs);
     vec3 albedo = texture(gAlbedo, UVs).rgb;
-    vec3 N = texture(gNormal, UVs).rgb;
-    float depth = texture(depthTexture, UVs).r;
+    vec3 normal = texture(gNormal, UVs).rgb;
     vec3 fragPos = WorldPos(depth, UVs); // texture(gPosition, UVs).rgb;
     vec3 MetRoughShadow = texture(gMetallicRough, UVs).rgb;
 
-    float metallic = MetRoughShadow.r;
-    float roughness = MetRoughShadow.g;
-    float shadow = MetRoughShadow.b;
-
-    vec3 V = normalize(viewPos - fragPos);
-
-    vec3 F0 = vec3(0.04);
-    F0 = mix(F0, albedo.rgb, metallic);
-
-    vec3 dirLighting = vec3(0.0);
-    dirLighting += CalcDirectionalLight(direction, V, N, F0, albedo.rgb, roughness, metallic);
-    dirLighting = pow(dirLighting, vec3(1 / 2.2));
-
-    vec3 pointLighting = vec3(0);
-    for (int i = 0; i < PointLights.length(); i++) pointLighting += CalcPointLight(PointLights[i], V, N, F0, albedo.rgb, roughness, metallic, fragPos);
-    pointLighting = pow(pointLighting, vec3(1 / 2.2));
-
-    vec3 result = dirLighting * (1 - shadow * shadowFactor) + (albedo.rgb * ambient);
-    result += pointLighting;
-
-    if (depth == 1.0)
+    if (depth == 1.0 && mainTex.a == 0.0)
     {
         imageStore(img_output, pixel_coords, vec4(ambient, 1.0));
     }
 
     else
     {
+        float metallic = MetRoughShadow.r;
+        float roughness = MetRoughShadow.g;
+        float shadow = MetRoughShadow.b;
+
+        vec3 V = normalize(viewPos - fragPos);
+
+        vec3 F0 = vec3(0.04);
+        F0 = mix(F0, albedo.rgb, metallic);
+
+        vec3 dirLighting = vec3(0.0);
+        dirLighting += CalcDirectionalLight(direction, V, normal, F0, albedo.rgb, roughness, metallic);
+        dirLighting = pow(dirLighting, vec3(1 / 2.2));
+
+        vec3 pointLighting = vec3(0);
+        for (int i = 0; i < PointLights.length(); i++) pointLighting += CalcPointLight(PointLights[i], V, normal, F0, albedo.rgb, roughness, metallic, fragPos);
+        pointLighting = pow(pointLighting, vec3(1 / 2.2));
+
+        vec3 result = dirLighting * (1 - shadow * shadowFactor) + (albedo.rgb * ambient);
+        result += pointLighting;
+
+        result = mix(result, mainTex.rgb, mainTex.a);
+
         if (ACES) result = ACESFilm(result);
-        imageStore(img_output, pixel_coords, vec4(vec3(mainTex.a), 1.0));
+        imageStore(img_output, pixel_coords, vec4(result, 1.0));
     }
 }
 

@@ -1,9 +1,9 @@
 #version 430
 
 layout(location = 0) out vec4 mainTexture;
-layout(location = 1) out vec4 gAlbedo;
-layout(location = 2) out vec4 gNormal;
-layout(location = 3) out vec4 gMetallicRough;
+layout(location = 1) out vec3 gAlbedo;
+layout(location = 2) out vec3 gNormal;
+layout(location = 3) out vec3 gMetallicRough;
 
 layout(binding = 5) uniform sampler2D shadowMap;
 
@@ -68,9 +68,9 @@ void main()
     normal = normalize(TBN * normal);
 
     mainTexture = vec4(0.0);
-    gAlbedo = vec4(albedo, 1.0);
-    gNormal = vec4(normal, 1.0);
+    gAlbedo = albedo;
+    gNormal = normal;
 
     float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, direction);
-    gMetallicRough = vec4(metallic, roughness, shadowCalc, 1.0);
+    gMetallicRough = vec3(metallic, roughness, shadowCalc);
 }

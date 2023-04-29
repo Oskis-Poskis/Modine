@@ -599,6 +599,8 @@ namespace Modine.ImGUI
         static float ChromaticAbberationRadius = 1;
         static float ChromaticAbberationStrength = 5;
 
+        static float NoiseAmount = 1;
+
         static bool showImGUIdemo = false;
         static float strength = 1.75f;
         static float fontSize = 0.9f;
@@ -646,6 +648,13 @@ namespace Modine.ImGUI
                 ImGui.Text("Strength");
                 if (ImGui.SliderFloat("##Strength", ref ChromaticAbberationStrength, 0, 1)) ppShader.SetFloat("ChromaticAbberationStrength", ChromaticAbberationStrength);
                 
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Separator();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                ImGui.Text("PBR Noise");
+                if (ImGui.SliderFloat("##Noise", ref NoiseAmount, 0, 1)) defshader.SetFloat("NoiseAmount", NoiseAmount);                
+
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));

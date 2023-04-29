@@ -14,6 +14,8 @@ namespace Modine.Common
         public float speed;
         public float sensitivity = 0.5f;
 
+        public bool trackball = false;
+
         public Camera(Vector3 startPosition, Vector3 startDirection, float startSpeed = 5)
         {
             position = startPosition;
@@ -23,18 +25,21 @@ namespace Modine.Common
 
         public void UpdateCamera(MouseState state)
         {
-            float deltaX = state.Delta.X;
-            float deltaY = state.Delta.Y;
-            theta += deltaX * sensitivity;
-            phi -= deltaY * sensitivity;
+            if (!trackball)
+            {
+                float deltaX = state.Delta.X;
+                float deltaY = state.Delta.Y;
+                theta += deltaX * sensitivity;
+                phi -= deltaY * sensitivity;
 
-            if (theta < 0) theta += 360;
-            else if (theta > 360) theta -= 360;
-            phi = Math.Clamp(phi, -89, 89);
+                if (theta < 0) theta += 360;
+                else if (theta > 360) theta -= 360;
+                phi = Math.Clamp(phi, -89, 89);
 
-            direction = new Vector3((float)Math.Cos(MathHelper.DegreesToRadians(theta)) * (float)Math.Cos(MathHelper.DegreesToRadians(phi)),
-                                    (float)Math.Sin(MathHelper.DegreesToRadians(phi)),
-                                    (float)Math.Sin(MathHelper.DegreesToRadians(theta)) * (float)Math.Cos(MathHelper.DegreesToRadians(phi)));
+                direction = new Vector3((float)Math.Cos(MathHelper.DegreesToRadians(theta)) * (float)Math.Cos(MathHelper.DegreesToRadians(phi)),
+                                        (float)Math.Sin(MathHelper.DegreesToRadians(phi)),
+                                        (float)Math.Sin(MathHelper.DegreesToRadians(theta)) * (float)Math.Cos(MathHelper.DegreesToRadians(phi)));
+            }
         }
     }
 }

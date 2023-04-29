@@ -50,6 +50,12 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
 
 vec3 ACESFilm(vec3 x);
 
+uniform highp float NoiseAmount = 1;
+highp float NoiseCalc = NoiseAmount / 255;
+highp float random(highp vec2 coords) {
+   return fract(sin(dot(coords.xy, vec2(12.9898,78.233))) * 43758.5453);
+}
+
 void main()
 {
     ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
@@ -87,10 +93,11 @@ void main()
         for (int i = 0; i < PointLights.length(); i++) pointLighting += CalcPointLight(PointLights[i], V, normal, F0, albedo.rgb, roughness, metallic, fragPos);
         pointLighting = pow(pointLighting, vec3(1 / 2.2));
 
-        vec3 result = dirLighting * (1 - shadow * shadowFactor) + (albedo.rgb * ambient);
+        vec3 result = dirLighting * (1 - shadow * shadowFactor) + ambient;
         result += pointLighting;
 
         result = mix(result, mainTex.rgb, mainTex.a);
+        result += mix(-NoiseCalc, NoiseCalc, random(UVs));
 
         if (ACES) result = ACESFilm(result);
         imageStore(img_output, pixel_coords, vec4(result, 1.0));

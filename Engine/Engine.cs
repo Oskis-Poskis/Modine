@@ -16,6 +16,8 @@ using Modine.ImGUI;
 using static Modine.Rendering.SceneObject;
 using static Modine.Compute.RenderTexture;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
+using Microsoft.VisualBasic;
+using System.Diagnostics;
 
 namespace Modine
 {
@@ -32,11 +34,12 @@ namespace Modine
                 WindowState = WindowState.Normal,
                 API = ContextAPI.OpenGL,
                 Profile = ContextProfile.Core,
-                APIVersion = new Version(4, 3),
+                APIVersion = new Version(4, 6),
                 Flags = ContextFlags.Debug
             })
         {
             CenterWindow();
+
             viewportSize = this.Size;
             previousViewportSize = viewportSize;
 
@@ -47,60 +50,47 @@ namespace Modine
             deferredCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/deferred.comp");
             outlineCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/outline.comp");
             postprocessCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/postprocess.comp");
-
-            // RaytracingShader = new ComputeShader("Compute/raytracer.comp");
         }
-
-        private bool viewportHovered;
-        public bool showOutlines = true;
-        public bool debugOutlines = false;
 
         private Vector2i viewportPos, viewportSize, previousViewportSize;
 
         Vector3 ambient = new(0.03f);
         Vector3 SunDirection = new(1);
+        float farPlane = 1000, nearPlane = 0.1f;
         float shadowFactor = 0.75f;
         
         Material defaultMat, krissVectorMat;
-        public static List<Material> Materials = new  List<Material>();
-        public static Shader PBRShader, lightShader, shadowShader;
         Matrix4 projectionMatrix, viewMatrix, lightSpaceMatrix;
-
-        Mesh krissVector, Room;
-        VertexData[] vectorData, vertexData;
-        int[] vectorIndicies, indices;
-        int triangleCount = 0;
+        public static List<Material> Materials = new List<Material>();
+        public static Shader PBRShader, lightShader, shadowShader;
+        Texture pointLightTexture;
 
         Camera camera;
         static List<SceneObject> sceneObjects = new  List<SceneObject>();
         public static int selectedSceneObject = 0;
         static int count_PointLights, count_Meshes = 0;
 
-        float farPlane = 1000;
-        float nearPlane = 0.1f;
-
         PolygonMode _polygonMode = PolygonMode.Fill;
-        private bool vsyncOn = true;
-        private bool fullscreen = false;
+        private bool vsyncOn = true, fullscreen = false;
+        private bool viewportHovered, showOutlines = true, debugOutlines = false;
 
         private Modine.ImGUI.ImGuiController ImGuiController;
 
         int selectedTexture = 0;
-        int depthStencilTexture, gAlbedo, gNormal, gMetallicRough, mainTexture;
-        int PBR_FBO;    
+        int depthStencilTexture, gAlbedo, gNormal, gMetallicRough, mainTexture; 
+        int PBR_FBO;
 
         ComputeShader deferredCompute;
         ComputeShader outlineCompute;
         ComputeShader postprocessCompute;
         int renderTexture;
 
-        Texture pointLightTexture;
-
         int depthMapFBO;
         int depthMap;
         int shadowRes = 2048;
 
-        FPScounter FPScounter = new ();
+        FPScounter FPScounter = new();
+        int triangleCount = 0;
 
         private static void OnDebugMessage(
             DebugSource source,     // Source of the debugging message.
@@ -140,7 +130,21 @@ namespace Modine
             GL.Enable(EnableCap.StencilTest);
             GL.Enable(EnableCap.DebugOutput);
             GL.Enable(EnableCap.Blend);
-            
+
+            /*
+            // Get the number of available extensions
+            int numExtensions;
+            GL.GetInteger(GetPName.NumExtensions, out numExtensions);
+            Console.WriteLine("Number of available extensions: " + numExtensions);
+
+            // Print the name of each extension
+            for (uint i = 0; i < numExtensions; i++)
+            {
+                string extensionName = GL.GetString(StringNameIndexed.Extensions, i);
+                Console.WriteLine("Extension #" + i + ": " + extensionName);
+            }
+            */
+
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
             GL.PointSize(5);
             IsVisible = true;
@@ -183,8 +187,8 @@ namespace Modine
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
             
-            int numRows = 3;
-            int numCols = 3;
+            int numRows = 8;
+            int numCols = 8;
             int spacing = 5;
             int startX = -((numCols - 1) * spacing) / 2;
             int startY = -((numRows - 1) * spacing) / 2;
@@ -196,7 +200,7 @@ namespace Modine
                     int x = startX + col * spacing;
                     int z = startY + row * spacing;
 
-                    krissVector = ModelImporter.LoadModel("Assets/Resources/KrissVector.fbx", true, PBRShader)[0];
+                    Mesh krissVector = ModelImporter.LoadModel("Assets/Resources/KrissVector.fbx", true, PBRShader)[0];
                     krissVector.MaterialIndex = 1;
                     SceneObject vector = new(EngineUtility.NewName(sceneObjects, "Vector"), krissVector);
                     vector.Scale = new(0.5f);
@@ -207,10 +211,9 @@ namespace Modine
                 }
             }
 
-            /*
-            int numRows2 = 15;
-            int numCols2 = 15;
-            int spacing2 = (int)(25/3);
+            int numRows2 = 10;
+            int numCols2 = 10;
+            int spacing2 = 5;
             int startX2 = -((numCols2 - 1) * spacing2) / 2;
             int startY2 = -((numRows2 - 1) * spacing2) / 2;
 
@@ -222,7 +225,7 @@ namespace Modine
                     int z = startY2 + row * spacing2;
 
                     Light light = new(lightShader, GetRandomBrightColor(), 10);
-                    SceneObject _light = new(lightShader, EngineUtility.NewName(sceneObjects, "Light"), light);
+                    SceneObject _light = new(EngineUtility.NewName(sceneObjects, "Light"), light);
                     _light.Position.X = x;
                     _light.Position.Z = z;
                     _light.Position.Y = 6;
@@ -230,7 +233,7 @@ namespace Modine
                     sceneObjects.Add(_light);
                 }
             }
-            */
+            
 
             count_Meshes = 0;
             count_PointLights = 0;
@@ -248,11 +251,8 @@ namespace Modine
             imnodes.PushStyleVar(StyleVar.NodeCornerRounding, 5f);
             imnodes.PushStyleVar(StyleVar.NodeBorderThickness, 2);
             ImGuiWindows.LoadTheme();
-
+            
             CreatePointLightResourceMemory(sceneObjects);
-
-            // SetupCompRect(ref compTexture, compSize);
-            // CreateResourceMemory(sceneObjects[0].Mesh.vertexData, sceneObjects[0].Mesh.indices);
         }
 
         public static Vector3 GetRandomBrightColor()
@@ -419,6 +419,8 @@ namespace Modine
 
         public void RenderScene(double time)
         {
+            long shadowTime = 0;
+
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
             RenderFuncs.RenderShadowScene(shadowRes, ref depthMapFBO, lightSpaceMatrix, ref sceneObjects, shadowShader);
 
@@ -522,22 +524,11 @@ namespace Modine
             deferredCompute.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
             deferredCompute.SetMatrix4("viewMatrixInv", Matrix4.Invert(viewMatrix));
 
-            // Bind framebuffer texture
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, mainTexture);
-
-            // Bind framebuffer texture
-            GL.ActiveTexture(TextureUnit.Texture1);
-            GL.BindTexture(TextureTarget.Texture2D, gAlbedo);
-            
-            // Bind normal texture
-            GL.ActiveTexture(TextureUnit.Texture2);
-            GL.BindTexture(TextureTarget.Texture2D, gNormal);
-        
-            // Bind Metallic and Roughness texture
-            GL.ActiveTexture(TextureUnit.Texture3);
-            GL.BindTexture(TextureTarget.Texture2D, gMetallicRough);
-
+            GL.BindTextureUnit(0, mainTexture);
+            GL.BindTextureUnit(1, gAlbedo);
+            GL.BindTextureUnit(2, gNormal);
+            GL.BindTextureUnit(3, gMetallicRough);
+           
             // Bind depth
             GL.ActiveTexture(TextureUnit.Texture4);
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
@@ -552,7 +543,7 @@ namespace Modine
             GL.DispatchCompute(Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.X / 8)), Convert.ToInt32(MathHelper.Ceiling((float)viewportSize.Y / 8)), 1);            
             GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
             GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
-            
+
             /*
             postprocessCompute.Use();
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -677,6 +668,10 @@ namespace Modine
                     ImGui.Begin("Material Editor##2");
                     ImGui.End();
                 }
+
+                ImGui.Begin("Debug");
+                ImGui.Text("Total rendertime: " + shadowTime);
+                ImGui.End();
             
                 // ImGuiWindows.AssetBrowser();
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);

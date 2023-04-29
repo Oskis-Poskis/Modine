@@ -32,7 +32,7 @@ void main()
     }
     outlinemask = mix(outlinemask, 0.0, stencil);
 
-    vec4 final = mix(color, vec4(0.75, 0.4, 0.0, 1.0), clamp(outlinemask, 0.0, 1.0));
+    vec4 final = mix(color, vec4(0.85, 0.4, 0.0, 1.0), clamp(outlinemask, 0.0, 1.0));
     if (!debug) imageStore(img_output, pixel_coords, final);
     else imageStore(img_output, pixel_coords, vec4(vec3(outlinemask), 1.0));
 }

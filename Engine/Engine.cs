@@ -74,7 +74,7 @@ namespace Modine
         private bool vsyncOn = true, fullscreen = false;
         private bool viewportHovered, showOutlines = true, debugOutlines = false;
 
-        private Modine.ImGUI.ImGuiController ImGuiController;
+        private ImGUI.ImGuiController ImGuiController;
 
         int selectedTexture = 0;
         int depthStencilTexture, gAlbedo, gNormal, gMetallicRough, mainTexture; 
@@ -287,7 +287,7 @@ namespace Modine
             if (IsMouseButtonDown(MouseButton.Button2))
             {
                 CursorState = CursorState.Grabbed;
-                camera.UpdateCamera(MouseState);
+                camera.UpdateCamera(MouseState, sceneObjects[selectedSceneObject].Position);
             }
             else CursorState = CursorState.Normal;
 
@@ -301,7 +301,11 @@ namespace Modine
                 if (IsKeyDown(Keys.E)) camera.position += moveAmount * Vector3.UnitY;
                 if (IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
                 if (IsKeyDown(Keys.LeftControl) && IsKeyPressed(Keys.Space)) fullscreen = EngineUtility.ToggleBool(fullscreen);
-                
+
+                if (IsKeyDown(Keys.LeftAlt)) camera.trackball = true;
+                if (IsKeyReleased(Keys.LeftAlt)) camera.trackball = false;
+                if (IsKeyPressed(Keys.LeftAlt)) camera.distance = Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Position);
+
                 if (IsKeyDown(Keys.LeftAlt) && IsKeyPressed(Keys.G)) sceneObjects[selectedSceneObject].Position = Vector3.Zero;
                 if (IsKeyPressed(Keys.G) && !IsKeyDown(Keys.LeftAlt))
                 {

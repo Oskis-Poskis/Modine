@@ -1,12 +1,13 @@
 #version 430
 
 layout(local_size_x = 8, local_size_y = 8) in;
-layout(rgba32f, binding = 4) writeonly uniform image2D img_output;
+layout(rgba32f, binding = 5) writeonly uniform image2D img_output;
 
 layout(binding = 0) uniform sampler2D gAlbedo;
 layout(binding = 1) uniform sampler2D gNormal;
 layout(binding = 2) uniform sampler2D gMetallicRough;
-layout(binding = 3) uniform sampler2D depthTexture;
+layout(binding = 3) uniform sampler2D gMisc;
+layout(binding = 4) uniform sampler2D depthTexture;
 
 uniform mat4 projMatrixInv;
 uniform mat4 viewMatrixInv;
@@ -49,17 +50,6 @@ vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, flo
 
 vec3 ACESFilm(vec3 x);
 
-const uint k = 1103515245U;
-
-vec3 hash(uvec3 x)
-{
-    x = ((x>>8U)^x.yzx)*k;
-    x = ((x>>8U)^x.yzx)*k;
-    x = ((x>>8U)^x.yzx)*k;
-    
-    return vec3(x)*(1.0/float(0xffffffffU));
-}
-
 void main()
 {
     ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
@@ -71,12 +61,12 @@ void main()
     float depth = texture(depthTexture, UVs).r;
     vec3 fragPos = WorldPos(depth, UVs); // texture(gPosition, UVs).rgb;
     vec3 MetRoughShadow = texture(gMetallicRough, UVs).rgb;
+    vec4 misc = texture(gMisc, UVs);
 
     float metallic = MetRoughShadow.r;
     float roughness = MetRoughShadow.g;
     float shadow = MetRoughShadow.b;
 
-    vec3 result = vec3(0);
     vec3 V = normalize(viewPos - fragPos);
 
     vec3 F0 = vec3(0.04);
@@ -90,13 +80,15 @@ void main()
     for (int i = 0; i < PointLights.length(); i++) pointLighting += CalcPointLight(PointLights[i], V, N, F0, albedo.rgb, roughness, metallic, fragPos);
     pointLighting = pow(pointLighting, vec3(1 / 2.2));
 
-    result = pointLighting;
-    result += dirLighting * (1 - shadow * shadowFactor) + (albedo.rgb * ambient);
+    vec3 result = dirLighting * (1 - shadow * shadowFactor) + (albedo.rgb * ambient);
+    result += pointLighting;
+
+    if (ACES) result = ACESFilm(result);
+    result = mix(misc.rgb, result, misc.a);
 
     // If statement no good -.-
-    if (albedo.a == 0)
+    if (albedo.a == 0.0 || misc.a == 0.0)
     {
-        if (ACES) result = ACESFilm(result);
         imageStore(img_output, pixel_coords, vec4(result, 1.0));
     }
 
@@ -221,5 +213,5 @@ vec3 ACESFilm(vec3 x)
     float c = 2.43;
     float d = 0.59;
     float e = 0.14;
-    return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
+    return (x * (a * x + b)) / (x * (c * x + d) + e);
 }

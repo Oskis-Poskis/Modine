@@ -3,7 +3,6 @@
 layout(location = 0) out vec3 gAlbedo;
 layout(location = 1) out vec3 gNormal;
 layout(location = 2) out vec3 gMetallicRough;
-layout(location = 3) out vec4 gPosition;
 layout(binding = 5) uniform sampler2D shadowMap;
 
 in vec2 UVs;
@@ -68,7 +67,6 @@ void main()
 
     gAlbedo = albedo;
     gNormal = normal;
-    gPosition = fragPos;
 
     float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, direction);
     gMetallicRough = vec3(metallic, roughness, shadowCalc);

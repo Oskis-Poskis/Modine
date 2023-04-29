@@ -85,7 +85,7 @@ namespace Modine
 
         private Modine.ImGUI.ImGuiController ImGuiController;
         int selectedTexture = 0;
-        int depthStencilTexture, gAlbedo, gNormal, gMetallicRough, gPosition;
+        int depthStencilTexture, gAlbedo, gNormal, gMetallicRough, gMisc;
         int FBO;
 
         ComputeShader deferredCompute;
@@ -136,6 +136,7 @@ namespace Modine
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.StencilTest);
             GL.Enable(EnableCap.DebugOutput);
+            
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
             GL.PointSize(5);
             IsVisible = true;
@@ -146,7 +147,7 @@ namespace Modine
             FBO = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
 
-            Framebuffers.SetupFBO(ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gPosition, viewportSize);
+            Framebuffers.SetupFBO(ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gMisc, viewportSize);
             FramebufferErrorCode status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
             Framebuffers.SetupShadowFBO(ref depthMapFBO, ref depthMap, shadowRes);
 
@@ -420,7 +421,7 @@ namespace Modine
             // Render normal scene
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
-            GL.DrawBuffers(5, new  DrawBuffersEnum[] { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3, DrawBuffersEnum.ColorAttachment4 });
+            GL.DrawBuffers(4, new DrawBuffersEnum[] { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1, DrawBuffersEnum.ColorAttachment2, DrawBuffersEnum.ColorAttachment3 });
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             GL.ClearColor(new  Color4(ambient.X, ambient.Y, ambient.Z, 1));
             GL.ClearDepth(1);
@@ -498,6 +499,11 @@ namespace Modine
                 GL.Disable(EnableCap.StencilTest);
             }
             
+            lightShader.Use();
+            lightShader.SetMatrix4("projection", projectionMatrix);
+            lightShader.SetMatrix4("view", viewMatrix);
+            for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Render(camera);
+
             deferredCompute.Use();
             deferredCompute.SetVector3("viewPos", camera.position);
             deferredCompute.SetMatrix4("projMatrixInv", Matrix4.Invert(projectionMatrix));
@@ -515,13 +521,17 @@ namespace Modine
             GL.ActiveTexture(TextureUnit.Texture2);
             GL.BindTexture(TextureTarget.Texture2D, gMetallicRough);
 
-            // Bind depth
+            // Bind misc texture
             GL.ActiveTexture(TextureUnit.Texture3);
+            GL.BindTexture(TextureTarget.Texture2D, gMisc);
+
+            // Bind depth
+            GL.ActiveTexture(TextureUnit.Texture4);
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.DepthStencilTextureMode, (int)All.DepthComponent);
 
-            GL.ActiveTexture(TextureUnit.Texture4);
-            GL.BindImageTexture(4, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
+            GL.ActiveTexture(TextureUnit.Texture5);
+            GL.BindImageTexture(5, renderTexture, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
             // Resize renderTexture
             GL.BindTexture(TextureTarget.Texture2D, renderTexture);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
@@ -563,16 +573,11 @@ namespace Modine
                 GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit);
                 GL.BindImageTexture(0, 0, 0, false, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba32f);
             }
-
-            lightShader.Use();
-            lightShader.SetMatrix4("projection", projectionMatrix);
-            lightShader.SetMatrix4("view", viewMatrix);
-            for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Render(camera);
             
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough);
+            Framebuffers.ResizeFBO(viewportSize, previousViewportSize, ref depthStencilTexture, ref gAlbedo, ref gNormal, ref gMetallicRough, ref gMisc);
 
             // Show all the ImGUI windows
             ImGuiController.Update(this, (float)time);

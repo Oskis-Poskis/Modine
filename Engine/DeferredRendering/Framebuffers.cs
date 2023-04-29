@@ -5,7 +5,7 @@ namespace Modine.Common
 {
     public class Framebuffers
     {
-        public static void SetupFBO(ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough, ref int gPosition, Vector2i viewportSize)
+        public static void SetupFBO(ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough, ref int gMisc, Vector2i viewportSize)
         {
             // Albedo Texture
             gAlbedo = GL.GenTexture();
@@ -49,6 +49,16 @@ namespace Modine.Common
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment3, TextureTarget.Texture2D, gPosition, 0);
             */
 
+            // Misc Texture
+            gMisc = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, gMisc);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment3, TextureTarget.Texture2D, gMisc, 0);
+
             // Depth Texture
             depthStencilTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, depthStencilTexture);
@@ -60,7 +70,7 @@ namespace Modine.Common
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, TextureTarget.Texture2D, depthStencilTexture, 0);
         }
 
-        public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough)
+        public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough, ref int gMisc)
         {            
             //Resize framebuffer textures
             if (viewportSize != previousViewportSize)
@@ -76,6 +86,9 @@ namespace Modine.Common
 
                 GL.BindTexture(TextureTarget.Texture2D, gMetallicRough);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+
+                GL.BindTexture(TextureTarget.Texture2D, gMisc);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 
                 previousViewportSize = viewportSize;
             }

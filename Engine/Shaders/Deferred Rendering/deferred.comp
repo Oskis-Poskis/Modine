@@ -90,7 +90,8 @@ void main()
 
     else
     {
-        imageStore(img_output, pixel_coords, vec4(result, 1.0));
+        if (ACES) result = ACESFilm(result);
+        imageStore(img_output, pixel_coords, vec4(vec3(mainTex.a), 1.0));
     }
 }
 

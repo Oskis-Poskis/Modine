@@ -1,8 +1,9 @@
 #version 430
 
-layout(location = 0) out vec3 gAlbedo;
-layout(location = 1) out vec3 gNormal;
-layout(location = 2) out vec3 gMetallicRough;
+layout(location = 1) out vec4 gAlbedo;
+layout(location = 2) out vec4 gNormal;
+layout(location = 3) out vec4 gMetallicRough;
+
 layout(binding = 5) uniform sampler2D shadowMap;
 
 in vec2 UVs;
@@ -45,7 +46,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
         for(float y = -1.5; y <= 1.5; ++y)
         {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;    
+            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;
         }    
     }
     shadow /= 16;
@@ -65,9 +66,9 @@ void main()
     
     normal = normalize(TBN * normal);
 
-    gAlbedo = albedo;
-    gNormal = normal;
+    gAlbedo = vec4(albedo, 1.0);
+    gNormal = vec4(normal, 1.0);
 
     float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, direction);
-    gMetallicRough = vec3(metallic, roughness, shadowCalc);
+    gMetallicRough = vec4(metallic, roughness, shadowCalc, 1.0);
 }

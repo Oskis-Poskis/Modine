@@ -5,8 +5,21 @@ namespace Modine.Common
 {
     public class Framebuffers
     {
-        public static void SetupFBO(ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough, ref int gMisc, Vector2i viewportSize)
+        public static void SetupMainFBO(ref int FBO, ref int mainTexture, ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough, Vector2i viewportSize)
         {
+            FBO = GL.GenFramebuffer();
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, FBO);
+
+            // Albedo Texture
+            mainTexture = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, mainTexture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, mainTexture, 0);
+
             // Albedo Texture
             gAlbedo = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, gAlbedo);
@@ -15,49 +28,27 @@ namespace Modine.Common
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, gAlbedo, 0);
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment1, TextureTarget.Texture2D, gAlbedo, 0);
 
             // Normal Texture
             gNormal = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, gNormal);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16Snorm, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16Snorm, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment1, TextureTarget.Texture2D, gNormal, 0);
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment2, TextureTarget.Texture2D, gNormal, 0);
 
             // Metallic and Roughness Texture
             gMetallicRough = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, gMetallicRough);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment2, TextureTarget.Texture2D, gMetallicRough, 0);
-
-            /*
-            // Position Texture
-            gPosition = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, gPosition);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16f, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment3, TextureTarget.Texture2D, gPosition, 0);
-            */
-
-            // Misc Texture
-            gMisc = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, gMisc);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, (int)viewportSize.X, (int)viewportSize.X, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment3, TextureTarget.Texture2D, gMisc, 0);
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment3, TextureTarget.Texture2D, gMetallicRough, 0);
 
             // Depth Texture
             depthStencilTexture = GL.GenTexture();
@@ -70,7 +61,7 @@ namespace Modine.Common
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, TextureTarget.Texture2D, depthStencilTexture, 0);
         }
 
-        public static void ResizeFBO(Vector2i viewportSize, Vector2i previousViewportSize, ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough, ref int gMisc)
+        public static void ResizeMainFBO(Vector2i viewportSize, Vector2i previousViewportSize, ref int mainTexture, ref int depthStencilTexture, ref int gAlbedo, ref int gNormal, ref int gMetallicRough)
         {            
             //Resize framebuffer textures
             if (viewportSize != previousViewportSize)
@@ -82,17 +73,18 @@ namespace Modine.Common
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 
                 GL.BindTexture(TextureTarget.Texture2D, gNormal);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16Snorm, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb16Snorm, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 
                 GL.BindTexture(TextureTarget.Texture2D, gMetallicRough);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
-
-                GL.BindTexture(TextureTarget.Texture2D, gMisc);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+
+                GL.BindTexture(TextureTarget.Texture2D, mainTexture);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, viewportSize.X, viewportSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 
                 previousViewportSize = viewportSize;
             }
         }
+
 
         public static void SetupShadowFBO(ref int depthMapFBO, ref int depthMap, int shadowRes)
         {

@@ -3,10 +3,10 @@
 layout(local_size_x = 8, local_size_y = 8) in;
 layout(rgba32f, binding = 5) writeonly uniform image2D img_output;
 
-layout(binding = 0) uniform sampler2D gAlbedo;
-layout(binding = 1) uniform sampler2D gNormal;
-layout(binding = 2) uniform sampler2D gMetallicRough;
-layout(binding = 3) uniform sampler2D gMisc;
+layout(binding = 0) uniform sampler2D mainTexture;
+layout(binding = 1) uniform sampler2D gAlbedo;
+layout(binding = 2) uniform sampler2D gNormal;
+layout(binding = 3) uniform sampler2D gMetallicRough;
 layout(binding = 4) uniform sampler2D depthTexture;
 
 uniform mat4 projMatrixInv;
@@ -56,12 +56,12 @@ void main()
     ivec2 screen_size = imageSize(img_output);
     vec2 UVs = (vec2(pixel_coords) + 0.5) / vec2(screen_size); // Add 0.5 to center the texel
 
-    vec4 albedo = texture(gAlbedo, UVs);
+    vec4 mainTex = texture(mainTexture, UVs);
+    vec3 albedo = texture(gAlbedo, UVs).rgb;
     vec3 N = texture(gNormal, UVs).rgb;
     float depth = texture(depthTexture, UVs).r;
     vec3 fragPos = WorldPos(depth, UVs); // texture(gPosition, UVs).rgb;
     vec3 MetRoughShadow = texture(gMetallicRough, UVs).rgb;
-    vec4 misc = texture(gMisc, UVs);
 
     float metallic = MetRoughShadow.r;
     float roughness = MetRoughShadow.g;
@@ -83,16 +83,15 @@ void main()
     vec3 result = dirLighting * (1 - shadow * shadowFactor) + (albedo.rgb * ambient);
     result += pointLighting;
 
-    if (ACES) result = ACESFilm(result);
-    result = mix(misc.rgb, result, misc.a);
+    if (depth == 1.0)
+    {
+        imageStore(img_output, pixel_coords, vec4(ambient, 1.0));
+    }
 
-    // If statement no good -.-
-    if (albedo.a == 0.0 || misc.a == 0.0)
+    else
     {
         imageStore(img_output, pixel_coords, vec4(result, 1.0));
     }
-
-    else imageStore(img_output, pixel_coords, vec4(ambient, 1.0));
 }
 
 vec4 ViewPosFromDepth(float depth, vec2 uv)

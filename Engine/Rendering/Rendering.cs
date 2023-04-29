@@ -19,7 +19,7 @@ namespace Modine.Rendering
             // Draw meshes to shadow map with different shaders
             foreach (SceneObject sceneObject in sceneObjects)
             {
-                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Shader = shadowShader;
+                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.Shader = shadowShader;
                 if (sceneObject.Type == SceneObjectType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Render();
             }
         }

@@ -3,14 +3,6 @@
 layout(local_size_x = 8, local_size_y = 8) in;
 layout(rgba32f, binding = 4) writeonly uniform image2D img_output;
 
-#define SAMPLES 16
-#define INTENSITY 1.
-#define SCALE 2.5
-#define BIAS 0.05
-#define SAMPLE_RAD 0.02
-#define MAX_DISTANCE 0.07
-#define MOD3 vec3(.1031,.11369,.13787)
-
 layout(binding = 0) uniform sampler2D gAlbedo;
 layout(binding = 1) uniform sampler2D gNormal;
 layout(binding = 2) uniform sampler2D gMetallicRough;

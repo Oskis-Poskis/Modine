@@ -475,12 +475,8 @@ namespace Modine.ImGUI
 
                 if (ImGui.MenuItem("Cube"))
                 {
-                    int[] cubeIndices;
-                    VertexData[] cubeVertexData;
-                    ModelImporter.LoadModel("Assets/Models/Cube.fbx", out cubeVertexData, out cubeIndices);
-
-                    Mesh cube = new  Mesh(cubeVertexData, cubeIndices, Game.PBRShader, true, 0);
-                    SceneObject _cube = new(Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Cube"), cube);
+                    Mesh cube = ModelImporter.LoadModel("Assets/Models/Cube.fbx", true, Game.PBRShader)[0];
+                    SceneObject _cube = new(Common.EngineUtility.NewName(sceneObjects, "Cube"), cube);
                     sceneObjects.Add(_cube);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -496,12 +492,8 @@ namespace Modine.ImGUI
 
                 if (ImGui.MenuItem("Sphere"))
                 {
-                    VertexData[] sphereVertexData;
-                    int[] sphereIndices;
-                    ModelImporter.LoadModel("Assets/Models/Sphere.fbx", out sphereVertexData, out sphereIndices);
-
-                    Mesh sphere = new  Mesh(sphereVertexData, sphereIndices, Game.PBRShader, true, 0);
-                    SceneObject _sphere = new (Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Sphere"), sphere);
+                    Mesh sphere = ModelImporter.LoadModel("Assets/Models/Sphere.fbx", true, Game.PBRShader)[0];
+                    SceneObject _sphere = new(Common.EngineUtility.NewName(sceneObjects, "Sphere"), sphere);
                     sceneObjects.Add(_sphere);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -517,12 +509,8 @@ namespace Modine.ImGUI
 
                 if (ImGui.MenuItem("Plane"))
                 {
-                    VertexData[] planeVertexData;
-                    int[] planeIndices;
-                    ModelImporter.LoadModel("Assets/Models/Floor.fbx", out planeVertexData, out planeIndices);
-
-                    Mesh plane = new  Mesh(planeVertexData, planeIndices, Game.PBRShader, true, 0);
-                    SceneObject _plane = new (Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Plane"), plane);
+                    Mesh plane = ModelImporter.LoadModel("Assets/Models/Floor.fbx", true, Game.PBRShader)[0];
+                    SceneObject _plane = new(Common.EngineUtility.NewName(sceneObjects, "Plane"), plane);
                     sceneObjects.Add(_plane);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -548,14 +536,12 @@ namespace Modine.ImGUI
 
                     if (File.Exists(path))
                     {
-                        VertexData[] cubeVertexData;
-                        int[] cubeIndices;
-                        string name;
-                        ModelImporter.LoadModel(path, out cubeVertexData, out cubeIndices, out name);
-
-                        Mesh import = new  Mesh(cubeVertexData, cubeIndices, Game.PBRShader, true, 0);
-                        SceneObject _import = new(Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, name), import);
-                        sceneObjects.Add(_import);
+                        List<Mesh> import = ModelImporter.LoadModel(path, true, Game.PBRShader);
+                        for (int i = 0; i < import.Count; i++)
+                        {
+                            SceneObject _import = new(Common.EngineUtility.NewName(sceneObjects, import[i].Name), import[i]);
+                            sceneObjects.Add(_import);
+                        }
 
                         selectedSceneObject = sceneObjects.Count - 1;
                     }
@@ -573,7 +559,7 @@ namespace Modine.ImGUI
                 if (ImGui.MenuItem("Point Light"))
                 {
                     Light light = new  Light(Game.lightShader, new (1, 1, 1), 5);
-                    SceneObject _light = new (Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Light"), light);
+                    SceneObject _light = new(Common.EngineUtility.NewName(sceneObjects, "Light"), light);
                     sceneObjects.Add(_light);
 
                     selectedSceneObject = sceneObjects.Count - 1;

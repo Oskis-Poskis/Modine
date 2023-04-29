@@ -174,7 +174,6 @@ namespace Modine
                 Texture.LoadFromFile("Assets/Resources/1_Roughness.png"),
                 Texture.LoadFromFile("Assets/Resources/1_Metallic.png"),
                 Texture.LoadFromFile("Assets/Resources/1_Normal.png"));
-            ModelImporter.LoadModel("Assets/Resources/KrissVector.fbx", out vectorData, out vectorIndicies);
 
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
@@ -192,8 +191,9 @@ namespace Modine
                     int x = startX + col * spacing;
                     int z = startY + row * spacing;
 
-                    krissVector = new(vectorData, vectorIndicies, PBRShader, true, 1);
-                    SceneObject vector = new(PBRShader, EngineUtility.NewName(sceneObjects, "Vector"), krissVector);
+                    krissVector = ModelImporter.LoadModel("Assets/Resources/KrissVector.fbx", true, PBRShader)[0];
+                    krissVector.MaterialIndex = 1;
+                    SceneObject vector = new(EngineUtility.NewName(sceneObjects, "Vector"), krissVector);
                     vector.Scale = new(0.5f);
                     vector.Position.X = x;
                     vector.Position.Z = z;
@@ -434,7 +434,7 @@ namespace Modine
                     switch (sceneObject.Type)
                     {
                         case SceneObjectType.Mesh:
-                            sceneObject.Shader = PBRShader;
+                            sceneObject.Mesh.Shader = PBRShader;
                             count_Meshes += 1;
                             break;
 

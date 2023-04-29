@@ -31,11 +31,13 @@ namespace Modine.Rendering
         public int vertexCount;
         public bool castShadow;
         public string meshName;
+
+        public Shader Shader;
         public int MaterialIndex;
         public VertexData[] vertexData;
         public int[] indices;
 
-        public Mesh(VertexData[] vertData, int[] ind, Shader shader, bool CastShadow, int matIndex) : base(meshShader: shader)
+        public Mesh(VertexData[] vertData, int[] ind, Shader shader, bool CastShadow, int matIndex)
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -64,6 +66,7 @@ namespace Modine.Rendering
             castShadow = CastShadow;
             MaterialIndex = matIndex;
 
+            Shader = shader;
             vertexData = vertData;
             indices = ind;
 
@@ -72,7 +75,7 @@ namespace Modine.Rendering
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
         }
 
-        public override void Render(Vector3 pos, Vector3 rot, Vector3 scale, Shader meshShader)
+        public override void Render(Vector3 pos, Vector3 rot, Vector3 scale)
         {   
             Matrix4 model = Matrix4.Identity;
             model *= Matrix4.CreateScale(scale);
@@ -81,7 +84,7 @@ namespace Modine.Rendering
                      Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(rot.Z));
             model *= Matrix4.CreateTranslation(pos);
 
-            meshShader.SetMatrix4("model", model);
+            Shader.SetMatrix4("model", model);
 
             GL.BindVertexArray(vaoHandle);
             GL.DrawElements(PrimitiveType.Triangles, vertexCount, DrawElementsType.UnsignedInt, 0);

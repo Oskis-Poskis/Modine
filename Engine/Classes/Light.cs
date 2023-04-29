@@ -27,7 +27,7 @@ namespace Modine.Rendering
              1, -1, 0
         };
 
-        public Light(Shader shader, Vector3 _color, float _strength) : base(lightShader: shader)
+        public Light(Shader shader, Vector3 _color, float _strength)
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);

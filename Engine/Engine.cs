@@ -170,7 +170,7 @@ namespace Modine
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1, nearPlane, farPlane);
             viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitY, new(0, 1, 0));
             camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 5);
-            defaultMat = new ("Default", new (0.8f), 0, 0.3f, 0.0f, PBRShader);
+            defaultMat = new("Default", new (0.8f), 0, 0.5f, 0.0f, PBRShader);
 
             // RaytracingShader.SetVector3("ambient", ambient);
             deferredCompute.SetVector3("ambient", ambient);
@@ -187,8 +187,8 @@ namespace Modine
             Materials.Add(defaultMat);
             Materials.Insert(1, krissVectorMat);
             
-            int numRows = 8;
-            int numCols = 8;
+            int numRows = 1;
+            int numCols = 1;
             int spacing = 5;
             int startX = -((numCols - 1) * spacing) / 2;
             int startY = -((numRows - 1) * spacing) / 2;
@@ -211,8 +211,8 @@ namespace Modine
                 }
             }
 
-            int numRows2 = 10;
-            int numCols2 = 10;
+            int numRows2 = 2;
+            int numCols2 = 2;
             int spacing2 = 5;
             int startX2 = -((numCols2 - 1) * spacing2) / 2;
             int startY2 = -((numRows2 - 1) * spacing2) / 2;
@@ -233,15 +233,8 @@ namespace Modine
                     sceneObjects.Add(_light);
                 }
             }
-            
 
-            count_Meshes = 0;
-            count_PointLights = 0;
-            foreach (SceneObject sceneObject in sceneObjects)
-            {
-                if (sceneObject.Type == SceneObjectType.Mesh) count_Meshes += 1;
-                else if (sceneObject.Type == SceneObjectType.Light) count_PointLights += 1;
-            }
+            CountSceneObjects();
 
             triangleCount = EngineUtility.CalculateTriangles(sceneObjects);
 
@@ -393,30 +386,58 @@ namespace Modine
             public float p0;
         }
     
+        public static void CountSceneObjects()
+        {
+            count_Meshes = 0;
+            count_PointLights = 0;
+            foreach (SceneObject sceneObject in sceneObjects)
+            {
+                if (sceneObject.Type == SceneObjectType.Mesh) count_Meshes += 1;
+                else if (sceneObject.Type == SceneObjectType.Light) count_PointLights += 1;
+            }
+        }
+
         public static void CreatePointLightResourceMemory(List<SceneObject> sceneObjs)
         {
-            List<SSBOlight> lightData = new List<SSBOlight>();
-
-            for (int i = 0; i < sceneObjs.Count; i++)
-            {
-                if (sceneObjs[i].Type == SceneObjectType.Light)
-                {
-                    SSBOlight light;
-                    light.lightPos = sceneObjs[i].Position;
-                    light.strength = sceneObjs[i].Light.strength;
-                    light.lightColor = sceneObjs[i].Light.lightColor;
-                    light.p0 = 0;
-
-                    lightData.Add(light);
-                }
-            }
-
+            CountSceneObjects();
+            
             if (count_PointLights > 0)
             {
+                List<SSBOlight> lightData = new List<SSBOlight>();
+
+                for (int i = 0; i < sceneObjs.Count; i++)
+                {
+                    if (sceneObjs[i].Type == SceneObjectType.Light)
+                    {
+                        SSBOlight light;
+                        light.lightPos = sceneObjs[i].Position;
+                        light.strength = sceneObjs[i].Light.strength;
+                        light.lightColor = sceneObjs[i].Light.lightColor;
+                        light.p0 = 0;
+
+                        lightData.Add(light);
+                    }
+                }
+
                 const int BINDING_INDEX = 0;
 
                 GL.CreateBuffers(1, out int buffer);
                 GL.NamedBufferStorage(buffer, sizeof(float) * 8 * lightData.Count(), ref lightData.ToArray()[0], BufferStorageFlags.DynamicStorageBit);
+                GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, BINDING_INDEX, buffer);
+            }
+
+            else
+            {
+                SSBOlight lightData = new SSBOlight();
+                lightData.lightPos = Vector3.Zero;
+                lightData.strength = 0;
+                lightData.lightColor = Vector3.Zero;
+                lightData.p0 = 0;
+
+                const int BINDING_INDEX = 0;
+
+                GL.CreateBuffers(1, out int buffer);
+                GL.NamedBufferStorage(buffer, sizeof(float) * 8, ref lightData, BufferStorageFlags.DynamicStorageBit);
                 GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, BINDING_INDEX, buffer);
             }
         }
@@ -676,6 +697,7 @@ namespace Modine
                 ImGui.Begin("Debug");
                 ImGui.Text("Total rendertime: " + shadowTime);
                 ImGui.End();
+
             
                 // ImGuiWindows.AssetBrowser();
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);

@@ -584,6 +584,7 @@ namespace Modine.ImGUI
                 sceneObjects.RemoveAt(selectedSceneObject);
                 triangleCount = Common.EngineUtility.CalculateTriangles(sceneObjects);
                 if (selectedSceneObject != 0) selectedSceneObject -= 1;
+                Game.CreatePointLightResourceMemory(sceneObjects);
             }
             ImGui.PopStyleVar(5);
 
@@ -626,7 +627,7 @@ namespace Modine.ImGUI
                 float np = nearPlane;
                 float fp = farPlane;
                 if (ImGui.SliderFloat("##NearPlane", ref np, 0.1f, 0.5f, "%.1f")) nearPlane = np;
-                if (ImGui.SliderFloat("##FarPlane", ref fp, 1, 100, "%.1f")) farPlane = fp;
+                if (ImGui.SliderFloat("##FarPlane", ref fp, 1, 1000, "%.1f")) farPlane = fp;
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -915,7 +916,7 @@ namespace Modine.ImGUI
         unsafe public static void LoadTheme()
         {
             ImGui.GetStyle().FrameRounding = 2;
-            ImGui.GetStyle().FrameBorderSize = 2;
+            ImGui.GetStyle().FrameBorderSize = 0;
             ImGui.GetStyle().FramePadding = new System.Numerics.Vector2(4);
             ImGui.GetStyle().ChildBorderSize = 0;
             ImGui.GetStyle().CellPadding = new SN.Vector2(3, 3);
@@ -930,13 +931,13 @@ namespace Modine.ImGUI
             ImGui.GetStyle().SelectableTextAlign = new(0.02f, 0);
             ImGui.GetStyle().PopupBorderSize = 0;
             ImGui.GetStyle().PopupRounding = 6;
-            ImGui.GetStyle().GrabMinSize = 15;
+            ImGui.GetStyle().GrabMinSize = 10;
             ImGui.GetStyle().GrabRounding = 2;
             
             ImGui.PushStyleColor(ImGuiCol.Text, new System.Numerics.Vector4(230, 230, 230, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.Border, new System.Numerics.Vector4(65, 65, 65, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.MenuBarBg, new System.Numerics.Vector4(30, 30, 30, 200f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.CheckMark, new System.Numerics.Vector4(255, 140, 0, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.CheckMark, new System.Numerics.Vector4(150f, 150f, 150f, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.PopupBg, new System.Numerics.Vector4(20, 20, 20, 255) / 255);
 
             // Background color

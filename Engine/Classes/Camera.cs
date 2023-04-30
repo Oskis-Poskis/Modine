@@ -8,7 +8,7 @@ namespace Modine.Common
         public Vector3 position = Vector3.Zero;
         public Vector3 direction = -Vector3.UnitZ;
 
-        public float theta = -90 - 180;
+        public float theta = -90;
         public float phi = 0;
 
         public float speed;

@@ -13,15 +13,17 @@ namespace Modine.Common
 
         public float speed;
         public float sensitivity = 0.5f;
+        public int FOV;
 
         public bool trackball = false;
         public float distance = 10;
 
-        public Camera(Vector3 startPosition, Vector3 startDirection, float startSpeed = 5)
+        public Camera(Vector3 startPosition, Vector3 startDirection, int fov, float startSpeed = 5)
         {
             position = startPosition;
             direction = startDirection;
             speed = startSpeed;
+            FOV = fov;
         }
 
         public void UpdateCamera(MouseState state, Vector3 selectedPos)

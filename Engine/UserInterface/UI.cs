@@ -860,7 +860,7 @@ namespace Modine.ImGUI
         {
             ImGui.Begin("Outliner");
 
-            if (ImGui.BeginTable("table", 2, ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersOuter))
+            if (ImGui.BeginTable("table", 2, ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit))
             {
                 ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch, 0.5f);
                 ImGui.TableSetupColumn("Type");
@@ -869,14 +869,20 @@ namespace Modine.ImGUI
                 {
                     ImGui.TableNextRow();
 
-                    if (i % 2 == 0) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.15f)));
-                    if (i % 2 == 1) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
+                    if (i % 2 == 0) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255));
+                    if (i % 2 == 1) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(25f, 25f, 25f, 255f) / 255));
 
                     ImGui.TableSetColumnIndex(0);
+                    ImGui.PushStyleColor(ImGuiCol.Header, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(184, 126, 30, 255) / 255));
+                    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(200, 135, 40, 255) / 255));
+                    ImGui.PushStyleColor(ImGuiCol.HeaderActive, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(184, 126, 30, 255) / 255));
                     if (ImGui.Selectable(sceneObjects[i].Name, selectedMeshIndex == i))
                     {
                         selectedMeshIndex = i;
                     }
+                    ImGui.PushStyleColor(ImGuiCol.Header, new System.Numerics.Vector4(40, 40, 40, 255f) / 255);
+                    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new System.Numerics.Vector4(100, 100, 100, 180f) / 255);
+                    ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(70, 70, 70, 255f) / 255);
 
                     ImGui.TableSetColumnIndex(1);
                     ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.5f)));
@@ -897,8 +903,8 @@ namespace Modine.ImGUI
                 {
                     ImGui.TableNextRow();
 
-                    if (i % 2 == 0) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.15f)));
-                    if (i % 2 == 1) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
+                    if (i % 2 == 1) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255));
+                    if (i % 2 == 0) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(25f, 25f, 25f, 255f) / 255));
 
                     ImGui.TableSetColumnIndex(0);
                     ImGui.Text("");
@@ -923,15 +929,15 @@ namespace Modine.ImGUI
             ImGui.GetStyle().ItemSpacing = new System.Numerics.Vector2(4, 2);
             ImGui.GetStyle().ItemInnerSpacing = new System.Numerics.Vector2(0, 4);
             ImGui.GetStyle().WindowPadding = new System.Numerics.Vector2(2, 2);
-            ImGui.GetStyle().TabRounding = 4;
+            ImGui.GetStyle().TabRounding = 2;
             ImGui.GetStyle().ColorButtonPosition = ImGuiDir.Left;
-            ImGui.GetStyle().WindowRounding = 3;
+            ImGui.GetStyle().WindowRounding = 2;
             ImGui.GetStyle().WindowBorderSize = 0;
             ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;
             ImGui.GetStyle().SelectableTextAlign = new(0.02f, 0);
             ImGui.GetStyle().PopupBorderSize = 0;
             ImGui.GetStyle().PopupRounding = 6;
-            ImGui.GetStyle().GrabMinSize = 10;
+            ImGui.GetStyle().GrabMinSize = 15;
             ImGui.GetStyle().GrabRounding = 2;
             
             ImGui.PushStyleColor(ImGuiCol.Text, new System.Numerics.Vector4(230, 230, 230, 255f) / 255);
@@ -969,8 +975,8 @@ namespace Modine.ImGUI
 
             // Rezising bar
             ImGui.PushStyleColor(ImGuiCol.Separator, new System.Numerics.Vector4(30f, 30f, 30f, 255) / 255);
-            ImGui.PushStyleColor(ImGuiCol.SeparatorHovered, new System.Numerics.Vector4(60f, 60f, 60f, 255) / 255);
-            ImGui.PushStyleColor(ImGuiCol.SeparatorActive, new System.Numerics.Vector4(80f, 80f, 80f, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.SeparatorHovered, new System.Numerics.Vector4(100f, 100f, 100f, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.SeparatorActive, new System.Numerics.Vector4(120f, 120f, 120f, 255) / 255);
 
             // Buttons
             ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.343f, 0.343f, 0.343f, 0.784f));

@@ -1,0 +1,10 @@
+using ImGuiNET;
+
+namespace Modine.ImGUI
+{
+    public class DropDownTab
+    {
+        string title = "";
+        
+    }
+}

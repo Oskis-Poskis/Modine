@@ -167,9 +167,9 @@ namespace Modine
 
             pointLightTexture = Texture.LoadFromFile("Assets/Resources/PointLightIcon.png");
 
-            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), 1, nearPlane, farPlane);
+            camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 75, 5);
+            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(camera.FOV), 1, nearPlane, farPlane);
             viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitY, new(0, 1, 0));
-            camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 5);
             defaultMat = new("Default", new (0.8f), 0, 0.5f, 0.0f, PBRShader);
 
             // RaytracingShader.SetVector3("ambient", ambient);
@@ -487,7 +487,7 @@ namespace Modine
                 
                 float aspectRatio = (float)viewportSize.X / viewportSize.Y;
                 lightSpaceMatrix = Matrix4.LookAt(SunDirection * 10, Vector3.Zero, Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-15, 15, -15, 15, 0.1f, 100);
-                projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(75), aspectRatio, nearPlane, farPlane);
+                projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(camera.FOV), aspectRatio, nearPlane, farPlane);
                 viewMatrix = Matrix4.LookAt(camera.position, camera.position + camera.direction, Vector3.UnitY);
 
                 GL.ActiveTexture(TextureUnit.Texture5);
@@ -694,9 +694,50 @@ namespace Modine
                     ImGui.End();
                 }
 
-                ImGui.Begin("Debug");
-                ImGui.Text("Total rendertime: " + shadowTime);
+                ImGui.Begin("Test");
+
+                float splitPos = ImGui.GetContentRegionAvail().X * 0.5f;
+
+                if (ImGui.CollapsingHeader("Testing"))
+                {
+                    float width = ImGui.GetContentRegionAvail().X;
+                    ImGui.Indent(10);
+                    
+                    for (int i = 0; i < 4; i++)
+                    {
+                        ImGui.SetNextItemWidth(width / 2);
+                        ImGui.Text("FOV" + i);
+                    
+                        ImGui.SameLine(width / 2);
+                        ImGui.GetForegroundDrawList().AddLine(
+                            ImGui.GetCursorPos() + ImGui.GetWindowPos(),
+                            new System.Numerics.Vector2(ImGui.GetCursorPos().X, ImGui.GetCursorPos().Y + ImGui.GetFrameHeightWithSpacing()) + ImGui.GetWindowPos(),
+                            ImGui.ColorConvertFloat4ToU32(new(0.1f, 0.1f, 0.1f, 1.0f)), 3);
+
+                        ImGui.Dummy(new(10, 0));
+                        ImGui.SameLine();
+                        ImGui.SetNextItemWidth(width / 2 - 20);
+                        ImGui.SliderInt("##FOV" + i, ref camera.FOV, 1, 100);
+                    }
+                    ImGui.Unindent(10);
+                }
+
+                if (ImGui.CollapsingHeader("Testing2"))
+                {
+                    ImGui.BeginGroup();
+                    ImGui.Text("Property");
+                    ImGui.EndGroup();
+
+                    ImGui.SameLine();
+
+                    ImGui.BeginGroup();
+                    ImGui.Text("Value");
+                    ImGui.EndGroup();
+                }                
+
                 ImGui.End();
+
+
 
             
                 // ImGuiWindows.AssetBrowser();

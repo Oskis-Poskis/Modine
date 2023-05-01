@@ -7,7 +7,7 @@ namespace Modine.Rendering
 {
     public class RenderFuncs
     {
-        public static void RenderShadowScene(int shadowRes, ref int depthMapFBO, OpenTK.Mathematics.Matrix4 lightSpaceMatrix, ref List<SceneObject> sceneObjects, Shader shadowShader)
+        public static void RenderShadowScene(int shadowRes, ref int depthMapFBO, OpenTK.Mathematics.Matrix4 lightSpaceMatrix, ref List<SceneObject> sceneObjects, Shader shadowShader, Shader PBRShader)
         {
             // Adjust viewport to shadow resolution
             GL.Viewport(0, 0, shadowRes, shadowRes);
@@ -19,8 +19,9 @@ namespace Modine.Rendering
             // Draw meshes to shadow map with different shaders
             foreach (SceneObject sceneObject in sceneObjects)
             {
-                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Mesh.Shader = shadowShader;
+                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Shader = shadowShader;
                 if (sceneObject.Type == SceneObjectType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Render();
+                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Shader = PBRShader;
             }
         }
     }

@@ -5,15 +5,12 @@ using Modine.Common;
 
 namespace Modine.Rendering
 {
-    public class Light : SceneObject
+    public class Light
     {
         private int vaoHandle;
         private int vboHandle;
-        public Shader lightShader;
-
-        public Vector3 lightColor = new(1);
-        public float strength = 1.0f;
-        public string lightName;
+        public Vector3 Color { get; set; }
+        public float strength;
 
         float[] vertices = new float[]
         {
@@ -21,13 +18,14 @@ namespace Modine.Rendering
             -1,  1, 0,
             -1, -1, 0,
              1,  1, 0,
+
              // Second triangle
              1,  1, 0,
             -1, -1, 0,
              1, -1, 0
         };
 
-        public Light(Shader shader, Vector3 _color, float _strength)
+        public Light(Vector3 _color, float _strength)
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -36,21 +34,19 @@ namespace Modine.Rendering
             GL.BindBuffer(BufferTarget.ArrayBuffer, vboHandle);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
 
-            GL.EnableVertexAttribArray(shader.GetAttribLocation("aPosition"));
-            GL.VertexAttribPointer(shader.GetAttribLocation("aPosition"), 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
 
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
-            this.lightShader = shader;
-            this.lightName = Name;
-            this.lightColor = _color;
+            this.Color = _color;
             this.strength = _strength;
         }
 
-        public override void Render(Camera cam, Vector3 pos)
+        public void RenderLight(Shader shader, Camera cam, Vector3 pos)
         {   
-            Matrix4 viewMatrix = Matrix4.LookAt(cam.position, cam.position + cam.direction, Vector3.UnitY);
+            Matrix4 viewMatrix = Matrix4.LookAt(cam.position, cam.position + cam.direction, new(Vector3.UnitY));
 
             Matrix4 model = Matrix4.Identity;
             model *= Matrix4.CreateScale(0.3f);
@@ -59,8 +55,8 @@ namespace Modine.Rendering
                      Matrix4.CreateRotationZ(0);
             model *= Matrix4.CreateTranslation(pos);
 
-            lightShader.SetMatrix4("model", model);
-            lightShader.SetVector3("lightColor", lightColor);
+            shader.SetMatrix4("model", model);
+            shader.SetVector3("lightColor", Color);
 
             GL.BindVertexArray(vaoHandle);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
@@ -68,7 +64,7 @@ namespace Modine.Rendering
             GL.BindVertexArray(0);
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             GL.DeleteVertexArray(vaoHandle);
             GL.DeleteBuffer(vboHandle);

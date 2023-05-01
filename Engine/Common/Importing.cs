@@ -8,7 +8,7 @@ namespace Modine.Common
 {
     public static class ModelImporter
     {
-        public static List<Mesh> LoadModel(string path, bool castShadow, Shader shader)
+        public static List<Mesh> LoadModel(string path, bool castShadow)
         {
             try
             {
@@ -57,8 +57,7 @@ namespace Modine.Common
                     Vector3 newRot;
                     OpenTK.Mathematics.Quaternion.ToEulerAngles(new(rotation.X, rotation.Y, rotation.Z, rotation.W), out newRot);*/
 
-                    Mesh tempMesh = new(tempData, indices, shader, true, 0);
-                    tempMesh.Name = mesh.Name;
+                    Mesh tempMesh = new(tempData, indices, true, 0);
 
                     meshes.Add(tempMesh);
                 }
@@ -71,11 +70,11 @@ namespace Modine.Common
                 Console.WriteLine("Assimp import error: " + ex.Message);
             }
 
-            Mesh temp = new(new VertexData[0], new int[0], shader, true, 0);
-            temp.Name = "FailedImport";
+            Mesh temp = new(new VertexData[0], new int[0], true, 0);
 
             List<Mesh> _meshes = new();
             _meshes.Add(temp);
+            
             return _meshes;
 
             // Console.WriteLine("Indices: " + indices.Count() + " - " + "Vertices: " + vertdata.Count());

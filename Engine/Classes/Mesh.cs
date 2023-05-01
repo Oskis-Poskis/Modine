@@ -23,21 +23,19 @@ namespace Modine.Rendering
         }
     }
 
-    public class Mesh : SceneObject
+    public class Mesh
     {
         private int vaoHandle;
         private int vboHandle;
         private int eboHandle;
         public int vertexCount;
         public bool castShadow;
-        public string meshName;
 
-        public Shader Shader;
         public int MaterialIndex;
-        public VertexData[] vertexData;
         public int[] indices;
+        public VertexData[] vertexData;
 
-        public Mesh(VertexData[] vertData, int[] ind, Shader shader, bool CastShadow, int matIndex)
+        public Mesh(VertexData[] vertData, int[] ind, bool CastShadow, int matIndex)
         {
             vaoHandle = GL.GenVertexArray();
             GL.BindVertexArray(vaoHandle);
@@ -61,12 +59,10 @@ namespace Modine.Rendering
             GL.EnableVertexAttribArray(4);
             GL.VertexAttribPointer(4, 3, VertexAttribPointerType.Float, false, 14 * sizeof(float), 11 * sizeof(float));
             
-            meshName = Name;
             vertexCount = ind.Length;
             castShadow = CastShadow;
             MaterialIndex = matIndex;
 
-            Shader = shader;
             vertexData = vertData;
             indices = ind;
 
@@ -75,7 +71,7 @@ namespace Modine.Rendering
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
         }
 
-        public override void Render(Vector3 pos, Vector3 rot, Vector3 scale)
+        public void RenderScene(Shader shader, Vector3 pos, Vector3 rot, Vector3 scale)
         {   
             Matrix4 model = Matrix4.Identity;
             model *= Matrix4.CreateScale(scale);
@@ -84,14 +80,14 @@ namespace Modine.Rendering
                      Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(rot.Z));
             model *= Matrix4.CreateTranslation(pos);
 
-            Shader.SetMatrix4("model", model);
+            shader.SetMatrix4("model", model);
 
             GL.BindVertexArray(vaoHandle);
-            GL.DrawElements(PrimitiveType.Triangles, vertexCount, DrawElementsType.UnsignedInt, 0);
+            if (vertexCount > 0) GL.DrawElements(PrimitiveType.Triangles, vertexCount, DrawElementsType.UnsignedInt, 0);
             GL.BindVertexArray(0);
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             GL.DeleteVertexArray(vaoHandle);
             GL.DeleteBuffer(vboHandle);

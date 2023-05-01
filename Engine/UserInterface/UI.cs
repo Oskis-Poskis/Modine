@@ -156,11 +156,11 @@ namespace Modine.ImGUI
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                    SN.Vector3 color = new(_sceneObject.Light.lightColor.X, _sceneObject.Light.lightColor.Y, _sceneObject.Light.lightColor.Z);
+                    SN.Vector3 color = new(_sceneObject.Light.Color.X, _sceneObject.Light.Color.Y, _sceneObject.Light.Color.Z);
                     ImGui.Text("Albedo");
                     if (ImGui.ColorPicker3("##Albedo", ref color))
                     {
-                        _sceneObject.Light.lightColor = new(color.X, color.Y, color.Z);
+                        _sceneObject.Light.Color = new(color.X, color.Y, color.Z);
                         Game.CreatePointLightResourceMemory(sceneObjects);
                     }
                 }
@@ -475,8 +475,8 @@ namespace Modine.ImGUI
 
                 if (ImGui.MenuItem("Cube"))
                 {
-                    Mesh cube = ModelImporter.LoadModel("Assets/Models/Cube.fbx", true, Game.PBRShader)[0];
-                    SceneObject _cube = new(Common.EngineUtility.NewName(sceneObjects, "Cube"), cube);
+                    Mesh cube = ModelImporter.LoadModel("Assets/Models/Cube.fbx", true)[0];
+                    SceneObject _cube = new(cube, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Cube"));
                     sceneObjects.Add(_cube);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -492,8 +492,8 @@ namespace Modine.ImGUI
 
                 if (ImGui.MenuItem("Sphere"))
                 {
-                    Mesh sphere = ModelImporter.LoadModel("Assets/Models/Sphere.fbx", true, Game.PBRShader)[0];
-                    SceneObject _sphere = new(Common.EngineUtility.NewName(sceneObjects, "Sphere"), sphere);
+                    Mesh sphere = ModelImporter.LoadModel("Assets/Models/Sphere.fbx", true)[0];
+                    SceneObject _sphere = new(sphere, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Sphere"));
                     sceneObjects.Add(_sphere);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -509,8 +509,8 @@ namespace Modine.ImGUI
 
                 if (ImGui.MenuItem("Plane"))
                 {
-                    Mesh plane = ModelImporter.LoadModel("Assets/Models/Floor.fbx", true, Game.PBRShader)[0];
-                    SceneObject _plane = new(Common.EngineUtility.NewName(sceneObjects, "Plane"), plane);
+                    Mesh plane = ModelImporter.LoadModel("Assets/Models/Floor.fbx", true)[0];
+                    SceneObject _plane = new(plane, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Plane"));
                     sceneObjects.Add(_plane);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -536,13 +536,13 @@ namespace Modine.ImGUI
 
                     if (File.Exists(path))
                     {
-                        List<Mesh> import = ModelImporter.LoadModel(path, true, Game.PBRShader);
+                        List<Mesh> import = ModelImporter.LoadModel(path, true);
                         for (int i = 0; i < import.Count; i++)
                         {
-                            SceneObject _import = new(Common.EngineUtility.NewName(sceneObjects, import[i].Name), import[i]);
+                            SceneObject _import = new(import[i], Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Imported Model"));
                             sceneObjects.Add(_import);
                         }
-
+                        
                         selectedSceneObject = sceneObjects.Count - 1;
                     }
 
@@ -558,8 +558,9 @@ namespace Modine.ImGUI
             {
                 if (ImGui.MenuItem("Point Light"))
                 {
-                    Light light = new  Light(Game.lightShader, new (1, 1, 1), 5);
-                    SceneObject _light = new(Common.EngineUtility.NewName(sceneObjects, "Light"), light);
+                    Light light = new  Light(new (1, 1, 1), 5);
+                    SceneObject _light = new(light, Vector3.Zero, Common.EngineUtility.NewName(sceneObjects, "Light"));
+
                     sceneObjects.Add(_light);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -887,9 +888,9 @@ namespace Modine.ImGUI
                     ImGui.TableSetColumnIndex(1);
                     ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.5f)));
                     if (sceneObjects[i].Type == SceneObjectType.Light) ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(
-                        sceneObjects[i].Light.lightColor.X,
-                        sceneObjects[i].Light.lightColor.Y,
-                        sceneObjects[i].Light.lightColor.Z, 1)));
+                        sceneObjects[i].Light.Color.X,
+                        sceneObjects[i].Light.Color.Y,
+                        sceneObjects[i].Light.Color.Z, 1)));
                     ImGui.Text(sceneObjects[i].Type.ToString().ToLower() + " ");
                     ImGui.PopStyleColor();
                     if (sceneObjects[i].Type == SceneObjectType.Light) ImGui.PopStyleColor();

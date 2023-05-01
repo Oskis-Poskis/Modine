@@ -7,11 +7,13 @@ namespace Modine.Rendering
     {
         public SceneObjectType Type;
         public string Name;
-        public Vector3 Position = Vector3.Zero;
-        public Vector3 Rotation = new(-90, 0, 0);
-        public Vector3 Scale = Vector3.One;
+        public Vector3 Position;
+        public Vector3 Rotation;
+        public Vector3 Scale;
         public Mesh Mesh;
         public Light Light;
+
+        public Shader Shader;
 
         public enum SceneObjectType
         {
@@ -19,29 +21,40 @@ namespace Modine.Rendering
             Light
         }
 
-        public SceneObject(string name, Mesh _mesh = null)
+        public SceneObject()
         {
-            this.Name = name;
+
+        }
+
+        public SceneObject(Mesh mesh, Shader shader, Vector3 pos, Vector3 rot, Vector3 scale, string name)
+        {
+            this.Shader = shader;     
             this.Type = SceneObjectType.Mesh;
-            this.Mesh = _mesh;
-            this.Position = Mesh.Position;
+            this.Mesh = mesh;
+            this.Position = pos;
+            this.Rotation = rot + new Vector3(-90, 0, 0);
+            this.Scale = scale;
+            this.Name = name;
         }
 
-        public SceneObject(string _name = "Light", Light _light = null)
+        public SceneObject(Light light, Vector3 pos, string name)
         {
-            this.Name = _name;
             this.Type = SceneObjectType.Light;
-            this.Light = _light;
+            this.Light = light;
+            this.Position = pos;
+            this.Scale = Vector3.One;
+            this.Rotation = Vector3.Zero;
+            this.Name = name;
         }
 
-        public virtual void Render(Vector3 position = default(Vector3), Vector3 rotation = default(Vector3), Vector3 scale = default(Vector3))
+        public virtual void Render()
         {
-            Mesh.Render(Position, Rotation, Scale);
+            Mesh.RenderScene(Game.PBRShader, this.Position, this.Rotation, this.Scale);
         }
 
-        public virtual void Render(Camera cam, Vector3 pos = default(Vector3))
+        public virtual void Render(Camera cam)
         {
-            Light.Render(cam, Position);
+            Light.RenderLight(Game.lightShader, cam, Position);
         }
 
         public virtual void Dispose()

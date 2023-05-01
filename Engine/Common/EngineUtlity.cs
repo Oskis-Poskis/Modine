@@ -7,17 +7,22 @@ namespace Modine.Common
     {
         public static string NewName(List<SceneObject> sceneObjects, string baseName)
         {
-            int index = 0;
-            string nName = baseName;
-
-            // Loop through the existing material names to find a unique name
-            while (sceneObjects.Any(m => m.Name == nName))
+            if (sceneObjects.Count > 0)
             {
-                index++;
-                nName = $"{baseName}.{index.ToString("D3")}";
+                int index = 0;
+                string nName = baseName;
+
+                // Loop through the existing material names to find a unique name
+                while (sceneObjects.Any(m => m.Name == nName))
+                {
+                    index++;
+                    nName = $"{baseName}.{index.ToString("D3")}";
+                }
+
+                return nName;
             }
 
-            return nName;
+            else return baseName;
         }
 
         public static bool ToggleBool(bool toggleBool)

@@ -126,7 +126,6 @@ namespace Modine
 
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
             GL.PointSize(5);
-            IsVisible = true;
 
             VSync = VSyncMode.On;
             GL.DebugMessageCallback(DebugMessageDelegate, IntPtr.Zero);
@@ -173,6 +172,8 @@ namespace Modine
             
             Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
             LoadEditorSettings();
+
+            IsVisible = true;
         }
 
         protected override void OnUnload()

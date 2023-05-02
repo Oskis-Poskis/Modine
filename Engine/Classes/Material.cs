@@ -20,7 +20,12 @@ namespace Modine.Rendering
         private Texture white1x1 = Texture.LoadFromFile("Assets/Resources/White1x1.png");
         private Texture normal1x1 = Texture.LoadFromFile("Assets/Resources/Normal1x1.png");
 
-        public Material(string name, Vector3 color, float metallic, float roughness, float emissionStrength, Shader shader, Texture colorTexture = null, Texture roughnessTexture = null, Texture metallitexture = null, Texture normaltexture = null)
+        public struct MaterialType
+        {
+            
+        }
+
+        public Material(string name, Vector3 color, float metallic, float roughness, float emissionStrength, Texture colorTexture = null, Texture roughnessTexture = null, Texture metallitexture = null, Texture normaltexture = null)
         {
             Name = name;
             Color = color;
@@ -32,17 +37,18 @@ namespace Modine.Rendering
             RoughnessTexture = roughnessTexture ?? white1x1;
             MetallicTexture = metallitexture ?? white1x1;
             NormalTexture = normaltexture ?? normal1x1;
-
-            SetShaderUniforms(shader);
         }
 
-        public void SetShaderUniforms(Shader shader)
+        public void SetShaderUniforms(Shader shader, Camera camera)
         {
             shader.Use();
             shader.SetVector3("material.albedo", Color);
             shader.SetFloat("material.metallic", Metallic);
             shader.SetFloat("material.roughness", Roughness);
-            //shader.SetFloat("material.emissionStrength", EmissionStrength);
+            
+            shader.SetMatrix4("projection", camera.projectionMatrix);
+            shader.SetMatrix4("view", camera.viewMatrix);
+            shader.SetMatrix4("lightSpaceMatrix", camera.lightSpaceMatrix);
 
             GL.ActiveTexture(TextureUnit.Texture0);
             ColorTexture.Use(TextureUnit.Texture0);

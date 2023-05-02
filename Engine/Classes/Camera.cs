@@ -8,6 +8,8 @@ namespace Modine.Common
         public Vector3 position = Vector3.Zero;
         public Vector3 direction = -Vector3.UnitZ;
 
+        public Matrix4 lightSpaceMatrix, projectionMatrix, viewMatrix;
+
         public float theta = -90;
         public float phi = 0;
 
@@ -24,9 +26,12 @@ namespace Modine.Common
             direction = startDirection;
             speed = startSpeed;
             FOV = fov;
+
+            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FOV), 1, Game.nearPlane, Game.farPlane);
+            viewMatrix = Matrix4.LookAt(Vector3.Zero, -Vector3.UnitY, new(0, 1, 0));
         }
 
-        public void UpdateCamera(MouseState state, Vector3 selectedPos)
+        public void Input(MouseState state, Vector3 selectedPos)
         {
             float deltaX = state.Delta.X;
             float deltaY = state.Delta.Y;
@@ -56,6 +61,14 @@ namespace Modine.Common
 
                 direction = Vector3.Normalize(selectedPos - position);
             }
+        }
+
+        public void Update(Vector2 viewportSize)
+        {
+            float aspectRatio = (float)viewportSize.X / viewportSize.Y;
+            lightSpaceMatrix = Matrix4.LookAt(Game.SunDirection * 10, Vector3.Zero, Vector3.UnitY) * Matrix4.CreateOrthographicOffCenter(-15, 15, -15, 15, 0.1f, 100);
+            projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FOV), aspectRatio, Game.nearPlane, Game.farPlane);
+            viewMatrix = Matrix4.LookAt(position, position + direction, Vector3.UnitY);
         }
     }
 }

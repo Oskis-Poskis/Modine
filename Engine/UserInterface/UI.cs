@@ -141,7 +141,7 @@ namespace Modine.ImGUI
                     if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
                     {
                         _sceneObject.Position = new(tempPos.X, tempPos.Y, tempPos.Z);
-                        Game.CreatePointLightResourceMemory(sceneObjects);
+                        Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -151,7 +151,7 @@ namespace Modine.ImGUI
                     if (ImGui.DragFloat("##Strength", ref tempStrength, 0.1f))
                     {
                         _sceneObject.Light.strength = tempStrength;
-                        Game.CreatePointLightResourceMemory(sceneObjects);
+                        Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -161,7 +161,7 @@ namespace Modine.ImGUI
                     if (ImGui.ColorPicker3("##Albedo", ref color))
                     {
                         _sceneObject.Light.Color = new(color.X, color.Y, color.Z);
-                        Game.CreatePointLightResourceMemory(sceneObjects);
+                        Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
                     }
                 }
             }
@@ -214,7 +214,7 @@ namespace Modine.ImGUI
             Filter = "Formats:|*.PNG;*.JPG;*.JPEG;",
         };
 
-        public static void MaterialEditor(ref List<Entity> sceneObjects, ref Shader meshShader, int selectedIndex, ref List<Material> materials)
+        public static void MaterialEditor(ref List<Entity> sceneObjects, ref Shader meshShader, int selectedIndex, ref List<Material> materials, Camera cam)
         {
             ImGui.Begin("Material Editor");
 
@@ -285,7 +285,7 @@ namespace Modine.ImGUI
                     if (ImGui.SliderFloat("##Roughness", ref tempRoughness, 0, 1))
                     {
                         _material.Roughness = tempRoughness;
-                        _material.SetShaderUniforms(meshShader);
+                        _material.SetShaderUniforms(meshShader, cam);
                     }
                     if (ImGui.Button("Load Roughness Texture"))
                     {
@@ -308,7 +308,7 @@ namespace Modine.ImGUI
                     if (ImGui.SliderFloat("##Metallic", ref tempMetallic, 0, 1))
                     {
                         _material.Metallic = tempMetallic;
-                        _material.SetShaderUniforms(meshShader);
+                        _material.SetShaderUniforms(meshShader, cam);
                     }
                     if (ImGui.Button("Load Metallic Texture"))
                     {
@@ -331,7 +331,7 @@ namespace Modine.ImGUI
                     if (ImGui.SliderFloat("##Emission Strength", ref tempEmission, 0, 100))
                     {
                         _material.EmissionStrength = tempEmission;
-                        _material.SetShaderUniforms(meshShader);
+                        _material.SetShaderUniforms(meshShader, cam);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -567,7 +567,7 @@ namespace Modine.ImGUI
 
                     showQuickMenu = false;
 
-                    Game.CreatePointLightResourceMemory(sceneObjects);
+                    Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
                 }
 
                 ImGui.EndMenu();
@@ -585,7 +585,7 @@ namespace Modine.ImGUI
                 sceneObjects.RemoveAt(selectedSceneObject);
                 triangleCount = Common.EngineUtility.CalculateTriangles(sceneObjects);
                 if (selectedSceneObject != 0) selectedSceneObject -= 1;
-                Game.CreatePointLightResourceMemory(sceneObjects);
+                Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
             }
             ImGui.PopStyleVar(5);
 

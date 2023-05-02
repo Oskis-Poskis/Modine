@@ -1,4 +1,5 @@
 using Modine.Rendering;
+using OpenTK.Mathematics;
 using static Modine.Rendering.Entity;
 
 namespace Modine.Common
@@ -46,6 +47,35 @@ namespace Modine.Common
         public static float MapRange(float value, float inputMin, float inputMax, float outputMin, float outputMax)
         {
             return ((value - inputMin) / (inputMax - inputMin)) * (outputMax - outputMin) + outputMin;
+        }
+
+        public static void CountEntities(List<Entity> entities, out int MeshCount, out int PointLightCount)
+        {
+            MeshCount = 0;
+            PointLightCount = 0;
+            foreach (Entity entity in entities)
+            {
+                if (entity.Type == EntityType.Mesh) MeshCount += 1;
+                else if (entity.Type == EntityType.Light) PointLightCount += 1;
+            }
+        }
+
+        public static Vector3 GetRandomBrightColor()
+        {
+            Random rand = new Random();
+            float r = (float)rand.NextDouble(); // random value between 0 and 1
+            float g = (float)rand.NextDouble();
+            float b = (float)rand.NextDouble();
+            // Make sure at least two of the three color components are greater than 0.5
+            int numComponentsOverHalf = (r > 0.5f ? 1 : 0) + (g > 0.5f ? 1 : 0) + (b > 0.5f ? 1 : 0);
+            while (numComponentsOverHalf < 2)
+            {
+                r = (float)rand.NextDouble();
+                g = (float)rand.NextDouble();
+                b = (float)rand.NextDouble();
+                numComponentsOverHalf = (r > 0.5f ? 1 : 0) + (g > 0.5f ? 1 : 0) + (b > 0.5f ? 1 : 0);
+            }
+            return new Vector3(r, g, b);
         }
     }
 }

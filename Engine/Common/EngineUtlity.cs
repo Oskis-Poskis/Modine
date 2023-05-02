@@ -1,11 +1,11 @@
 using Modine.Rendering;
-using static Modine.Rendering.SceneObject;
+using static Modine.Rendering.Entity;
 
 namespace Modine.Common
 {
     public static class EngineUtility
     {
-        public static string NewName(List<SceneObject> sceneObjects, string baseName)
+        public static string NewName(List<Entity> sceneObjects, string baseName)
         {
             if (sceneObjects.Count > 0)
             {
@@ -35,10 +35,10 @@ namespace Modine.Common
             return _bool;
         }
 
-        public static int CalculateTriangles(List<SceneObject> sceneObjects)
+        public static int CalculateTriangles(List<Entity> sceneObjects)
         {
             int count = 0;
-            foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Type == SceneObjectType.Mesh) count += sceneObject.Mesh.vertexCount / 3;
+            foreach (Entity sceneObject in sceneObjects) if (sceneObject.Type == EntityType.Mesh) count += sceneObject.Mesh.vertexCount / 3;
             
             return count;
         }

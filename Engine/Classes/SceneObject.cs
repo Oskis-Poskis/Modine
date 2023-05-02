@@ -3,9 +3,9 @@ using Modine.Common;
 
 namespace Modine.Rendering
 {
-    public class SceneObject : IDisposable
+    public class Entity : IDisposable
     {
-        public SceneObjectType Type;
+        public EntityType Type;
         public string Name;
         public Vector3 Position;
         public Vector3 Rotation;
@@ -15,21 +15,21 @@ namespace Modine.Rendering
 
         public Shader Shader;
 
-        public enum SceneObjectType
+        public enum EntityType
         {
             Mesh,
             Light
         }
 
-        public SceneObject()
+        public Entity()
         {
 
         }
 
-        public SceneObject(Mesh mesh, Shader shader, Vector3 pos, Vector3 rot, Vector3 scale, string name)
+        public Entity(Mesh mesh, Shader shader, Vector3 pos, Vector3 rot, Vector3 scale, string name)
         {
             this.Shader = shader;     
-            this.Type = SceneObjectType.Mesh;
+            this.Type = EntityType.Mesh;
             this.Mesh = mesh;
             this.Position = pos;
             this.Rotation = rot + new Vector3(-90, 0, 0);
@@ -37,9 +37,9 @@ namespace Modine.Rendering
             this.Name = name;
         }
 
-        public SceneObject(Light light, Vector3 pos, string name)
+        public Entity(Light light, Vector3 pos, string name)
         {
-            this.Type = SceneObjectType.Light;
+            this.Type = EntityType.Light;
             this.Light = light;
             this.Position = pos;
             this.Scale = Vector3.One;
@@ -49,7 +49,7 @@ namespace Modine.Rendering
 
         public virtual void Render()
         {
-            Mesh.RenderScene(Game.PBRShader, this.Position, this.Rotation, this.Scale);
+            Mesh.RenderScene(Shader, this.Position, this.Rotation, this.Scale);
         }
 
         public virtual void Render(Camera cam)
@@ -61,11 +61,11 @@ namespace Modine.Rendering
         {
             switch (this.Type)
             {
-                case SceneObjectType.Mesh:
+                case EntityType.Mesh:
                     Mesh.Dispose();
                     break;
                     
-                case SceneObjectType.Light:
+                case EntityType.Light:
                     Light.Dispose();
                     break;
             }

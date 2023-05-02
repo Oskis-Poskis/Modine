@@ -7,7 +7,7 @@ using Modine.Rendering;
 using Modine.Common;
 using Modine.Compute;
 
-using static Modine.Rendering.SceneObject;
+using static Modine.Rendering.Entity;
 
 namespace Modine.ImGUI
 {
@@ -42,7 +42,7 @@ namespace Modine.ImGUI
                 ms.ToString("0.00") + " ms");
         }
 
-        public static void ObjectProperties(ref List<SceneObject> sceneObjects, int selectedMesh, ref List<Material> materials)
+        public static void ObjectProperties(ref List<Entity> sceneObjects, int selectedMesh, ref List<Material> materials)
         {
             ImGui.Begin("Properties");
 
@@ -51,13 +51,13 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        public static void Properties(ref List<SceneObject> sceneObjects, int selectedObject, ref List<Material> materials)
+        public static void Properties(ref List<Entity> sceneObjects, int selectedObject, ref List<Material> materials)
         {
             ImGui.Begin("Properties");
 
             if (sceneObjects.Count > 0)
             {
-                SceneObject _sceneObject = sceneObjects[selectedObject];
+                Entity _sceneObject = sceneObjects[selectedObject];
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 string newName = _sceneObject.Name;
@@ -68,7 +68,7 @@ namespace Modine.ImGUI
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();
 
-                if (_sceneObject.Type == SceneObjectType.Mesh)
+                if (_sceneObject.Type == EntityType.Mesh)
                 {
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Checkbox(" Cast shadow", ref _sceneObject.Mesh.castShadow);
@@ -132,7 +132,7 @@ namespace Modine.ImGUI
                     ImGui.PopItemWidth();
                 }
 
-                else if (_sceneObject.Type == SceneObjectType.Light)
+                else if (_sceneObject.Type == EntityType.Light)
                 {
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -214,13 +214,13 @@ namespace Modine.ImGUI
             Filter = "Formats:|*.PNG;*.JPG;*.JPEG;",
         };
 
-        public static void MaterialEditor(ref List<SceneObject> sceneObjects, ref Shader meshShader, int selectedIndex, ref List<Material> materials)
+        public static void MaterialEditor(ref List<Entity> sceneObjects, ref Shader meshShader, int selectedIndex, ref List<Material> materials)
         {
             ImGui.Begin("Material Editor");
 
             if (sceneObjects.Count > 0)
             {
-                if (sceneObjects[selectedIndex].Type == SceneObjectType.Mesh)
+                if (sceneObjects[selectedIndex].Type == EntityType.Mesh)
                 {
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -451,7 +451,7 @@ namespace Modine.ImGUI
             }
         }
 
-        public static void QuickMenu(ref List<SceneObject> sceneObjects, ref int selectedSceneObject, ref bool showQuickMenu, ref int triangleCount)
+        public static void QuickMenu(ref List<Entity> sceneObjects, ref int selectedSceneObject, ref bool showQuickMenu, ref int triangleCount)
         {
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 2);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new SN.Vector2(7, 5));
@@ -476,7 +476,7 @@ namespace Modine.ImGUI
                 if (ImGui.MenuItem("Cube"))
                 {
                     Mesh cube = ModelImporter.LoadModel("Assets/Models/Cube.fbx", true)[0];
-                    SceneObject _cube = new(cube, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Cube"));
+                    Entity _cube = new(cube, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Cube"));
                     sceneObjects.Add(_cube);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -493,7 +493,7 @@ namespace Modine.ImGUI
                 if (ImGui.MenuItem("Sphere"))
                 {
                     Mesh sphere = ModelImporter.LoadModel("Assets/Models/Sphere.fbx", true)[0];
-                    SceneObject _sphere = new(sphere, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Sphere"));
+                    Entity _sphere = new(sphere, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Sphere"));
                     sceneObjects.Add(_sphere);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -510,7 +510,7 @@ namespace Modine.ImGUI
                 if (ImGui.MenuItem("Plane"))
                 {
                     Mesh plane = ModelImporter.LoadModel("Assets/Models/Floor.fbx", true)[0];
-                    SceneObject _plane = new(plane, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Plane"));
+                    Entity _plane = new(plane, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Plane"));
                     sceneObjects.Add(_plane);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -539,7 +539,7 @@ namespace Modine.ImGUI
                         List<Mesh> import = ModelImporter.LoadModel(path, true);
                         for (int i = 0; i < import.Count; i++)
                         {
-                            SceneObject _import = new(import[i], Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Imported Model"));
+                            Entity _import = new(import[i], Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Imported Model"));
                             sceneObjects.Add(_import);
                         }
                         
@@ -559,7 +559,7 @@ namespace Modine.ImGUI
                 if (ImGui.MenuItem("Point Light"))
                 {
                     Light light = new  Light(new (1, 1, 1), 5);
-                    SceneObject _light = new(light, Vector3.Zero, Common.EngineUtility.NewName(sceneObjects, "Light"));
+                    Entity _light = new(light, Vector3.Zero, Common.EngineUtility.NewName(sceneObjects, "Light"));
 
                     sceneObjects.Add(_light);
 
@@ -834,7 +834,7 @@ namespace Modine.ImGUI
             ImGui.EndMainMenuBar();
         }
 
-        public static void OldOutliner(List<SceneObject> sceneObjects, ref int selectedMeshIndex)
+        public static void OldOutliner(List<Entity> sceneObjects, ref int selectedMeshIndex)
         {
             ImGui.Begin("Outliner", ImGuiWindowFlags.None);
 
@@ -857,7 +857,7 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        public static void Outliner(ref List<SceneObject> sceneObjects, ref int selectedMeshIndex, ref int triCount)
+        public static void Outliner(ref List<Entity> sceneObjects, ref int selectedMeshIndex, ref int triCount)
         {
             ImGui.Begin("Outliner");
 
@@ -887,13 +887,13 @@ namespace Modine.ImGUI
 
                     ImGui.TableSetColumnIndex(1);
                     ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.5f)));
-                    if (sceneObjects[i].Type == SceneObjectType.Light) ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(
+                    if (sceneObjects[i].Type == EntityType.Light) ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(
                         sceneObjects[i].Light.Color.X,
                         sceneObjects[i].Light.Color.Y,
                         sceneObjects[i].Light.Color.Z, 1)));
                     ImGui.Text(sceneObjects[i].Type.ToString().ToLower() + " ");
                     ImGui.PopStyleColor();
-                    if (sceneObjects[i].Type == SceneObjectType.Light) ImGui.PopStyleColor();
+                    if (sceneObjects[i].Type == EntityType.Light) ImGui.PopStyleColor();
                 }
 
                 float tableHeight = ImGui.GetContentRegionAvail().Y;

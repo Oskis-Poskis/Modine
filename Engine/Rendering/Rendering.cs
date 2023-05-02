@@ -1,5 +1,5 @@
 using OpenTK.Graphics.OpenGL4;
-using static Modine.Rendering.SceneObject;
+using static Modine.Rendering.Entity;
 using Modine.Common;
 using OpenTK.Windowing.Common;
 
@@ -7,7 +7,7 @@ namespace Modine.Rendering
 {
     public class RenderFuncs
     {
-        public static void RenderShadowScene(int shadowRes, ref int depthMapFBO, OpenTK.Mathematics.Matrix4 lightSpaceMatrix, ref List<SceneObject> sceneObjects, Shader shadowShader, Shader PBRShader)
+        public static void RenderShadowScene(int shadowRes, ref int depthMapFBO, OpenTK.Mathematics.Matrix4 lightSpaceMatrix, ref List<Entity> sceneObjects, Shader shadowShader, Shader PBRShader)
         {
             // Adjust viewport to shadow resolution
             GL.Viewport(0, 0, shadowRes, shadowRes);
@@ -17,11 +17,11 @@ namespace Modine.Rendering
             shadowShader.SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
 
             // Draw meshes to shadow map with different shaders
-            foreach (SceneObject sceneObject in sceneObjects)
+            foreach (Entity sceneObject in sceneObjects)
             {
-                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Shader = shadowShader;
-                if (sceneObject.Type == SceneObjectType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Render();
-                if (sceneObject.Type == SceneObjectType.Mesh) sceneObject.Shader = PBRShader;
+                if (sceneObject.Type == EntityType.Mesh) sceneObject.Shader = shadowShader;
+                if (sceneObject.Type == EntityType.Mesh && sceneObject.Mesh.castShadow == true) sceneObject.Render();
+                if (sceneObject.Type == EntityType.Mesh) sceneObject.Shader = PBRShader;
             }
         }
     }

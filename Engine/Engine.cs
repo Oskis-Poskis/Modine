@@ -13,7 +13,7 @@ using Modine.Rendering;
 using Modine.Compute;
 using Modine.ImGUI;
 
-using static Modine.Rendering.SceneObject;
+using static Modine.Rendering.Entity;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 using Newtonsoft.Json;
 
@@ -64,7 +64,7 @@ namespace Modine
         Texture pointLightTexture;
 
         Camera camera;
-        static List<SceneObject> sceneObjects = new List<SceneObject>();
+        static List<Entity> sceneObjects = new List<Entity>();
         public static int selectedSceneObject = 0;
         static int count_PointLights, count_Meshes = 0;
 
@@ -121,27 +121,13 @@ namespace Modine
         unsafe protected override void OnLoad()
         {
             base.OnLoad();
-
             MakeCurrent();
+
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.StencilTest);
             GL.Enable(EnableCap.DebugOutput);
             GL.Enable(EnableCap.Blend);
-
-            /*
-            // Get the number of available extensions
-            int numExtensions;
-            GL.GetInteger(GetPName.NumExtensions, out numExtensions);
-            Console.WriteLine("Number of available extensions: " + numExtensions);
-
-            // Print the name of each extension
-            for (uint i = 0; i < numExtensions; i++)
-            {
-                string extensionName = GL.GetString(StringNameIndexed.Extensions, i);
-                Console.WriteLine("Extension #" + i + ": " + extensionName);
-            }
-            */
 
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
             GL.PointSize(5);
@@ -201,7 +187,7 @@ namespace Modine
                     Mesh krissVector = ModelImporter.LoadModel("Assets/Resources/KrissVector.fbx", true)[0];
                     krissVector.MaterialIndex = 1;
                     
-                    SceneObject vector = new SceneObject(krissVector, PBRShader, new(x, 0, z), new(0), new(0.5f), EngineUtility.NewName(sceneObjects, "Vector"));
+                    Entity vector = new Entity(krissVector, PBRShader, new(x, 0, z), new(0), new(0.5f), EngineUtility.NewName(sceneObjects, "Vector"));
 
                     sceneObjects.Add(vector);
                 }
@@ -221,7 +207,7 @@ namespace Modine
                     int z = startY2 + row * spacing2;
 
                     Light light = new(GetRandomBrightColor(), 10);
-                    SceneObject _light = new(light, new(x, 6, z), EngineUtility.NewName(sceneObjects, "Light"));
+                    Entity _light = new(light, new(x, 6, z), EngineUtility.NewName(sceneObjects, "Light"));
 
                     sceneObjects.Add(_light);
                 }
@@ -238,6 +224,7 @@ namespace Modine
             ImGuiWindows.LoadTheme();
             
             CreatePointLightResourceMemory(sceneObjects);
+            LoadEditorSettings();
         }
 
         public static Vector3 GetRandomBrightColor()
@@ -363,12 +350,74 @@ namespace Modine
         {
             base.OnResize(e);
             RenderScene(0.017f);
+            // SaveEditorSettings();
 
             ImGuiController.WindowResized(e.Width, e.Height);
         }
 
+        protected override void OnMaximized(MaximizedEventArgs e)
+        {
+            base.OnMaximized(e);
+
+            SaveEditorSettings();
+        }
+
+        protected override void OnMinimized(MinimizedEventArgs e)
+        {
+            base.OnMinimized(e);
+
+            SaveEditorSettings();
+        }
+
         bool showQuickMenu = false;
         bool selectedIsMesh = false;
+
+        public struct EditorSettings
+        {
+            public Vector2 WindowSize;
+            public Vector2 WindowPos;
+            public bool Maximized;
+        }
+
+        unsafe public void SaveEditorSettings()
+        {
+            EditorSettings editor = new();
+
+            GLFW.GetWindowSize(WindowPtr, out int width, out int height);
+            editor.WindowSize = new(width, height);
+
+            GLFW.GetWindowPos(WindowPtr, out int x, out int y);
+            editor.WindowPos = new(x, y);
+
+            editor.Maximized = GLFW.GetWindowAttrib(WindowPtr, WindowAttributeGetBool.Maximized);
+
+            var settings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+            };
+
+            settings.Converters.Add(new Vector2Converter());
+            settings.Converters.Add(new Vector3Converter());
+
+            string json = JsonConvert.SerializeObject(editor, settings);
+            using (StreamWriter writer = new StreamWriter("Engine/testsave.editorsettings"))
+            {
+                writer.Write(json);
+            }
+        }
+
+        unsafe public void LoadEditorSettings()
+        {
+            if (File.Exists("Engine/testsave.editorsettings"))
+            {
+                string json = File.ReadAllText("Engine/testsave.editorsettings");
+                EditorSettings editor = JsonConvert.DeserializeObject<EditorSettings>(json);
+
+                GLFW.SetWindowSize(WindowPtr, (int)editor.WindowSize.X, (int)editor.WindowSize.Y);
+                GLFW.SetWindowPos(WindowPtr, (int)editor.WindowPos.X, (int)editor.WindowPos.Y);
+                if (editor.Maximized) GLFW.MaximizeWindow(WindowPtr);
+            }
+        }
 
         public struct SSBOlight
         {
@@ -382,14 +431,14 @@ namespace Modine
         {
             count_Meshes = 0;
             count_PointLights = 0;
-            foreach (SceneObject sceneObject in sceneObjects)
+            foreach (Entity sceneObject in sceneObjects)
             {
-                if (sceneObject.Type == SceneObjectType.Mesh) count_Meshes += 1;
-                else if (sceneObject.Type == SceneObjectType.Light) count_PointLights += 1;
+                if (sceneObject.Type == EntityType.Mesh) count_Meshes += 1;
+                else if (sceneObject.Type == EntityType.Light) count_PointLights += 1;
             }
         }
 
-        public static void CreatePointLightResourceMemory(List<SceneObject> sceneObjs)
+        public static void CreatePointLightResourceMemory(List<Entity> sceneObjs)
         {
             CountSceneObjects();
             
@@ -399,7 +448,7 @@ namespace Modine
 
                 for (int i = 0; i < sceneObjs.Count; i++)
                 {
-                    if (sceneObjs[i].Type == SceneObjectType.Light)
+                    if (sceneObjs[i].Type == EntityType.Light)
                     {
                         SSBOlight light;
                         light.lightPos = sceneObjs[i].Position;
@@ -474,7 +523,7 @@ namespace Modine
 
                 for (int i = 0; i < sceneObjects.Count; i++)
                 {
-                    if (sceneObjects[i].Type == SceneObjectType.Mesh)
+                    if (sceneObjects[i].Type == EntityType.Mesh)
                     {
                         Materials[sceneObjects[i].Mesh.MaterialIndex].SetShaderUniforms(PBRShader);
                         sceneObjects[i].Render();
@@ -486,7 +535,7 @@ namespace Modine
                 lightShader.SetMatrix4("projection", projectionMatrix);
                 lightShader.SetMatrix4("view", viewMatrix);
                 pointLightTexture.Use(TextureUnit.Texture0);
-                for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == SceneObjectType.Light) sceneObjects[i].Render(camera);
+                for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == EntityType.Light) sceneObjects[i].Render(camera);
                 GL.DepthMask(true);
 
                 // Render selected sceneobject infront of everything and dont write to color buffer
@@ -498,12 +547,12 @@ namespace Modine
 
                 switch (sceneObjects[selectedSceneObject].Type)
                 {
-                    case SceneObjectType.Mesh:
+                    case EntityType.Mesh:
                         PBRShader.Use();
                         sceneObjects[selectedSceneObject].Render();
                         break;
                     
-                    case SceneObjectType.Light:
+                    case EntityType.Light:
                         lightShader.Use();
                         sceneObjects[selectedSceneObject].Render(camera);
                         break;
@@ -600,7 +649,7 @@ namespace Modine
             {
                 if (sceneObjects.Count > 0)
                 {
-                    selectedIsMesh = sceneObjects[selectedSceneObject].Type == SceneObjectType.Mesh ? true : false;
+                    selectedIsMesh = sceneObjects[selectedSceneObject].Type == EntityType.Mesh ? true : false;
                 
                     ImGui.Begin("Material Editor##2");
                     if (selectedIsMesh)
@@ -708,7 +757,7 @@ namespace Modine
                     {
                         var settings = new JsonSerializerSettings
                         {
-                            Formatting = Formatting.Indented
+                            Formatting = Formatting.Indented,
                         };
 
                         settings.Converters.Add(new Vector2Converter());
@@ -739,8 +788,8 @@ namespace Modine
                         if (File.Exists("Engine/testsave.mod"))
                         {
                             string json = File.ReadAllText("Engine/testsave.mod");
-                            List<SceneObject> sceneObjs = JsonConvert.DeserializeObject<List<SceneObject>>(json);
-                            foreach (SceneObject obj in sceneObjs) if (obj.Type == SceneObjectType.Light) Console.WriteLine(obj.Position);
+                            List<Entity> sceneObjs = JsonConvert.DeserializeObject<List<Entity>>(json);
+                            foreach (Entity obj in sceneObjs) if (obj.Type == EntityType.Light) Console.WriteLine(obj.Position);
                         }
                     }
 
@@ -750,6 +799,7 @@ namespace Modine
                 ImGui.End();
             
                 // ImGuiWindows.AssetBrowser();
+                ImGuiWindows.ShadowView(depthMap);
                 ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials);
                 ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
                 ImGuiWindows.Properties(ref sceneObjects, selectedSceneObject, ref Materials);

@@ -313,7 +313,7 @@ namespace Modine
                     if (sceneObjects[i].Type == EntityType.Mesh)
                     {
                         Materials[sceneObjects[i].Mesh.MaterialIndex].SetShaderUniforms(sceneObjects[i].Shader, camera);
-                        sceneObjects[i].Render();
+                        sceneObjects[i].Render(i);
                     }
                 }
 
@@ -336,7 +336,7 @@ namespace Modine
                 {
                     case EntityType.Mesh:
                         PBRShader.Use();
-                        sceneObjects[selectedSceneObject].Render();
+                        sceneObjects[selectedSceneObject].Render(selectedSceneObject);
                         break;
                     
                     case EntityType.Light:

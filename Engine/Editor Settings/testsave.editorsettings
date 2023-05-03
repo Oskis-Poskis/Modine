@@ -1,11 +1,11 @@
 {
   "WindowSize": {
-    "X": 2560.0,
-    "Y": 1417.0
+    "X": 1920.0,
+    "Y": 1080.0
   },
   "WindowPos": {
-    "X": 0.0,
-    "Y": 23.0
+    "X": 491.0,
+    "Y": 140.0
   },
-  "Maximized": true
+  "Maximized": false
 }

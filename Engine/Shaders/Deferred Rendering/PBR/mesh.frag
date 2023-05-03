@@ -1,7 +1,7 @@
 #version 430
 
 layout(location = 0) out vec4 mainTexture;
-layout(location = 1) out vec3 gAlbedo;
+layout(location = 1) out vec4 gAlbedo;
 layout(location = 2) out vec3 gNormal;
 layout(location = 3) out vec3 gMetallicRough;
 
@@ -13,6 +13,7 @@ in vec4 fragPos;
 in vec4 fragPosLightSpace;
 in mat3 TBN;
 
+uniform float meshID;
 uniform vec3 direction;
 
 struct Material {
@@ -68,7 +69,8 @@ void main()
     normal = normalize(TBN * normal);
 
     mainTexture = vec4(0.0);
-    gAlbedo = albedo;
+    float test = meshID;
+    gAlbedo = vec4(meshID, 1.0, 1.0, 1.0);
     gNormal = normal;
 
     float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, direction);

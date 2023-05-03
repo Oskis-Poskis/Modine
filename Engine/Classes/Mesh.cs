@@ -71,6 +71,23 @@ namespace Modine.Rendering
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
         }
 
+        public void RenderScene(Shader shader, Vector3 pos, Vector3 rot, Vector3 scale, float index)
+        {   
+            Matrix4 model = Matrix4.Identity;
+            model *= Matrix4.CreateScale(scale);
+            model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(rot.X)) *
+                     Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rot.Y)) *
+                     Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(rot.Z));
+            model *= Matrix4.CreateTranslation(pos);
+
+            shader.SetMatrix4("model", model);
+            shader.SetFloat("meshID", index);
+
+            GL.BindVertexArray(vaoHandle);
+            if (vertexCount > 0) GL.DrawElements(PrimitiveType.Triangles, vertexCount, DrawElementsType.UnsignedInt, 0);
+            GL.BindVertexArray(0);
+        }
+
         public void RenderScene(Shader shader, Vector3 pos, Vector3 rot, Vector3 scale)
         {   
             Matrix4 model = Matrix4.Identity;

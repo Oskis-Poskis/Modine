@@ -47,6 +47,11 @@ namespace Modine.Rendering
             this.Name = name;
         }
 
+        public virtual void Render(float index)
+        {
+            Mesh.RenderScene(Shader, this.Position, this.Rotation, this.Scale, index);
+        }
+
         public virtual void Render()
         {
             Mesh.RenderScene(Shader, this.Position, this.Rotation, this.Scale);

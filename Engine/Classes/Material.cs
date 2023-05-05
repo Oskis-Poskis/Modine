@@ -8,13 +8,16 @@ namespace Modine.Rendering
     public class Material
     {
         public string Name { get; set; } = "";
+
         public Vector3 Color { get; set; } = new Vector3(1.0f, 1.0f, 1.0f);
         public float Metallic { get; set; } = 0.0f;
         public float Roughness { get; set; } = 0.5f;
+
         public Texture ColorTexture { get; set; }
         public Texture RoughnessTexture { get; set; }
         public Texture MetallicTexture { get; set; }
         public Texture NormalTexture { get; set; }
+        
         public float EmissionStrength { get; set; } = 0.0f;
 
         private Texture white1x1 = Texture.LoadFromFile("Assets/Resources/White1x1.png");

@@ -53,7 +53,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
     }
     shadow /= 16;
 
-    if(projCoords.z > 1.0)
+    if (projCoords.z > 1.0)
         shadow = 0.0;
         
     return shadow;
@@ -70,7 +70,7 @@ void main()
 
     mainTexture = vec4(0.0);
     float test = meshID;
-    gAlbedo = vec4(meshID, 1.0, 1.0, 1.0);
+    gAlbedo = vec4(albedo, 1.0);
     gNormal = normal;
 
     float shadowCalc = ShadowCalculation(fragPosLightSpace, normal, direction);

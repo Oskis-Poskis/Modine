@@ -7,9 +7,11 @@ namespace Modine.Rendering
     {
         public EntityType Type;
         public string Name;
+        
         public Vector3 Position;
         public Vector3 Rotation;
         public Vector3 Scale;
+
         public Mesh Mesh;
         public Light Light;
 

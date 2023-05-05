@@ -15,6 +15,7 @@ namespace Modine.Rendering
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO);
             GL.Clear(ClearBufferMask.DepthBufferBit);
 
+            shadowShader.Use();
             shadowShader.SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
 
             // Draw meshes to shadow map with different shaders

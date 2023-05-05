@@ -57,7 +57,7 @@ namespace Modine
         public static float farPlane = 1000, nearPlane = 0.1f;
         float shadowFactor = 0.75f;
         
-        Material defaultMat, krissVectorMat;
+        Material defaultMat;
         public static List<Material> Materials = new List<Material>();
         public static Shader PBRShader, lightShader, shadowShader;
         Texture pointLightTexture;
@@ -152,10 +152,8 @@ namespace Modine
             deferredCompute.SetFloat("shadowFactor", shadowFactor);
             PBRShader.SetVector3("direction", SunDirection);
 
-            krissVectorMat = new("VectorMat", new(1), 1, 1, 0);
             defaultMat = new("Default", new (0.8f), 0, 0.5f, 0.0f);
 
-            Materials.Add(krissVectorMat);
             Materials.Add(defaultMat);
 
             triangleCount = EngineUtility.CalculateTriangles(sceneObjects);

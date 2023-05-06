@@ -21,11 +21,11 @@ namespace Modine
 {
     class Game : GameWindow
     {
-        public Game(int width, int height, string title)
+        public Game(int width, int height, string title, int tempnum)
             : base(GameWindowSettings.Default, new  NativeWindowSettings()
             {
                 Title = title,
-                Size = new  Vector2i(width, height),
+                Size = new Vector2i(width, height),
                 WindowBorder = WindowBorder.Resizable,
                 StartVisible = false,
                 StartFocused = true,
@@ -38,6 +38,8 @@ namespace Modine
         {
             CenterWindow();
 
+            _tempnum = tempnum;
+
             viewportSize = this.Size;
             previousViewportSize = viewportSize;
 
@@ -49,6 +51,8 @@ namespace Modine
             outlineCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/outline.comp");
             postprocessCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/postprocess.comp");
         }
+
+        int _tempnum = 5;
 
         private Vector2i viewportPos, viewportSize, previousViewportSize;
 
@@ -144,7 +148,7 @@ namespace Modine
 
             pointLightTexture = Texture.LoadFromFile("Assets/Resources/PointLightIcon.png");
 
-            camera = new Camera(new(0, 0, 2), -Vector3.UnitZ, 75, 5);
+            camera = new Camera(new(0, 3, 5), -Vector3.UnitZ, 75, 10);
 
             // RaytracingShader.SetVector3("ambient", ambient);
             deferredCompute.SetVector3("ambient", ambient);
@@ -152,9 +156,88 @@ namespace Modine
             deferredCompute.SetFloat("shadowFactor", shadowFactor);
             PBRShader.SetVector3("direction", SunDirection);
 
-            defaultMat = new("Default", new (0.8f), 0, 0.5f, 0.0f);
+            if (_tempnum == 1)
+            {
+                defaultMat = new("Default", new(0.8f), 0, 0.5f, 0.0f);
+                Material cubemat = new("Red", new(1, 0, 0), 0, 0.5f, 0.0f);
+                Materials.Add(defaultMat);
+                Materials.Insert(1, cubemat);
 
-            Materials.Add(defaultMat);
+                Mesh floor = ModelImporter.LoadModel("Assets/Models/Floor.fbx", true)[0];
+                floor.MaterialIndex = 0;
+                Entity _floor = new Entity(floor, PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, "Floor");
+                _floor.Scale = Vector3.One * 10;
+
+                Mesh cube = ModelImporter.LoadModel("Assets/Models/Cube.fbx", true)[0];
+                cube.MaterialIndex = 1;
+                Entity _cube = new Entity(cube, PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, "Cube");
+                _cube.Position = new(0, 2, 0);
+
+                sceneObjects.Add(_floor);
+                sceneObjects.Add(_cube);
+            }
+
+            else if (_tempnum == 2)
+            {
+                defaultMat = new("Default", new(1), 1, 0.25f, 0.0f);
+                Materials.Add(defaultMat);
+
+                Mesh floor = ModelImporter.LoadModel("Assets/Models/Floor.fbx", true)[0];
+                floor.MaterialIndex = 0;
+                Entity _floor = new Entity(floor, PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, "Floor");
+                _floor.Scale = Vector3.One * 50;
+                sceneObjects.Add(_floor);
+
+                int gridWidth = 15;
+                int gridDepth = 15;
+                float gridSpacing = 5f;
+
+                for (int x = 0; x < gridWidth; x++)
+                {
+                    for (int y = 0; y < gridDepth; y++)
+                    {
+                        Vector3 position = new Vector3(
+                            x * gridSpacing - (gridWidth - 1) * gridSpacing * 0.5f,
+                            4,
+                            y * gridSpacing - (gridDepth - 1) * gridSpacing * 0.5f);
+
+                        Light light = new(EngineUtility.GetRandomBrightColor(), 5);
+                        Entity _light = new Entity(light, position, $"Light{x}-{y}");
+                        sceneObjects.Add(_light);
+                    }
+                }
+            }
+
+            else if (_tempnum == 3)
+            {
+                defaultMat = new("Default", new(1), 1, 1, 0.0f,
+                    Texture.LoadFromFile("Assets/Resources/1_Albedo.png"),
+                    Texture.LoadFromFile("Assets/Resources/1_Roughness.png"),
+                    Texture.LoadFromFile("Assets/Resources/1_Metallic.png"),
+                    Texture.LoadFromFile("Assets/Resources/1_Normal.png"));
+                Materials.Add(defaultMat);
+
+                Mesh vector = ModelImporter.LoadModel("Assets/Resources/KrissVector.fbx", true)[0];
+
+                int gridWidth = 15;
+                int gridDepth = 15;
+                float gridSpacing = 10f;
+
+                for (int x = 0; x < gridWidth; x++)
+                {
+                    for (int y = 0; y < gridDepth; y++)
+                    {
+                        Vector3 position = new Vector3(
+                            x * gridSpacing - (gridWidth - 1) * gridSpacing * 0.5f,
+                            0,
+                            y * gridSpacing - (gridDepth - 1) * gridSpacing * 0.5f);
+
+                        Entity _vector = new Entity(vector, PBRShader, position, Vector3.Zero, Vector3.One, $"Vector{x}-{y}");
+                        sceneObjects.Add(_vector);
+                    }
+                }
+            }
+
 
             triangleCount = EngineUtility.CalculateTriangles(sceneObjects);
             EngineUtility.CountEntities(sceneObjects, out int MeshCount, out int PointLightCount);
@@ -188,7 +271,8 @@ namespace Modine
             if (IsMouseButtonDown(MouseButton.Button2))
             {
                 CursorState = CursorState.Grabbed;
-                camera.Input(MouseState, sceneObjects[selectedSceneObject].Position);
+                if (sceneObjects.Count > 0) camera.Input(MouseState, sceneObjects[selectedSceneObject].Position);
+                else camera.Input(MouseState, Vector3.Zero);
             }
             else CursorState = CursorState.Normal;
 
@@ -203,9 +287,9 @@ namespace Modine
                 if (IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
                 if (IsKeyDown(Keys.LeftControl) && IsKeyPressed(Keys.Space)) fullscreen = EngineUtility.ToggleBool(fullscreen);
 
-                if (IsKeyDown(Keys.LeftAlt)) camera.trackball = true;
+                if (IsKeyDown(Keys.LeftAlt) && sceneObjects.Count > 0) camera.trackball = true;
                 if (IsKeyReleased(Keys.LeftAlt)) camera.trackball = false;
-                if (IsKeyPressed(Keys.LeftAlt)) camera.distance = Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Position);
+                if (IsKeyPressed(Keys.LeftAlt) && sceneObjects.Count > 0) camera.distance = Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Position);
 
                 if (IsKeyDown(Keys.LeftAlt) && IsKeyPressed(Keys.G)) sceneObjects[selectedSceneObject].Position = Vector3.Zero;
             }
@@ -265,14 +349,20 @@ namespace Modine
 
         unsafe public void LoadEditorSettings()
         {
-            imnodes.LoadCurrentEditorStateFromIniFile("Engine/Editor Settings/nodeeditor.ini");
+            if (File.Exists("Engine/Editor Settings/nodeeditor.ini"))
+            {
+                imnodes.LoadCurrentEditorStateFromIniFile("Engine/Editor Settings/nodeeditor.ini");
+            }
 
-            string json = File.ReadAllText("Engine/Editor Settings/testsave.editorsettings");
-            EditorSettings editor = JsonConvert.DeserializeObject<EditorSettings>(json);
+            if (File.Exists("Engine/Editor Settings/testsave.editorsettings"))
+            {
+                string json = File.ReadAllText("Engine/Editor Settings/testsave.editorsettings");
+                EditorSettings editor = JsonConvert.DeserializeObject<EditorSettings>(json);
 
-            GLFW.SetWindowSize(WindowPtr, (int)editor.WindowSize.X, (int)editor.WindowSize.Y);
-            GLFW.SetWindowPos(WindowPtr, (int)editor.WindowPos.X, (int)editor.WindowPos.Y);
-            if (editor.Maximized) GLFW.MaximizeWindow(WindowPtr);
+                GLFW.SetWindowSize(WindowPtr, (int)editor.WindowSize.X, (int)editor.WindowSize.Y);
+                GLFW.SetWindowPos(WindowPtr, (int)editor.WindowPos.X, (int)editor.WindowPos.Y);
+                if (editor.Maximized) GLFW.MaximizeWindow(WindowPtr);
+            }
         }
 
         public void RenderScene(double time)
@@ -432,6 +522,7 @@ namespace Modine
             
             if (!fullscreen)
             {
+                /*
                 if (sceneObjects.Count > 0)
                 {
                     ImGui.Begin("Material Editor##2");
@@ -580,6 +671,7 @@ namespace Modine
                 }                
 
                 ImGui.End();
+                */
             
                 // ImGuiWindows.AssetBrowser();
                 ImGuiWindows.ShadowView(depthMap);

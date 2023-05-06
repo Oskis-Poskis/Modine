@@ -635,10 +635,14 @@ namespace Modine.ImGUI
                 ImGui.Unindent();
             }
 
+
             if (ImGui.CollapsingHeader("Post Processing"))
             {
                 ImGui.Indent(20);
 
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                /*
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -653,6 +657,7 @@ namespace Modine.ImGUI
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                */
 
                 ImGui.Text("PBR Noise");
                 if (ImGui.SliderFloat("##Noise", ref NoiseAmount, 0, 1)) defshader.SetFloat("NoiseAmount", NoiseAmount);                

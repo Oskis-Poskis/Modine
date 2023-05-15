@@ -65,6 +65,7 @@ namespace Modine.Rendering
 
             vertexData = vertData;
             indices = ind;
+            
 
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
@@ -108,6 +109,7 @@ namespace Modine.Rendering
         {
             GL.DeleteVertexArray(vaoHandle);
             GL.DeleteBuffer(vboHandle);
+            GL.DeleteBuffer(eboHandle);
         }
     }
 }

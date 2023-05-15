@@ -16,7 +16,7 @@ void main()
 {
     ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
     ivec2 screen_size = imageSize(img_output);
-    vec2 UVs = (vec2(pixel_coords) + 0.5) / vec2(screen_size); // Add 0.5 to center the texel
+    vec2 UVs = (vec2(pixel_coords) + 0.5) / vec2(screen_size); // Add 0.5, idk why but it fixes pixelation
     
     vec4 color = vec4(texture(renderTexture, UVs).rgb, 1.0);
     uint stencil = texture(stencilTexture, UVs).r;

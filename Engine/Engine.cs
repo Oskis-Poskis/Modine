@@ -67,8 +67,8 @@ namespace Modine
         Texture pointLightTexture;
 
         Camera camera;
-        static List<Entity> sceneObjects = new List<Entity>();
-        public static int selectedSceneObject = 0;
+        static List<Entity> entities = new List<Entity>();
+        public static int selectedEntity = 0;
         static int count_PointLights, count_Meshes = 0;
         int triangleCount = 0;
 
@@ -173,8 +173,8 @@ namespace Modine
                 Entity _cube = new Entity(cube, PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, "Cube");
                 _cube.Position = new(0, 2, 0);
 
-                sceneObjects.Add(_floor);
-                sceneObjects.Add(_cube);
+                entities.Add(_floor);
+                entities.Add(_cube);
             }
 
             else if (_tempnum == 2)
@@ -186,7 +186,7 @@ namespace Modine
                 floor.MaterialIndex = 0;
                 Entity _floor = new Entity(floor, PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, "Floor");
                 _floor.Scale = Vector3.One * 50;
-                sceneObjects.Add(_floor);
+                entities.Add(_floor);
 
                 int gridWidth = 15;
                 int gridDepth = 15;
@@ -203,7 +203,7 @@ namespace Modine
 
                         Light light = new(EngineUtility.GetRandomBrightColor(), 5);
                         Entity _light = new Entity(light, position, $"Light{x}-{y}");
-                        sceneObjects.Add(_light);
+                        entities.Add(_light);
                     }
                 }
             }
@@ -217,11 +217,11 @@ namespace Modine
                     Texture.LoadFromFile("Assets/Resources/1_Normal.png"));
                 Materials.Add(defaultMat);
 
-                Mesh vector = ModelImporter.LoadModel("Assets/Resources/KrissVector.fbx", true)[0];
-
                 int gridWidth = 15;
                 int gridDepth = 15;
                 float gridSpacing = 10f;
+
+                Mesh vector = ModelImporter.LoadModel("Assets/Resources/KrissVector.fbx", true)[0];
 
                 for (int x = 0; x < gridWidth; x++)
                 {
@@ -233,14 +233,14 @@ namespace Modine
                             y * gridSpacing - (gridDepth - 1) * gridSpacing * 0.5f);
 
                         Entity _vector = new Entity(vector, PBRShader, position, Vector3.Zero, Vector3.One, $"Vector{x}-{y}");
-                        sceneObjects.Add(_vector);
+                        entities.Add(_vector);
                     }
                 }
             }
 
 
-            triangleCount = EngineUtility.CalculateTriangles(sceneObjects);
-            EngineUtility.CountEntities(sceneObjects, out int MeshCount, out int PointLightCount);
+            triangleCount = EngineUtility.CalculateTriangles(entities);
+            EngineUtility.CountEntities(entities, out int MeshCount, out int PointLightCount);
             count_Meshes = MeshCount;
             count_PointLights = PointLightCount;
 
@@ -251,7 +251,7 @@ namespace Modine
             imnodes.PushStyleVar(StyleVar.NodeBorderThickness, 2);
             ImGuiWindows.LoadTheme();
             
-            Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
+            Rendering.Functions.CreatePointLightResourceMemory(entities);
             LoadEditorSettings();
 
             IsVisible = true;
@@ -271,7 +271,7 @@ namespace Modine
             if (IsMouseButtonDown(MouseButton.Button2))
             {
                 CursorState = CursorState.Grabbed;
-                if (sceneObjects.Count > 0) camera.Input(MouseState, sceneObjects[selectedSceneObject].Position);
+                if (entities.Count > 0) camera.Input(MouseState, entities[selectedEntity].Position);
                 else camera.Input(MouseState, Vector3.Zero);
             }
             else CursorState = CursorState.Normal;
@@ -287,11 +287,11 @@ namespace Modine
                 if (IsKeyDown(Keys.Q)) camera.position -= moveAmount * Vector3.UnitY;
                 if (IsKeyDown(Keys.LeftControl) && IsKeyPressed(Keys.Space)) fullscreen = EngineUtility.ToggleBool(fullscreen);
 
-                if (IsKeyDown(Keys.LeftAlt) && sceneObjects.Count > 0) camera.trackball = true;
+                if (IsKeyDown(Keys.LeftAlt) && entities.Count > 0) camera.trackball = true;
                 if (IsKeyReleased(Keys.LeftAlt)) camera.trackball = false;
-                if (IsKeyPressed(Keys.LeftAlt) && sceneObjects.Count > 0) camera.distance = Vector3.Distance(camera.position, sceneObjects[selectedSceneObject].Position);
+                if (IsKeyPressed(Keys.LeftAlt) && entities.Count > 0) camera.distance = Vector3.Distance(camera.position, entities[selectedEntity].Position);
 
-                if (IsKeyDown(Keys.LeftAlt) && IsKeyPressed(Keys.G)) sceneObjects[selectedSceneObject].Position = Vector3.Zero;
+                if (IsKeyDown(Keys.LeftAlt) && IsKeyPressed(Keys.G)) entities[selectedEntity].Position = Vector3.Zero;
             }
         }
 
@@ -368,7 +368,7 @@ namespace Modine
         public void RenderScene(double time)
         {
             VSync = vsyncOn ? VSyncMode.On : VSyncMode.Off;
-            Functions.RenderShadowScene(shadowRes, ref depthMapFBO, camera.lightSpaceMatrix, ref sceneObjects, shadowShader, PBRShader);
+            Functions.RenderShadowScene(shadowRes, ref depthMapFBO, camera.lightSpaceMatrix, ref entities, shadowShader, PBRShader);
 
             // Render normal scene
             GL.Viewport(0, 0, viewportSize.X, viewportSize.Y);
@@ -381,12 +381,13 @@ namespace Modine
             GL.ClearDepth(1);
             GL.PolygonMode(MaterialFace.FrontAndBack, _polygonMode);
 
-            if (sceneObjects.Count > 0)
+            if (entities.Count > 0)
             {
-                EngineUtility.CountEntities(sceneObjects, out int MeshCount, out int PointLightCount);
+                EngineUtility.CountEntities(entities, out int MeshCount, out int PointLightCount);
                 count_Meshes = MeshCount;
                 count_PointLights = PointLightCount;
 
+                // Render normal scene
                 GL.Enable(EnableCap.StencilTest);
                 GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
                 GL.StencilOp(StencilOp.Replace, StencilOp.Replace, StencilOp.Replace);
@@ -396,12 +397,12 @@ namespace Modine
                 GL.BindTexture(TextureTarget.Texture2D, depthMap);
 
                 camera.Update(viewportSize);
-                for (int i = 0; i < sceneObjects.Count; i++)
+                for (int i = 0; i < entities.Count; i++)
                 {
-                    if (sceneObjects[i].Type == EntityType.Mesh)
+                    if (entities[i].Type == EntityType.Mesh)
                     {
-                        Materials[sceneObjects[i].Mesh.MaterialIndex].SetShaderUniforms(sceneObjects[i].Shader, camera);
-                        sceneObjects[i].Render(i);
+                        Materials[entities[i].Mesh.MaterialIndex].SetShaderUniforms(entities[i].Shader, camera);
+                        entities[i].Render(i);
                     }
                 }
 
@@ -410,26 +411,26 @@ namespace Modine
                 lightShader.SetMatrix4("projection", camera.projectionMatrix);
                 lightShader.SetMatrix4("view", camera.viewMatrix);
                 pointLightTexture.Use(TextureUnit.Texture0);
-                for (int i = 0; i < sceneObjects.Count; i++) if (sceneObjects[i].Type == EntityType.Light) sceneObjects[i].Render(camera);
+                for (int i = 0; i < entities.Count; i++) if (entities[i].Type == EntityType.Light) entities[i].Render(camera);
                 GL.DepthMask(true);
 
-                // Render selected sceneobject infront of everything and dont write to color buffer
+                // Render selected entity infront of everything and dont write to color buffer
                 GL.Disable(EnableCap.DepthTest);
                 GL.Disable(EnableCap.CullFace);
                 GL.ColorMask(false, false, false, false);
                 GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
                 GL.StencilMask(0xFF);
 
-                switch (sceneObjects[selectedSceneObject].Type)
+                switch (entities[selectedEntity].Type)
                 {
                     case EntityType.Mesh:
                         PBRShader.Use();
-                        sceneObjects[selectedSceneObject].Render(selectedSceneObject);
+                        entities[selectedEntity].Render(selectedEntity);
                         break;
                     
                     case EntityType.Light:
                         lightShader.Use();
-                        sceneObjects[selectedSceneObject].Render(camera);
+                        entities[selectedEntity].Render(camera);
                         break;
                 }
 
@@ -518,7 +519,7 @@ namespace Modine
                 if (showQuickMenu) ImGui.SetNextWindowPos(new(MouseState.Position.X, MouseState.Position.Y));
             }
             
-            if (showQuickMenu) ImGuiWindows.QuickMenu(ref sceneObjects, ref selectedSceneObject, ref showQuickMenu, ref triangleCount);
+            if (showQuickMenu) ImGuiWindows.QuickMenu(ref entities, ref selectedEntity, ref showQuickMenu, ref triangleCount);
             
             if (!fullscreen)
             {
@@ -675,9 +676,9 @@ namespace Modine
             
                 // ImGuiWindows.AssetBrowser();
                 ImGuiWindows.ShadowView(depthMap);
-                ImGuiWindows.MaterialEditor(ref sceneObjects, ref PBRShader, selectedSceneObject, ref Materials, camera);
-                ImGuiWindows.Outliner(ref sceneObjects, ref selectedSceneObject, ref triangleCount);
-                ImGuiWindows.Properties(ref sceneObjects, selectedSceneObject, ref Materials);
+                ImGuiWindows.MaterialEditor(ref entities, ref PBRShader, selectedEntity, ref Materials, camera);
+                ImGuiWindows.Outliner(ref entities, ref selectedEntity, ref triangleCount);
+                ImGuiWindows.Properties(ref entities, selectedEntity, ref Materials);
                 ImGuiWindows.Settings(ref camera.speed, ref farPlane, ref nearPlane, ref vsyncOn, ref showOutlines, ref debugOutlines, ref showStats, ref shadowRes, ref depthMap, ref SunDirection, ref ambient, ref shadowFactor, ref deferredCompute, ref outlineCompute, ref postprocessCompute, ref PBRShader);
             }
 

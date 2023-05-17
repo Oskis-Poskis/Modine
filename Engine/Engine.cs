@@ -151,9 +151,11 @@ namespace Modine
             camera = new Camera(new(0, 3, 5), -Vector3.UnitZ, 75, 10);
 
             // RaytracingShader.SetVector3("ambient", ambient);
+            deferredCompute.Use();
             deferredCompute.SetVector3("ambient", ambient);
             deferredCompute.SetVector3("direction", SunDirection);
             deferredCompute.SetFloat("shadowFactor", shadowFactor);
+            PBRShader.Use();
             PBRShader.SetVector3("direction", SunDirection);
 
             if (_tempnum == 1)

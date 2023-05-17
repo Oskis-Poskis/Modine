@@ -13,7 +13,7 @@ in vec4 fragPos;
 in vec4 fragPosLightSpace;
 in mat3 TBN;
 
-uniform float meshID;
+//uniform float meshID;
 uniform vec3 direction;
 
 struct Material {
@@ -69,7 +69,7 @@ void main()
     normal = normalize(TBN * normal);
 
     mainTexture = vec4(0.0);
-    float test = meshID;
+    //float test = meshID;
     gAlbedo = vec4(albedo, 1.0);
     gNormal = normal;
 

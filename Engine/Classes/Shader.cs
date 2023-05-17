@@ -147,7 +147,7 @@ namespace Modine.Common
         /// <param name="data">The data to set</param>
         public void SetInt(string name, int data)
         {
-            GL.UseProgram(Handle);
+            //GL.UseProgram(Handle);
             GL.Uniform1(_uniformLocations[name], data);
         }
 
@@ -158,7 +158,7 @@ namespace Modine.Common
         /// <param name="data">The data to set</param>
         public void SetFloat(string name, float data)
         {
-            GL.UseProgram(Handle);
+            //GL.UseProgram(Handle);
             GL.Uniform1(_uniformLocations[name], data);
         }
 
@@ -174,7 +174,7 @@ namespace Modine.Common
         /// </remarks>
         public void SetMatrix4(string name, Matrix4 data)
         {
-            GL.UseProgram(Handle);
+            //.UseProgram(Handle);
             GL.UniformMatrix4(_uniformLocations[name], true, ref data);
         }
 
@@ -185,13 +185,13 @@ namespace Modine.Common
         /// <param name="data">The data to set</param>
         public void SetVector3(string name, Vector3 data)
         {
-            GL.UseProgram(Handle);
+            //GL.UseProgram(Handle);
             GL.Uniform3(_uniformLocations[name], data);
         }
 
         public void SetVector2(string name, Vector2 data)
         {
-            GL.UseProgram(Handle);
+            //GL.UseProgram(Handle);
             GL.Uniform2(_uniformLocations[name], data);
         }
     }

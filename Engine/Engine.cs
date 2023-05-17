@@ -146,7 +146,7 @@ namespace Modine
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
 
-            pointLightTexture = Texture.LoadFromFile("Assets/Resources/PointLightIcon.png");
+            pointLightTexture = Texture.LoadFromFile(basePath + "Assets/Resources/PointLightIcon.png");
 
             camera = new Camera(new(0, 3, 5), -Vector3.UnitZ, 75, 10);
 
@@ -165,12 +165,12 @@ namespace Modine
                 Materials.Add(defaultMat);
                 Materials.Insert(1, cubemat);
 
-                Mesh floor = ModelImporter.LoadModel("Assets/Models/Floor.fbx", true)[0];
+                Mesh floor = ModelImporter.LoadModel(basePath + "Assets/Models/Floor.fbx", true)[0];
                 floor.MaterialIndex = 0;
                 Entity _floor = new Entity(floor, PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, "Floor");
                 _floor.Scale = Vector3.One * 10;
 
-                Mesh cube = ModelImporter.LoadModel("Assets/Models/Cube.fbx", true)[0];
+                Mesh cube = ModelImporter.LoadModel(basePath + "Assets/Models/Cube.fbx", true)[0];
                 cube.MaterialIndex = 1;
                 Entity _cube = new Entity(cube, PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, "Cube");
                 _cube.Position = new(0, 2, 0);
@@ -184,7 +184,7 @@ namespace Modine
                 defaultMat = new("Default", new(1), 1, 0.25f, 0.0f);
                 Materials.Add(defaultMat);
 
-                Mesh floor = ModelImporter.LoadModel("Assets/Models/Floor.fbx", true)[0];
+                Mesh floor = ModelImporter.LoadModel(basePath + "Assets/Models/Floor.fbx", true)[0];
                 floor.MaterialIndex = 0;
                 Entity _floor = new Entity(floor, PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, "Floor");
                 _floor.Scale = Vector3.One * 50;
@@ -213,17 +213,17 @@ namespace Modine
             else if (_tempnum == 3)
             {
                 defaultMat = new("Default", new(1), 1, 1, 0.0f,
-                    Texture.LoadFromFile("Assets/Resources/1_Albedo.png"),
-                    Texture.LoadFromFile("Assets/Resources/1_Roughness.png"),
-                    Texture.LoadFromFile("Assets/Resources/1_Metallic.png"),
-                    Texture.LoadFromFile("Assets/Resources/1_Normal.png"));
+                    Texture.LoadFromFile(basePath + "Assets/Resources/1_Albedo.png"),
+                    Texture.LoadFromFile(basePath + "Assets/Resources/1_Roughness.png"),
+                    Texture.LoadFromFile(basePath + "Assets/Resources/1_Metallic.png"),
+                    Texture.LoadFromFile(basePath + "Assets/Resources/1_Normal.png"));
                 Materials.Add(defaultMat);
 
                 int gridWidth = 15;
                 int gridDepth = 15;
                 float gridSpacing = 10f;
 
-                Mesh vector = ModelImporter.LoadModel("Assets/Resources/KrissVector.fbx", true)[0];
+                Mesh vector = ModelImporter.LoadModel(basePath + "Assets/Resources/KrissVector.fbx", true)[0];
 
                 for (int x = 0; x < gridWidth; x++)
                 {
@@ -322,43 +322,46 @@ namespace Modine
 
         unsafe public void SaveEditorSettings()
         {
-            imnodes.SaveCurrentEditorStateToIniFile("Engine/Editor Settings/nodeeditor.ini");
+            imnodes.SaveCurrentEditorStateToIniFile(basePath + "Engine/Editor Settings/nodeeditor.ini");
 
-            EditorSettings editor = new();
-
-            GLFW.GetWindowSize(WindowPtr, out int width, out int height);
-            editor.WindowSize = new(width, height);
-
-            GLFW.GetWindowPos(WindowPtr, out int x, out int y);
-            editor.WindowPos = new(x, y);
-
-            editor.Maximized = GLFW.GetWindowAttrib(WindowPtr, WindowAttributeGetBool.Maximized);
-
-            var settings = new JsonSerializerSettings
+            if (File.Exists(basePath + "Engine/Editor Settings/testsave.editorsettings"))
             {
-                Formatting = Formatting.Indented,
-            };
+                EditorSettings editor = new();
 
-            settings.Converters.Add(new Vector2Converter());
-            settings.Converters.Add(new Vector3Converter());
+                GLFW.GetWindowSize(WindowPtr, out int width, out int height);
+                editor.WindowSize = new(width, height);
 
-            string json = JsonConvert.SerializeObject(editor, settings);
-            using (StreamWriter writer = new StreamWriter("Engine/Editor Settings/testsave.editorsettings"))
-            {
-                writer.Write(json);
+                GLFW.GetWindowPos(WindowPtr, out int x, out int y);
+                editor.WindowPos = new(x, y);
+
+                editor.Maximized = GLFW.GetWindowAttrib(WindowPtr, WindowAttributeGetBool.Maximized);
+
+                var settings = new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented,
+                };
+
+                settings.Converters.Add(new Vector2Converter());
+                settings.Converters.Add(new Vector3Converter());
+
+                string json = JsonConvert.SerializeObject(editor, settings);
+                using (StreamWriter writer = new StreamWriter(basePath + "Engine/Editor Settings/testsave.editorsettings"))
+                {
+                    writer.Write(json);
+                }
             }
         }
 
         unsafe public void LoadEditorSettings()
         {
-            if (File.Exists("Engine/Editor Settings/nodeeditor.ini"))
+            if (File.Exists(basePath + "Engine/Editor Settings/nodeeditor.ini"))
             {
-                imnodes.LoadCurrentEditorStateFromIniFile("Engine/Editor Settings/nodeeditor.ini");
+                imnodes.LoadCurrentEditorStateFromIniFile(basePath + "Engine/Editor Settings/nodeeditor.ini");
             }
 
-            if (File.Exists("Engine/Editor Settings/testsave.editorsettings"))
+            if (File.Exists(basePath + "Engine/Editor Settings/testsave.editorsettings"))
             {
-                string json = File.ReadAllText("Engine/Editor Settings/testsave.editorsettings");
+                string json = File.ReadAllText(basePath + "Engine/Editor Settings/testsave.editorsettings");
                 EditorSettings editor = JsonConvert.DeserializeObject<EditorSettings>(json);
 
                 GLFW.SetWindowSize(WindowPtr, (int)editor.WindowSize.X, (int)editor.WindowSize.Y);

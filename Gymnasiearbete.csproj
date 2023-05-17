@@ -15,14 +15,14 @@
     <PackageReference Include="opentk" Version="4.7.7" />
     <PackageReference Include="STBImageSharp" Version="2.27.13" />
     <Reference Include="System.Windows.Forms" Version="7.0.0.0" />
-    <Content Include="Assets\**\**\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="Assets\**\**\**\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+	<Content Include="Engine\Shaders\**\**">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
     <Content Include="imgui.ini">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Compute\**\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 </Project>

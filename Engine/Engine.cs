@@ -43,17 +43,16 @@ namespace Modine
             viewportSize = this.Size;
             previousViewportSize = viewportSize;
 
-            PBRShader = new Shader("Engine/Shaders/Deferred Rendering/PBR/mesh.vert", "Engine/Shaders/Deferred Rendering/PBR/mesh.frag");
-            shadowShader = new Shader("Engine/Shaders/Deferred Rendering/PBR/shadow.vert", "Engine/Shaders/Deferred Rendering/PBR/shadow.frag");
-            lightShader = new Shader("Engine/Shaders/Lights/light.vert", "Engine/Shaders/Lights/light.frag");
+            PBRShader = new Shader(basePath + "Engine/Shaders/Deferred Rendering/PBR/mesh.vert", "Engine/Shaders/Deferred Rendering/PBR/mesh.frag");
+            shadowShader = new Shader(basePath + "Engine/Shaders/Deferred Rendering/PBR/shadow.vert", "Engine/Shaders/Deferred Rendering/PBR/shadow.frag");
+            lightShader = new Shader(basePath + "Engine/Shaders/Lights/light.vert", "Engine/Shaders/Lights/light.frag");
 
-            deferredCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/deferred.comp");
-            outlineCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/outline.comp");
-            postprocessCompute = new ComputeShader("Engine/Shaders/Deferred Rendering/postprocess.comp");
+            deferredCompute = new ComputeShader(basePath + "Engine/Shaders/Deferred Rendering/deferred.comp");
+            outlineCompute = new ComputeShader(basePath + "Engine/Shaders/Deferred Rendering/outline.comp");
+            postprocessCompute = new ComputeShader(basePath + "Engine/Shaders/Deferred Rendering/postprocess.comp");
         }
 
         int _tempnum = 5;
-
         private Vector2i viewportPos, viewportSize, previousViewportSize;
 
         Vector3 ambient = new(0.03f);
@@ -83,6 +82,7 @@ namespace Modine
         int depthStencilTexture, gAlbedo, gNormal, gMetallicRough, mainTexture; 
         int PBR_FBO;
 
+        string basePath = AppDomain.CurrentDomain.BaseDirectory;
         ComputeShader deferredCompute, outlineCompute, postprocessCompute;
         int renderTexture;
 

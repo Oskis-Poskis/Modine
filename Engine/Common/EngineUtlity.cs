@@ -91,7 +91,7 @@ namespace Modine.Common
 
             public static IntPtr DllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
             {
-                if (OperatingSystem.IsLinux() && File.Exists("/lib/x86_64-linux-gnu/libdl.so.2"))
+                if (OperatingSystem.IsLinux())
                 {
                     if (NativeLibrary.TryLoad("/lib/x86_64-linux-gnu/libdl.so.2", assembly, searchPath, out IntPtr lib))
                     {

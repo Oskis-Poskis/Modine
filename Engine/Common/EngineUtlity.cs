@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Runtime.InteropServices;
 using Modine.Rendering;
 using OpenTK.Mathematics;
 using static Modine.Rendering.Entity;
@@ -76,6 +78,30 @@ namespace Modine.Common
                 numComponentsOverHalf = (r > 0.5f ? 1 : 0) + (g > 0.5f ? 1 : 0) + (b > 0.5f ? 1 : 0);
             }
             return new Vector3(r, g, b);
+        }
+
+        public static class DllResolver
+        {
+            static DllResolver()
+            {
+                NativeLibrary.SetDllImportResolver(typeof(Assimp.AssimpContext).Assembly, DllImportResolver);
+            }
+
+            public static void InitLoader() { }
+
+            public static IntPtr DllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+            {
+                if (OperatingSystem.IsLinux() && File.Exists("/lib/x86_64-linux-gnu/libdl.so.2"))
+                {
+                    if (NativeLibrary.TryLoad("/lib/x86_64-linux-gnu/libdl.so.2", assembly, searchPath, out IntPtr lib))
+                    {
+                        Console.WriteLine("Exists");
+                        return lib;
+                    }
+                }
+
+                return IntPtr.Zero;
+            }
         }
     }
 }

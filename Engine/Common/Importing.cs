@@ -10,6 +10,8 @@ namespace Modine.Common
     {
         public static List<Mesh> LoadModel(string path, bool castShadow)
         {
+            Modine.Common.EngineUtility.DllResolver.InitLoader();
+
             try
             {
                 var importer = new AssimpContext();

@@ -5,8 +5,9 @@
         [STAThread]
         static void Main()
         {
-            int selection = 0;
+            int selection = 1;
 
+            /*
             while (selection < 1 || selection > 3)
             {
                 Console.WriteLine("Please select a scene:");
@@ -25,6 +26,7 @@
                     Console.WriteLine("Number must be between 1-3.");
                 }
             }
+            */
 
             using Game game = new Game(1920, 1080, "Modine", selection);
             game.Run();

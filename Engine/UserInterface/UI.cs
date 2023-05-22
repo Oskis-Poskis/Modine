@@ -208,11 +208,11 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        static OpenFileDialog selectFile = new OpenFileDialog()
+        /*static OpenFileDialog selectFile = new OpenFileDialog()
         {
             Title = "Select File",
             Filter = "Formats:|*.PNG;*.JPG;*.JPEG;",
-        };
+        };*/
 
         public static void MaterialEditor(ref List<Entity> sceneObjects, ref Shader meshShader, int selectedIndex, ref List<Material> materials, Camera cam)
         {
@@ -263,7 +263,7 @@ namespace Modine.ImGUI
                     if (ImGui.ColorEdit4("##colbutton", ref color)) _material.Color = new(color.X, color.Y, color.Z);
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    
+                    /*
                     if (ImGui.Button("Load Albedo Texture"))
                     {
                         selectFile.ShowDialog();
@@ -275,6 +275,7 @@ namespace Modine.ImGUI
                             materials[sceneObjects[selectedIndex].Mesh.MaterialIndex].ColorTexture = Texture.LoadFromFile(path);
                         }
                     }
+                    */
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Separator();
@@ -287,6 +288,7 @@ namespace Modine.ImGUI
                         _material.Roughness = tempRoughness;
                         _material.SetShaderUniforms(meshShader, cam);
                     }
+                    /*
                     if (ImGui.Button("Load Roughness Texture"))
                     {
                         selectFile.ShowDialog();
@@ -298,6 +300,7 @@ namespace Modine.ImGUI
                             materials[sceneObjects[selectedIndex].Mesh.MaterialIndex].RoughnessTexture = Texture.LoadFromFile(path);
                         }
                     }
+                    */
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Separator();
@@ -310,6 +313,8 @@ namespace Modine.ImGUI
                         _material.Metallic = tempMetallic;
                         _material.SetShaderUniforms(meshShader, cam);
                     }
+
+                    /*
                     if (ImGui.Button("Load Metallic Texture"))
                     {
                         selectFile.ShowDialog();
@@ -321,6 +326,7 @@ namespace Modine.ImGUI
                             materials[sceneObjects[selectedIndex].Mesh.MaterialIndex].MetallicTexture = Texture.LoadFromFile(path);
                         }
                     }
+                    */
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Separator();
@@ -334,6 +340,7 @@ namespace Modine.ImGUI
                         _material.SetShaderUniforms(meshShader, cam);
                     }
 
+                    /*
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -349,6 +356,7 @@ namespace Modine.ImGUI
                             materials[sceneObjects[selectedIndex].Mesh.MaterialIndex].NormalTexture = Texture.LoadFromFile(path);
                         }
                     }
+                    */
                 }
             }
             
@@ -526,7 +534,7 @@ namespace Modine.ImGUI
 
                 if (ImGui.MenuItem("Import Mesh"))
                 {
-                    OpenFileDialog selectFile = new  OpenFileDialog()
+                    /*OpenFileDialog selectFile = new OpenFileDialog()
                     {
                         Title = "Select File",
                         Filter = "Formats:|*.FBX; *.OBJ; *.GLTF; *.DAE;"
@@ -544,7 +552,7 @@ namespace Modine.ImGUI
                         }
                         
                         selectedSceneObject = sceneObjects.Count - 1;
-                    }
+                    }*/
 
                     showQuickMenu = false;
                 }

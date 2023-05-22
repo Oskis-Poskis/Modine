@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <UseWindowsForms>true</UseWindowsForms>
+    <!-- <UseWindowsForms>true</UseWindowsForms> -->
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
@@ -15,7 +15,7 @@
     <PackageReference Include="ImTool" Version="1.4.1" />
     <PackageReference Include="opentk" Version="4.7.7" />
     <PackageReference Include="STBImageSharp" Version="2.27.13" />
-    <Reference Include="System.Windows.Forms" Version="7.0.0.0" />
+    <!-- <Reference Include="System.Windows.Forms" Version="7.0.0.0" /> -->
     <Content Include="Assets\**\**\**\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

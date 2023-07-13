@@ -1,6 +1,10 @@
 # Modine
 ## This is my final high school project, a 3D engine made with OpenGL and C#
 
+## If you wanna test it:
+You can either clone this github repository and build it,
+or download the ZippedBuilds.7z, unzip it and run the RunEngine.bat
+
 ## Editor Usage
 First person camera rotation
 > Right click and move mouse

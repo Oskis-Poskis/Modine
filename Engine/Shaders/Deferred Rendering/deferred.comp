@@ -1,0 +1,226 @@
+#version 430
+
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(rgba32f, binding = 5) writeonly uniform image2D img_output;
+
+layout(binding = 0) uniform sampler2D mainTexture;
+layout(binding = 1) uniform sampler2D gAlbedo;
+layout(binding = 2) uniform sampler2D gNormal;
+layout(binding = 3) uniform sampler2D gMetallicRough;
+layout(binding = 4) uniform sampler2D depthTexture;
+
+uniform mat4 projMatrixInv;
+uniform mat4 viewMatrixInv;
+
+uniform vec3 ambient;
+uniform vec3 viewPos;
+uniform vec3 direction;
+uniform float dirStrength = 1.0;
+uniform float shadowFactor = 0.75;
+
+uniform bool ACES = true;
+
+const float constant = 1;
+const float linear = 0.09;
+const float quadratic = 0.032;
+const float PI = 3.14159265359;
+
+struct PointLight {
+    vec3 lightPos;
+    float strength;
+    vec3 lightColor;
+    float p0;
+};
+
+layout(std430, binding = 0) readonly buffer PointLightSSBO
+{
+    PointLight PointLights[];
+};
+
+vec4 ViewPosFromDepth(float depth, vec2 uv);
+vec3 WorldPos(float depth, vec2 uv);
+
+float DistributionGGX(vec3 N, vec3 H, float roughness);
+float GeometrySchlickGGX(float NdotV, float roughness);
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
+vec3 fresnelSchlick(float cosTheta, vec3 F0);
+
+vec3 CalcPointLight(PointLight pl, vec3 V, vec3 N, vec3 F0, vec3 alb, float rough, float metal, vec3 fragPos);
+vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, float rough, float metal);
+
+vec3 ACESFilm(vec3 x);
+
+uniform highp float NoiseAmount = 1;
+highp float NoiseCalc = NoiseAmount / 255;
+highp float random(highp vec2 coords) {
+   return fract(sin(dot(coords.xy, vec2(12.9898,78.233))) * 43758.5453);
+}
+
+void main()
+{
+    ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 screen_size = imageSize(img_output);
+    vec2 UVs = (vec2(pixel_coords) + 0.5) / vec2(screen_size); // Add 0.5 to center the texel
+
+    float depth = texture(depthTexture, UVs).r;
+    vec4 mainTex = texture(mainTexture, UVs);
+    vec3 albedo = texture(gAlbedo, UVs).rgb;
+    vec3 normal = texture(gNormal, UVs).rgb;
+    vec3 fragPos = WorldPos(depth, UVs); // texture(gPosition, UVs).rgb;
+    vec3 MetRoughShadow = texture(gMetallicRough, UVs).rgb;
+
+    if (depth == 1.0 && mainTex.a == 0.0)
+    {
+        imageStore(img_output, pixel_coords, vec4(ambient, 1.0));
+    }
+
+    else
+    {
+        float metallic = MetRoughShadow.r;
+        float roughness = MetRoughShadow.g;
+        float shadow = MetRoughShadow.b;
+
+        vec3 V = normalize(viewPos - fragPos);
+
+        vec3 F0 = vec3(0.04);
+        F0 = mix(F0, albedo.rgb, metallic);
+
+        vec3 dirLighting = vec3(0.0);
+        dirLighting += CalcDirectionalLight(direction, V, normal, F0, albedo.rgb, roughness, metallic);
+        dirLighting = pow(dirLighting, vec3(1 / 2.2));
+
+        vec3 pointLighting = vec3(0);
+        for (int i = 0; i < PointLights.length(); i++) pointLighting += CalcPointLight(PointLights[i], V, normal, F0, albedo.rgb, roughness, metallic, fragPos);
+        pointLighting = pow(pointLighting, vec3(1 / 2.2));
+
+        vec3 result = dirLighting * (1 - shadow * shadowFactor) + ambient;
+        result += pointLighting;
+
+        result = mix(result, mainTex.rgb, mainTex.a);
+        result += mix(-NoiseCalc, NoiseCalc, random(UVs));
+
+        if (ACES) result = ACESFilm(result);
+        imageStore(img_output, pixel_coords, vec4(result, 1.0));
+    }
+}
+
+vec4 ViewPosFromDepth(float depth, vec2 uv)
+{
+    float z = depth * 2.0 - 1.0;
+    vec4 clipSpacePosition = vec4(uv * 2.0 - 1.0, z, 1.0);
+    vec4 viewSpacePosition = clipSpacePosition * projMatrixInv;
+    viewSpacePosition /= viewSpacePosition.w;
+
+    return viewSpacePosition;
+}
+
+vec3 WorldPos(float depth, vec2 uv)
+{
+    vec4 viewSpacePosition = ViewPosFromDepth(depth, uv);
+    vec4 worldSpacePosition = viewSpacePosition * viewMatrixInv;
+
+    return worldSpacePosition.xyz;
+}
+
+float DistributionGGX(vec3 N, vec3 H, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a*a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+
+    float nom   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+
+    return nom / denom;
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+
+    float nom   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return nom / denom;
+}
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 CalcPointLight(PointLight pl, vec3 V, vec3 N, vec3 F0, vec3 alb, float rough, float metal, vec3 fragPos)
+{
+    // Calc per light radiance
+    vec3 L = normalize(pl.lightPos - fragPos);
+    vec3 H = normalize(V + L);
+    float distance = length(pl.lightPos - fragPos);
+    float attenuation = 1.0 / (distance * distance);
+    //float _attenuation = pow(smoothstep(pl.radius, 0, distance), pl.falloff); // Non-PBR attenuation
+    vec3 radiance = pl.lightColor * attenuation * pl.strength;
+
+    // Cook-Torrance BRDF
+    float NDF = DistributionGGX(N, H, rough);   
+    float G   = GeometrySmith(N, V, L, rough);
+    vec3 F    = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
+
+    vec3 numerator    = NDF * G * F; 
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
+    vec3 specular = numerator / denominator;
+
+    vec3 kS = F;
+    vec3 kD = vec3(1) - kS;
+    kD *= 1 - metal;
+
+    float NDotL = max(dot(N, L), 0.0);
+
+    return (kD * alb / PI + specular) * radiance * NDotL;
+}
+
+vec3 CalcDirectionalLight(vec3 direction, vec3 V, vec3 N, vec3 F0, vec3 alb, float rough, float metal)
+{
+    // Calc per light radiance
+    vec3 L = normalize(direction);
+    vec3 H = normalize(V + L);
+    vec3 radiance = vec3(1) * dirStrength;
+
+    // Cook-Torrance BRDF
+    float NDF = DistributionGGX(N, H, rough);   
+    float G   = GeometrySmith(N, V, L, rough);
+    vec3 F    = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
+
+    vec3 numerator    = NDF * G * F; 
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
+    vec3 specular = numerator / denominator;
+
+    vec3 kS = F;
+    vec3 kD = vec3(1) - kS;
+    kD *= 1 - metal;
+
+    float NDotL = max(dot(N, L), 0.0);
+
+    return (kD * alb / PI + specular) * radiance * NDotL;
+}
+
+vec3 ACESFilm(vec3 x)
+{
+    float a = 2.51;
+    float b = 0.03;
+    float c = 2.43;
+    float d = 0.59;
+    float e = 0.14;
+    return (x * (a * x + b)) / (x * (c * x + d) + e);
+}

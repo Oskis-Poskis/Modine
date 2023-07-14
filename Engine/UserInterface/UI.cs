@@ -5,8 +5,9 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using Modine.Rendering;
 using Modine.Common;
+using Modine.Compute;
 
-using static Modine.Rendering.SceneObject;
+using static Modine.Rendering.Entity;
 
 namespace Modine.ImGUI
 {
@@ -41,20 +42,22 @@ namespace Modine.ImGUI
                 ms.ToString("0.00") + " ms");
         }
 
-        public static void ObjectProperties(ref List<SceneObject> sceneObjects, int selectedMesh)
+        public static void ObjectProperties(ref List<Entity> sceneObjects, int selectedMesh, ref List<Material> materials)
         {
             ImGui.Begin("Properties");
 
-            Properties(ref sceneObjects, selectedMesh);
+            Properties(ref sceneObjects, selectedMesh, ref materials);
 
             ImGui.End();
         }
 
-        public static void Properties(ref List<SceneObject> sceneObjects, int selectedObject)
+        public static void Properties(ref List<Entity> sceneObjects, int selectedObject, ref List<Material> materials)
         {
+            ImGui.Begin("Properties");
+
             if (sceneObjects.Count > 0)
             {
-                SceneObject _sceneObject = sceneObjects[selectedObject];
+                Entity _sceneObject = sceneObjects[selectedObject];
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 string newName = _sceneObject.Name;
@@ -65,10 +68,11 @@ namespace Modine.ImGUI
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();
 
-                if (_sceneObject.Type == SceneObjectType.Mesh)
+                if (_sceneObject.Type == EntityType.Mesh)
                 {
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Checkbox(" Cast shadow", ref _sceneObject.Mesh.castShadow);
+                    
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -111,18 +115,24 @@ namespace Modine.ImGUI
                         ImGui.Unindent();
                     }
 
-                    else if (_sceneObject.Type == SceneObjectType.Light)
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    ImGui.Separator();
+                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                    string[] materialNames = new string[materials.Count];
+                    for (int i = 0; i < materials.Count; i++)
                     {
-                        SN.Vector3 tempPos = new(_sceneObject.Position.X, _sceneObject.Position.Y, _sceneObject.Position.Z);
-                        ImGui.Text("Position");
-                        if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
-                        {
-                            sceneObjects[selectedObject].Position = new(tempPos.X, tempPos.Y, tempPos.Z);
-                        }
+                        materialNames[i] = materials[i].Name;
                     }
+
+                    ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
+                    ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(20, 20, 20, 255f) / 255));
+                    ImGui.ListBox("##Materials", ref sceneObjects[selectedObject].Mesh.MaterialIndex, materialNames, materialNames.Length);
+                    ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(45f, 45f, 45f, 255f) / 255));
+                    ImGui.PopItemWidth();
                 }
 
-                else if (_sceneObject.Type == SceneObjectType.Light)
+                else if (_sceneObject.Type == EntityType.Light)
                 {
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -131,6 +141,7 @@ namespace Modine.ImGUI
                     if (ImGui.DragFloat3("##Position", ref tempPos, 0.1f))
                     {
                         _sceneObject.Position = new(tempPos.X, tempPos.Y, tempPos.Z);
+                        Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -140,21 +151,25 @@ namespace Modine.ImGUI
                     if (ImGui.DragFloat("##Strength", ref tempStrength, 0.1f))
                     {
                         _sceneObject.Light.strength = tempStrength;
+                        Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                    SN.Vector3 color = new(_sceneObject.Light.lightColor.X, _sceneObject.Light.lightColor.Y, _sceneObject.Light.lightColor.Z);
+                    SN.Vector3 color = new(_sceneObject.Light.Color.X, _sceneObject.Light.Color.Y, _sceneObject.Light.Color.Z);
                     ImGui.Text("Albedo");
                     if (ImGui.ColorPicker3("##Albedo", ref color))
                     {
-                        _sceneObject.Light.lightColor = new(color.X, color.Y, color.Z);
+                        _sceneObject.Light.Color = new(color.X, color.Y, color.Z);
+                        Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
                     }
                 }
             }
+        
+            ImGui.End();
         }
 
-        public static void Viewport(int framebufferTexture, int depthMap, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered, int shadowRes)
+        public static void Viewport(int texture, out Vector2i windowSize, out Vector2i viewportPos, out bool viewportHovered)
         {
             ImGui.Begin("Viewport");
             windowSize = new(
@@ -164,12 +179,11 @@ namespace Modine.ImGUI
                 Convert.ToInt32(ImGui.GetWindowPos().X),
                 Convert.ToInt32(ImGui.GetWindowPos().Y));
 
-            GL.BindTexture(TextureTarget.Texture2D, framebufferTexture);
-            
-            
-            ImGui.Image((IntPtr)framebufferTexture, new(windowSize.X, windowSize.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
+            GL.BindTexture(TextureTarget.Texture2D, texture); 
+            ImGui.Image((IntPtr)texture, new(windowSize.X, windowSize.Y), new(0, 1), new(1, 0), new(1, 1, 1, 1), new(0));
 
-            viewportHovered = ImGui.IsWindowHovered() ? true : false;
+            //viewportHovered = ImGui.IsWindowHovered() ? true : false;
+            viewportHovered = true;
             ImGui.End();
         }
 
@@ -194,31 +208,24 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        public static void MaterialEditor(ref List<SceneObject> sceneObjects, ref Shader meshShader, int selectedIndex, ref List<Material> materials)
+        static OpenFileDialog selectFile = new OpenFileDialog()
+        {
+            Title = "Select File",
+            Filter = "Formats:|*.PNG;*.JPG;*.JPEG;",
+        };
+
+        public static void MaterialEditor(ref List<Entity> sceneObjects, ref Shader meshShader, int selectedIndex, ref List<Material> materials, Camera cam)
         {
             ImGui.Begin("Material Editor");
 
             if (sceneObjects.Count > 0)
             {
-                if (sceneObjects[selectedIndex].Type == SceneObjectType.Mesh)
+                if (sceneObjects[selectedIndex].Type == EntityType.Mesh)
                 {
-                    string[] materialNames = new string[materials.Count];
-                    for (int i = 0; i < materials.Count; i++)
-                    {
-                        materialNames[i] = materials[i].Name;
-                    }
-
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-
-                    ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
-                    ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(20, 20, 20, 255f) / 255));
-                    ImGui.ListBox("##Materials", ref sceneObjects[selectedIndex].Mesh.MaterialIndex, materialNames, materialNames.Length);
-                    ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(45f, 45f, 45f, 255f) / 255));
-                    ImGui.PopItemWidth();
-
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
                     Material _material = materials[sceneObjects[selectedIndex].Mesh.MaterialIndex];
+                    
                     string newName = _material.Name;
                     if (ImGui.InputText("##Name", ref newName, 30, ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll)) _material.Name = newName;
 
@@ -226,6 +233,7 @@ namespace Modine.ImGUI
                     ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
+                    /*
                     if (ImGui.Button("Add Material"))
                     {
                         string baseName = "New Material";
@@ -245,17 +253,10 @@ namespace Modine.ImGUI
                         sceneObjects[selectedIndex].Mesh.MaterialIndex = materials.Count - 1;
                     }
 
-                    ImGui.SameLine();
-
-                    if (ImGui.Button("Delete Material") && sceneObjects[selectedIndex].Mesh.MaterialIndex != 0)
-                    {
-                        foreach (SceneObject sceneObject in sceneObjects) if (sceneObject.Mesh.MaterialIndex == sceneObjects[selectedIndex].Mesh.MaterialIndex) sceneObject.Mesh.MaterialIndex -= 1;
-                        materials.RemoveAt(sceneObjects[selectedIndex].Mesh.MaterialIndex + 1);
-                    }
-
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                     ImGui.Separator();
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                    */
 
                     SN.Vector4 color = new(_material.Color.X, _material.Color.Y, _material.Color.Z, 1);
                     ImGui.Text("Albedo");
@@ -265,11 +266,6 @@ namespace Modine.ImGUI
                     
                     if (ImGui.Button("Load Albedo Texture"))
                     {
-                        OpenFileDialog selectFile = new OpenFileDialog()
-                        {
-                            Title = "Select File",
-                            Filter = "Formats:|*.PNG;"
-                        };
                         selectFile.ShowDialog();
 
                         string path = selectFile.FileName;
@@ -289,15 +285,10 @@ namespace Modine.ImGUI
                     if (ImGui.SliderFloat("##Roughness", ref tempRoughness, 0, 1))
                     {
                         _material.Roughness = tempRoughness;
-                        _material.SetShaderUniforms(meshShader);
+                        _material.SetShaderUniforms(meshShader, cam);
                     }
                     if (ImGui.Button("Load Roughness Texture"))
                     {
-                        OpenFileDialog selectFile = new OpenFileDialog()
-                        {
-                            Title = "Select File",
-                            Filter = "Formats:|*.PNG;"
-                        };
                         selectFile.ShowDialog();
 
                         string path = selectFile.FileName;
@@ -317,15 +308,10 @@ namespace Modine.ImGUI
                     if (ImGui.SliderFloat("##Metallic", ref tempMetallic, 0, 1))
                     {
                         _material.Metallic = tempMetallic;
-                        _material.SetShaderUniforms(meshShader);
+                        _material.SetShaderUniforms(meshShader, cam);
                     }
                     if (ImGui.Button("Load Metallic Texture"))
                     {
-                        OpenFileDialog selectFile = new OpenFileDialog()
-                        {
-                            Title = "Select File",
-                            Filter = "Formats:|*.PNG;"
-                        };
                         selectFile.ShowDialog();
 
                         string path = selectFile.FileName;
@@ -345,7 +331,7 @@ namespace Modine.ImGUI
                     if (ImGui.SliderFloat("##Emission Strength", ref tempEmission, 0, 100))
                     {
                         _material.EmissionStrength = tempEmission;
-                        _material.SetShaderUniforms(meshShader);
+                        _material.SetShaderUniforms(meshShader, cam);
                     }
 
                     ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -354,11 +340,6 @@ namespace Modine.ImGUI
 
                     if (ImGui.Button("Load Normal Texture"))
                     {
-                        OpenFileDialog selectFile = new OpenFileDialog()
-                        {
-                            Title = "Select File",
-                            Filter = "Formats:|*.PNG;"
-                        };
                         selectFile.ShowDialog();
 
                         string path = selectFile.FileName;
@@ -470,7 +451,7 @@ namespace Modine.ImGUI
             }
         }
 
-        public static void QuickMenu(ref List<SceneObject> sceneObjects, ref int selectedSceneObject, ref bool showQuickMenu, ref int triangleCount)
+        public static void QuickMenu(ref List<Entity> sceneObjects, ref int selectedSceneObject, ref bool showQuickMenu, ref int triangleCount)
         {
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 2);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new SN.Vector2(7, 5));
@@ -494,12 +475,8 @@ namespace Modine.ImGUI
 
                 if (ImGui.MenuItem("Cube"))
                 {
-                    int[] cubeIndices;
-                    VertexData[] cubeVertexData;
-                    ModelImporter.LoadModel("Assets/Models/Cube.fbx", out cubeVertexData, out cubeIndices);
-
-                    Mesh cube = new  Mesh(cubeVertexData, cubeIndices, Game.PBRShader, true, 0);
-                    SceneObject _cube = new(Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Cube"), cube);
+                    Mesh cube = ModelImporter.LoadModel("Assets/Models/Cube.fbx", true)[0];
+                    Entity _cube = new(cube, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Cube"));
                     sceneObjects.Add(_cube);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -515,12 +492,8 @@ namespace Modine.ImGUI
 
                 if (ImGui.MenuItem("Sphere"))
                 {
-                    VertexData[] sphereVertexData;
-                    int[] sphereIndices;
-                    ModelImporter.LoadModel("Assets/Models/Sphere.fbx", out sphereVertexData, out sphereIndices);
-
-                    Mesh sphere = new  Mesh(sphereVertexData, sphereIndices, Game.PBRShader, true, 0);
-                    SceneObject _sphere = new (Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Sphere"), sphere);
+                    Mesh sphere = ModelImporter.LoadModel("Assets/Models/Sphere.fbx", true)[0];
+                    Entity _sphere = new(sphere, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Sphere"));
                     sceneObjects.Add(_sphere);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -536,12 +509,8 @@ namespace Modine.ImGUI
 
                 if (ImGui.MenuItem("Plane"))
                 {
-                    VertexData[] planeVertexData;
-                    int[] planeIndices;
-                    ModelImporter.LoadModel("Assets/Models/Floor.fbx", out planeVertexData, out planeIndices);
-
-                    Mesh plane = new  Mesh(planeVertexData, planeIndices, Game.PBRShader, true, 0);
-                    SceneObject _plane = new (Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Plane"), plane);
+                    Mesh plane = ModelImporter.LoadModel("Assets/Models/Floor.fbx", true)[0];
+                    Entity _plane = new(plane, Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Plane"));
                     sceneObjects.Add(_plane);
 
                     selectedSceneObject = sceneObjects.Count - 1;
@@ -567,15 +536,13 @@ namespace Modine.ImGUI
 
                     if (File.Exists(path))
                     {
-                        VertexData[] cubeVertexData;
-                        int[] cubeIndices;
-                        string name;
-                        ModelImporter.LoadModel(path, out cubeVertexData, out cubeIndices, out name);
-
-                        Mesh import = new  Mesh(cubeVertexData, cubeIndices, Game.PBRShader, true, 0);
-                        SceneObject _import = new(Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, name), import);
-                        sceneObjects.Add(_import);
-
+                        List<Mesh> import = ModelImporter.LoadModel(path, true);
+                        for (int i = 0; i < import.Count; i++)
+                        {
+                            Entity _import = new(import[i], Game.PBRShader, Vector3.Zero, Vector3.Zero, Vector3.One, Common.EngineUtility.NewName(sceneObjects, "Imported Model"));
+                            sceneObjects.Add(_import);
+                        }
+                        
                         selectedSceneObject = sceneObjects.Count - 1;
                     }
 
@@ -591,13 +558,16 @@ namespace Modine.ImGUI
             {
                 if (ImGui.MenuItem("Point Light"))
                 {
-                    Light light = new  Light(Game.lightShader, new (1, 1, 1), 5);
-                    SceneObject _light = new (Game.PBRShader, Common.EngineUtility.NewName(sceneObjects, "Light"), light);
+                    Light light = new  Light(new (1, 1, 1), 5);
+                    Entity _light = new(light, Vector3.Zero, Common.EngineUtility.NewName(sceneObjects, "Light"));
+
                     sceneObjects.Add(_light);
 
                     selectedSceneObject = sceneObjects.Count - 1;
 
                     showQuickMenu = false;
+
+                    Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
                 }
 
                 ImGui.EndMenu();
@@ -615,24 +585,23 @@ namespace Modine.ImGUI
                 sceneObjects.RemoveAt(selectedSceneObject);
                 triangleCount = Common.EngineUtility.CalculateTriangles(sceneObjects);
                 if (selectedSceneObject != 0) selectedSceneObject -= 1;
+                Rendering.Functions.CreatePointLightResourceMemory(sceneObjects);
             }
             ImGui.PopStyleVar(5);
 
             ImGui.Dummy(new  System.Numerics.Vector2(0f, 5));
 
             ImGui.End();
-            ImGui.PopStyleVar();
         }
         
         static int selectedIndex = 3;
         static float shadowBias = 0.0018f;
         static bool fxaaOnOff = true;
         static bool ACESonoff = true;
+        static float ChromaticAbberationRadius = 1;
+        static float ChromaticAbberationStrength = 5;
 
-        static bool ssaoOnOff = true;
-        static float ssaoRadius = 0.8f;
-        static float SSAOpower = 0.5f;
-        static int gaussianRadius = 3;
+        static float NoiseAmount = 1;
 
         static bool showImGUIdemo = false;
         static float strength = 1.75f;
@@ -641,7 +610,7 @@ namespace Modine.ImGUI
         static float outlineWidth = 3;
         static int outlineSteps = 12;
 
-        public static void Settings(ref float camSpeed, ref bool vsyncOn, ref bool showOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref int numAOsamples, ref Shader defshader, ref Shader ppshader, ref Shader outlineShader, ref Shader fxaaShader, ref Shader PBRshader)
+        public static void Settings(ref float camSpeed, ref float farPlane, ref float nearPlane, ref bool vsyncOn, ref bool showOutlines, ref bool debugOutlines, ref bool showStats, ref int shadowRes, ref int depthMap, ref Vector3 direction, ref Vector3 ambient, ref float ShadowFactor, ref ComputeShader defshader, ref ComputeShader outlineShader, ref ComputeShader ppShader, ref Shader PBRshader)
         {
             ImGui.Begin("Settings");
 
@@ -655,57 +624,49 @@ namespace Modine.ImGUI
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
+                ImGui.Text("Near Plane");
+                float np = nearPlane;
+                float fp = farPlane;
+                if (ImGui.SliderFloat("##NearPlane", ref np, 0.1f, 0.5f, "%.1f")) nearPlane = np;
+                if (ImGui.SliderFloat("##FarPlane", ref fp, 1, 1000, "%.1f")) farPlane = fp;
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
                 ImGui.Unindent();
             }
 
+
             if (ImGui.CollapsingHeader("Post Processing"))
             {
-                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                
                 ImGui.Indent(20);
-                if (ImGui.CollapsingHeader("SSAO"))
-                {
-                    ImGui.Indent(20);
 
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
-                    if (ImGui.Checkbox(" Use SSAO", ref ssaoOnOff))
-                    {
-                        ppshader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
-                        fxaaShader.SetInt("ssaoOnOff", Convert.ToInt32(ssaoOnOff));
-                    }
-
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    
-                    ImGui.Text("SSAO Radius");
-                    if (ImGui.SliderFloat("##SSAO Radius", ref ssaoRadius, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("radius", ssaoRadius);
-                    
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Text("SSAO Strength");
-                    if (ImGui.SliderFloat("##SSAO Power", ref SSAOpower, 0.0f, 5.0f, "%.1f")) ppshader.SetFloat("SSAOpower", SSAOpower);
-
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Text("SSAO Samples");
-                    if (ImGui.SliderInt("##SSAO Samples", ref numAOsamples, 1, 128)) ppshader.SetInt("kernelSize", numAOsamples);
-
-                    ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
-                    ImGui.Text("Blur Radius");
-                    if (ImGui.SliderInt("##Blur Radius", ref gaussianRadius, 1, 16)) fxaaShader.SetInt("gaussianRadius", gaussianRadius);
-
-                    ImGui.Unindent();
-                }
-
+                /*
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 
-                if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
+                //if (ImGui.Checkbox(" FXAA", ref fxaaOnOff)) fxaaShader.SetInt("fxaaOnOff", Convert.ToInt32(fxaaOnOff));
+                ImGui.Text("Radius");
+                if (ImGui.SliderFloat("##Radius", ref ChromaticAbberationRadius, 0.25f, 2)) ppShader.SetFloat("ChromaticAbberationRadius", ChromaticAbberationRadius);
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Text("Strength");
+                if (ImGui.SliderFloat("##Strength", ref ChromaticAbberationStrength, 0, 1)) ppShader.SetFloat("ChromaticAbberationStrength", ChromaticAbberationStrength);
                 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                */
 
-                if (ImGui.Checkbox(" Tonemapping", ref ACESonoff)) ppshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
+                ImGui.Text("PBR Noise");
+                if (ImGui.SliderFloat("##Noise", ref NoiseAmount, 0, 1)) defshader.SetFloat("NoiseAmount", NoiseAmount);                
+
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+                ImGui.Separator();
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
+                if (ImGui.Checkbox(" Tonemapping", ref ACESonoff)) defshader.SetInt("ACES", Convert.ToInt32(ACESonoff));
                 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
@@ -745,6 +706,7 @@ namespace Modine.ImGUI
                 {
                     ambient = new(color.X, color.Y, color.Z);
                     defshader.SetVector3("ambient", ambient);
+                    // rtShader.SetVector3("ambient", ambient);
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -763,7 +725,7 @@ namespace Modine.ImGUI
                 if (ImGui.SliderFloat("##Shadow Factor", ref shadowFac, 0, 1))
                 {
                     ShadowFactor = shadowFac;
-                    PBRshader.SetFloat("shadowFactor", ShadowFactor);
+                    defshader.SetFloat("shadowFactor", ShadowFactor);
                 }
 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -810,6 +772,10 @@ namespace Modine.ImGUI
                 ImGui.Separator();
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
 
+                ImGui.Checkbox(" Debug Outlines", ref debugOutlines);
+                
+                ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
+
                 ImGui.Checkbox(" Show Outlines", ref showOutlines);
                 
                 ImGui.Dummy(new System.Numerics.Vector2(0f, spacing));
@@ -840,7 +806,10 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        public static void Header(double FPS, double MS, int meshCount)
+        private static int selectedInt = 0;
+        private static readonly string[] intOptions = {"Combined", "Albedo", "World Space Normal"};
+
+        public static void Header(double FPS, double MS, int meshCount, ref int selectedTexture)
         {
             ImGui.BeginMainMenuBar();
 
@@ -859,6 +828,10 @@ namespace Modine.ImGUI
                 ImGui.EndMenu();
             }
 
+            ImGui.Dummy(new System.Numerics.Vector2(15, 0));
+            ImGui.SetNextItemWidth(175);
+            if (ImGui.Combo("##texture", ref selectedInt, intOptions, intOptions.Length)) selectedTexture = selectedInt;
+
             float textWidth = ImGui.CalcTextSize("FPS: " + FPS.ToString("0") + "      " + GL.GetString(StringName.Renderer) + "      " + "ms: " + MS.ToString("0.00")).X;
             ImGui.SetCursorPosX(ImGui.GetWindowWidth() - textWidth - 10);
             ImGui.TextColored(new(0.5f), "FPS: " + FPS.ToString("0") + "      " + "ms: " + MS.ToString("0.00") + "      " + GL.GetString(StringName.Renderer));
@@ -866,7 +839,7 @@ namespace Modine.ImGUI
             ImGui.EndMainMenuBar();
         }
 
-        public static void OldOutliner(List<SceneObject> sceneObjects, ref int selectedMeshIndex)
+        public static void OldOutliner(List<Entity> sceneObjects, ref int selectedMeshIndex)
         {
             ImGui.Begin("Outliner", ImGuiWindowFlags.None);
 
@@ -889,11 +862,11 @@ namespace Modine.ImGUI
             ImGui.End();
         }
 
-        public static void Outliner(ref List<SceneObject> sceneObjects, ref int selectedMeshIndex, ref int triCount)
+        public static void Outliner(ref List<Entity> sceneObjects, ref int selectedMeshIndex, ref int triCount)
         {
             ImGui.Begin("Outliner");
 
-            if (ImGui.BeginTable("table", 2, ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersOuter))
+            if (ImGui.BeginTable("table", 2, ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit))
             {
                 ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch, 0.5f);
                 ImGui.TableSetupColumn("Type");
@@ -902,24 +875,30 @@ namespace Modine.ImGUI
                 {
                     ImGui.TableNextRow();
 
-                    if (i % 2 == 0) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.15f)));
-                    if (i % 2 == 1) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
+                    if (i % 2 == 0) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255));
+                    if (i % 2 == 1) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(25f, 25f, 25f, 255f) / 255));
 
                     ImGui.TableSetColumnIndex(0);
+                    ImGui.PushStyleColor(ImGuiCol.Header, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(184, 126, 30, 255) / 255));
+                    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(200, 135, 40, 255) / 255));
+                    ImGui.PushStyleColor(ImGuiCol.HeaderActive, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(184, 126, 30, 255) / 255));
                     if (ImGui.Selectable(sceneObjects[i].Name, selectedMeshIndex == i))
                     {
                         selectedMeshIndex = i;
                     }
+                    ImGui.PushStyleColor(ImGuiCol.Header, new System.Numerics.Vector4(40, 40, 40, 255f) / 255);
+                    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new System.Numerics.Vector4(100, 100, 100, 180f) / 255);
+                    ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(70, 70, 70, 255f) / 255);
 
                     ImGui.TableSetColumnIndex(1);
                     ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.5f)));
-                    if (sceneObjects[i].Type == SceneObjectType.Light) ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(
-                        sceneObjects[i].Light.lightColor.X,
-                        sceneObjects[i].Light.lightColor.Y,
-                        sceneObjects[i].Light.lightColor.Z, 1)));
+                    if (sceneObjects[i].Type == EntityType.Light) ImGui.PushStyleColor(ImGuiCol.Text, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(
+                        sceneObjects[i].Light.Color.X,
+                        sceneObjects[i].Light.Color.Y,
+                        sceneObjects[i].Light.Color.Z, 1)));
                     ImGui.Text(sceneObjects[i].Type.ToString().ToLower() + " ");
                     ImGui.PopStyleColor();
-                    if (sceneObjects[i].Type == SceneObjectType.Light) ImGui.PopStyleColor();
+                    if (sceneObjects[i].Type == EntityType.Light) ImGui.PopStyleColor();
                 }
 
                 float tableHeight = ImGui.GetContentRegionAvail().Y;
@@ -930,8 +909,8 @@ namespace Modine.ImGUI
                 {
                     ImGui.TableNextRow();
 
-                    if (i % 2 == 0) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.15f)));
-                    if (i % 2 == 1) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new SN.Vector4(0.2f)));
+                    if (i % 2 == 1) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(20f, 20f, 20f, 255f) / 255));
+                    if (i % 2 == 0) ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, ImGui.ColorConvertFloat4ToU32(new System.Numerics.Vector4(25f, 25f, 25f, 255f) / 255));
 
                     ImGui.TableSetColumnIndex(0);
                     ImGui.Text("");
@@ -949,16 +928,16 @@ namespace Modine.ImGUI
         unsafe public static void LoadTheme()
         {
             ImGui.GetStyle().FrameRounding = 2;
-            ImGui.GetStyle().FrameBorderSize = 2;
+            ImGui.GetStyle().FrameBorderSize = 0;
             ImGui.GetStyle().FramePadding = new System.Numerics.Vector2(4);
             ImGui.GetStyle().ChildBorderSize = 0;
             ImGui.GetStyle().CellPadding = new SN.Vector2(3, 3);
             ImGui.GetStyle().ItemSpacing = new System.Numerics.Vector2(4, 2);
             ImGui.GetStyle().ItemInnerSpacing = new System.Numerics.Vector2(0, 4);
             ImGui.GetStyle().WindowPadding = new System.Numerics.Vector2(2, 2);
-            ImGui.GetStyle().TabRounding = 4;
+            ImGui.GetStyle().TabRounding = 2;
             ImGui.GetStyle().ColorButtonPosition = ImGuiDir.Left;
-            ImGui.GetStyle().WindowRounding = 3;
+            ImGui.GetStyle().WindowRounding = 2;
             ImGui.GetStyle().WindowBorderSize = 0;
             ImGui.GetStyle().WindowMenuButtonPosition = ImGuiDir.None;
             ImGui.GetStyle().SelectableTextAlign = new(0.02f, 0);
@@ -970,7 +949,7 @@ namespace Modine.ImGUI
             ImGui.PushStyleColor(ImGuiCol.Text, new System.Numerics.Vector4(230, 230, 230, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.Border, new System.Numerics.Vector4(65, 65, 65, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.MenuBarBg, new System.Numerics.Vector4(30, 30, 30, 200f) / 255);
-            ImGui.PushStyleColor(ImGuiCol.CheckMark, new System.Numerics.Vector4(255, 140, 0, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.CheckMark, new System.Numerics.Vector4(150f, 150f, 150f, 255f) / 255);
             ImGui.PushStyleColor(ImGuiCol.PopupBg, new System.Numerics.Vector4(20, 20, 20, 255) / 255);
 
             // Background color
@@ -1002,13 +981,13 @@ namespace Modine.ImGUI
 
             // Rezising bar
             ImGui.PushStyleColor(ImGuiCol.Separator, new System.Numerics.Vector4(30f, 30f, 30f, 255) / 255);
-            ImGui.PushStyleColor(ImGuiCol.SeparatorHovered, new System.Numerics.Vector4(60f, 60f, 60f, 255) / 255);
-            ImGui.PushStyleColor(ImGuiCol.SeparatorActive, new System.Numerics.Vector4(80f, 80f, 80f, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.SeparatorHovered, new System.Numerics.Vector4(100f, 100f, 100f, 255) / 255);
+            ImGui.PushStyleColor(ImGuiCol.SeparatorActive, new System.Numerics.Vector4(120f, 120f, 120f, 255) / 255);
 
             // Buttons
-            ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(255, 41, 55, 200) / 255);
-            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new System.Numerics.Vector4(255, 41, 55, 150) / 255);
-            ImGui.PushStyleColor(ImGuiCol.ButtonActive, new System.Numerics.Vector4(255, 41, 55, 100) / 255);
+            ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.343f, 0.343f, 0.343f, 0.784f));
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new System.Numerics.Vector4(0.343f, 0.343f, 0.343f, 0.784f) * 1.25f);
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, new System.Numerics.Vector4(0.343f, 0.343f, 0.343f, 0.784f) * 0.9f);
 
             // Docking and rezise
             // ImGui.PushStyleColor(ImGuiCol.DockingPreview, new System.Numerics.Vector4(30, 140, 120, 255) / 255);

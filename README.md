@@ -1,8 +1,9 @@
 # Modine
 ## This is my final high school project, a 3D engine made with OpenGL and C#
-**GUI** using [ImGUI.NET](https://www.nuget.org/packages/ImGui.NET)
 
-**3D Model Loading** using [AssimpNet](https://www.nuget.org/packages/AssimpNet)
+## If you wanna test it:
+You can either clone this github repository and build it,
+or download the ZippedBuilds.7z, unzip it and run the RunEngine.bat
 
 ## Editor Usage
 First person camera rotation
@@ -23,7 +24,7 @@ Open Quick Menu
 ## Features
 Raycasting
 
-PBR Shading
+PBR Shading, combining gBuffers inside a compute shader
 
 Point Lights
 
@@ -33,22 +34,14 @@ Screen space ambient occlusion (SSAO)
 
 Fast Approximate Anti-Aliasing (FXAA)
 
-Object outlines using stencilbuffer and fragmentshader
-
-Modify object transform in viewport
+Object outlines using stencilbuffer and compute shader
 
 Viewport, outliner, settings, properties and material editor using ImGUI Docking
-
-Framebuffer resizing to fit ImGUI window
 
 ## Problems
 Normals/TBN matrix is glitched on Intel iGPU
 
 Shadow mapping not entirely accurate
-
-Famebuffer glitching on some drivers/devices
-
-Deffered renderer color attachments BAAAD performance
 
 ## Useful Resources
 LearnOpenTK:

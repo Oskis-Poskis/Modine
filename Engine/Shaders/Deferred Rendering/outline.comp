@@ -16,7 +16,7 @@ void main()
 {
     ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
     ivec2 screen_size = imageSize(img_output);
-    vec2 UVs = (vec2(pixel_coords) + 0.5) / vec2(screen_size); // Add float to pixel_coords for float division, not a great solution..
+    vec2 UVs = (vec2(pixel_coords) + 0.5) / vec2(screen_size);
     
     vec4 color = vec4(texture(renderTexture, UVs).rgb, 1.0);
     uint stencil = texture(stencilTexture, UVs).r;

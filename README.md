@@ -1,5 +1,6 @@
 # Modine
 ## This is my final high school project, a 3D engine made with OpenGL and C#
+Github seems to think its written using AMPL for some reason, oop
 
 ## If you wanna test it:
 You can either clone this github repository and build it,
